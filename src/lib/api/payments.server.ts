@@ -64,6 +64,16 @@ export function offerBody(offer: PaymentOffer, error: string, extra: Record<stri
       instructions:
         "Retry this exact request with an X-PAYMENT header built from accepts[0]. Credits are added before the call runs.",
     },
+    checkout: {
+      machine: {
+        protocol: "x402",
+        retryWithHeader: "x-payment",
+        topupUrl: "/api/public/v1/credits/purchase",
+        topupMethod: "POST",
+      },
+      human: { url: "/pricing", note: "A human can buy a credit pack with a card instead." },
+      pricingUrl: "/api/public/v1/pricing",
+    },
     ...extra,
   };
 }

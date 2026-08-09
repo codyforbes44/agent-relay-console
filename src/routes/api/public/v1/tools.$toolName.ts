@@ -275,9 +275,16 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           if (balance < tool.credits) {
             await releaseIdem();
             if (!offer) {
+              // No x402 config: still answer with everything needed to top up.
               return apiError(402, "insufficient_credits", "Not enough credits for this call", {
                 required: tool.credits,
                 balance,
+                usdRequired: usdForCredits(tool.credits),
+                checkout: {
+                  machine: { url: `${origin}/api/public/v1/credits/purchase`, method: "POST" },
+                  human: { url: `${origin}/pricing` },
+                  pricingUrl: `${origin}/api/public/v1/pricing`,
+                },
               });
             }
             await recordIntent(supabaseAdmin, {
