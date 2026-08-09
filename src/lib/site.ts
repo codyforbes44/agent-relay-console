@@ -8,6 +8,8 @@ export const SITE_TITLE = "RELAY — pay-per-call tool API for AI agents";
 export const SITE_DESCRIPTION =
   "A metered HTTP and MCP tool API built for autonomous agents: bearer-key auth, OpenAPI discovery, credit billing per call, and explicit confirmation before side effects.";
 
+export const SITE_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+
 export function canonical(path: string) {
   return `${SITE_URL}${path === "/" ? "" : path}`;
 }
@@ -29,6 +31,8 @@ export function publicHead(opts: {
       { property: "og:url", content: url },
       { property: "og:type", content: opts.ogType ?? "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: SITE_OG_IMAGE },
+      { name: "twitter:image", content: SITE_OG_IMAGE },
     ],
     links: [{ rel: "canonical", href: url }],
   };
