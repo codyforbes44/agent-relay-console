@@ -347,7 +347,35 @@ structuredContent: ${JSON.stringify({
         </Section>
 
 
-        <Section title="10. MCP server">
+        <Section title="10. Security best practices for operators">
+          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+            <li>
+              Issue a dedicated API key for each MCP client or autonomous agent. Narrow the{" "}
+              <Mono>allowedTools</Mono> list to only the tools that agent needs, and set a per-key
+              daily or lifetime credit cap.
+            </li>
+            <li>
+              Disable any tool you do not expect your agents to use from the console{" "}
+              <Mono>/tools</Mono> page. Workspace-level disables apply across every key and MCP
+              connection.
+            </li>
+            <li>
+              Side-effecting tools (send_email, update_crm_record, create_payment, delete_record)
+              require either the <Mono>x-confirm-side-effects: true</Mono> header or an MCP client
+              confirmation prompt. Do not suppress these gates in agent code.
+            </li>
+            <li>
+              Rotate keys regularly. The rotation endpoint keeps the old key valid for 10 minutes,
+              so you can update your agents without downtime.
+            </li>
+            <li>
+              Monitor the <Mono>audit_logs</Mono> table and usage page for unexpected tool names or
+              credit spend spikes.
+            </li>
+          </ul>
+        </Section>
+
+        <Section title="11. MCP server">
           <p className="mb-3 text-sm text-muted-foreground">
             The same catalog is exposed over Model Context Protocol for clients like Claude, Cursor
             and ChatGPT. Connect with OAuth 2.1 — you approve the client once, then calls are
