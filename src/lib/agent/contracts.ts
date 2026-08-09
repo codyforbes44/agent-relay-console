@@ -97,9 +97,11 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     demo: true,
     schema: z.object({
       type: z.string().describe("Record type: contacts, invoices or tickets"),
-      status: z.string().nullable().describe("Optional status filter, or null"),
+      status: z.string().optional().describe("Optional status filter; omit for all records"),
+      limit: z.number().optional().describe("Page size, 1-100. Defaults to 25"),
+      cursor: z.string().optional().describe("Opaque cursor from a previous nextCursor"),
     }) as unknown as z.ZodType<Record<string, unknown>>,
-    example: { type: "invoices", status: null },
+    example: { type: "invoices", limit: 25 },
     exampleResult: {
       ok: true,
       type: "invoices",
@@ -108,6 +110,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
         { id: "in_881", contact: "dana@northwind.io", amountCents: 420000, status: "paid" },
         { id: "in_882", contact: "priya@fernbrook.co", amountCents: 89000, status: "open" },
       ],
+      nextCursor: null,
     },
     summarize: (a) => `${str(a['type'])}${a['status'] ? ` · ${str(a['status'])}` : ""}`,
   },
@@ -153,14 +156,16 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     demo: true,
     schema: z.object({
       recordId: z.string().describe("CRM record id"),
-      fields: z.string().describe("JSON object of fields to update, as a string"),
+      fields: z
+        .record(z.string(), z.unknown())
+        .describe("Object of field names to new values, e.g. { stage: \"churn_risk\" }"),
     }) as unknown as z.ZodType<Record<string, unknown>>,
-    example: { recordId: "c_1024", fields: '{"stage":"churn_risk","owner":"ae_12"}' },
+    example: { recordId: "c_1024", fields: { stage: "churn_risk", owner: "ae_12" } },
     exampleResult: {
       ok: true,
       simulated: true,
       recordId: "c_1024",
-      updatedFields: '{"stage":"churn_risk","owner":"ae_12"}',
+      updatedFields: { stage: "churn_risk", owner: "ae_12" },
       updatedAt: "2026-08-09T20:15:18.358Z",
     },
     summarize: (a) => str(a['recordId']),

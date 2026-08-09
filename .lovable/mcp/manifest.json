@@ -71,7 +71,7 @@
       {
         "name": "list_records",
         "title": "List records",
-        "description": "List records of a given type (contacts, invoices, tickets) with an optional status filter. Read-only. Costs 1 credit(s) per call. Example arguments: {\"type\":\"invoices\",\"status\":null}. Example result: {\"ok\":true,\"type\":\"invoices\",\"count\":2,\"rows\":[{\"id\":\"in_881\",\"contact\":\"dana@northwind.io\",\"amountCents\":420000,\"status\":\"paid\"},{\"id\":\"in_882\",\"contact\":\"priya@fernbrook.co\",\"amountCents\":89000,\"status\":\"open\"}]}. Read-only and safe to retry.",
+        "description": "List records of a given type (contacts, invoices, tickets) with an optional status filter. Read-only. Costs 1 credit(s) per call. Example arguments: {\"type\":\"invoices\",\"limit\":25}. Example result: {\"ok\":true,\"type\":\"invoices\",\"count\":2,\"rows\":[{\"id\":\"in_881\",\"contact\":\"dana@northwind.io\",\"amountCents\":420000,\"status\":\"paid\"},{\"id\":\"in_882\",\"contact\":\"priya@fernbrook.co\",\"amountCents\":89000,\"status\":\"open\"}],\"nextCursor\":null}. Read-only and safe to retry.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -86,16 +86,20 @@
               "description": "Record type: contacts, invoices or tickets"
             },
             "status": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Optional status filter, or null"
+              "type": "string",
+              "description": "Optional status filter; omit for all records"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Page size, 1-100. Defaults to 25"
+            },
+            "cursor": {
+              "type": "string",
+              "description": "Opaque cursor from a previous nextCursor"
             }
           },
           "required": [
-            "type",
-            "status"
+            "type"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -141,7 +145,7 @@
       {
         "name": "update_crm_record",
         "title": "Update CRM record",
-        "description": "Update fields on a CRM record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call. Example arguments: {\"recordId\":\"c_1024\",\"fields\":\"{\\\"stage\\\":\\\"churn_risk\\\",\\\"owner\\\":\\\"ae_12\\\"}\"}. Example result: {\"ok\":true,\"simulated\":true,\"recordId\":\"c_1024\",\"updatedFields\":\"{\\\"stage\\\":\\\"churn_risk\\\",\\\"owner\\\":\\\"ae_12\\\"}\",\"updatedAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting: your client should ask the human to approve before calling.",
+        "description": "Update fields on a CRM record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call. Example arguments: {\"recordId\":\"c_1024\",\"fields\":{\"stage\":\"churn_risk\",\"owner\":\"ae_12\"}}. Example result: {\"ok\":true,\"simulated\":true,\"recordId\":\"c_1024\",\"updatedFields\":{\"stage\":\"churn_risk\",\"owner\":\"ae_12\"},\"updatedAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting: your client should ask the human to approve before calling.",
         "annotations": {
           "readOnlyHint": false,
           "idempotentHint": false,
@@ -156,8 +160,9 @@
               "description": "CRM record id"
             },
             "fields": {
-              "type": "string",
-              "description": "JSON object of fields to update, as a string"
+              "type": "object",
+              "additionalProperties": {},
+              "description": "Object of field names to new values, e.g. { stage: \"churn_risk\" }"
             }
           },
           "required": [

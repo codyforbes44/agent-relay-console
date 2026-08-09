@@ -39,28 +39,34 @@ export async function runTool(
     }
     case "list_records": {
       const type = String(args['type'] ?? "contacts");
-      if (type === "contacts") {
-        const status = args['status'] ? String(args['status']) : null;
-        const rows = status ? CONTACTS.filter((c) => c.stage === status) : CONTACTS;
-        return ok({ type, count: rows.length, rows });
-      }
-      if (type === "invoices") {
-        return ok({
-          type,
-          count: 2,
-          rows: [
-            { id: "in_881", contact: "dana@northwind.io", amountCents: 420000, status: "paid" },
-            { id: "in_882", contact: "priya@fernbrook.co", amountCents: 89000, status: "open" },
-          ],
-        });
-      }
+      const status = args['status'] ? String(args['status']) : null;
+      const limit = Math.min(Math.max(Number(args['limit'] ?? 25) || 25, 1), 100);
+      const offset = Number.parseInt(String(args['cursor'] ?? "0"), 10) || 0;
+
+      const all: Array<Record<string, unknown>> =
+        type === "contacts"
+          ? (CONTACTS as unknown as Array<Record<string, unknown>>)
+          : type === "invoices"
+            ? [
+                { id: "in_881", contact: "dana@northwind.io", amountCents: 420000, status: "paid" },
+                { id: "in_882", contact: "priya@fernbrook.co", amountCents: 89000, status: "open" },
+              ]
+            : [
+                { id: "t_51", subject: "SSO login loop", priority: "high", status: "open" },
+                { id: "t_52", subject: "Export missing columns", priority: "normal", status: "pending" },
+              ];
+
+      const filtered = status
+        ? all.filter((r) => r['status'] === status || r['stage'] === status)
+        : all;
+      const rows = filtered.slice(offset, offset + limit);
+      const next = offset + limit;
+
       return ok({
         type,
-        count: 2,
-        rows: [
-          { id: "t_51", subject: "SSO login loop", priority: "high", status: "open" },
-          { id: "t_52", subject: "Export missing columns", priority: "normal", status: "pending" },
-        ],
+        count: rows.length,
+        rows,
+        nextCursor: next < filtered.length ? String(next) : null,
       });
     }
     case "send_email":
