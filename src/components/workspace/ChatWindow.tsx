@@ -258,10 +258,11 @@ export function ChatWindow({ orgId, threadId }: { orgId: string; threadId: strin
                 POST /api/agent
               </span>
               <PromptInputSubmit
-                status={busy ? "streaming" : undefined}
+                status={busy ? "streaming" : "ready"}
                 disabled={!busy && input.trim().length === 0}
-                onClick={busy ? onCancel : undefined}
+                onStop={onCancel}
               />
+
             </PromptInputFooter>
           </PromptInput>
         </div>
