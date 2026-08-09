@@ -42,6 +42,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
       POST: async ({ params, request }) => {
         const requestId = crypto.randomUUID();
         const started = Date.now();
+        const origin = new URL(request.url).origin;
         const toolName = params.toolName;
 
         const tool = TOOLS_BY_NAME[toolName];
