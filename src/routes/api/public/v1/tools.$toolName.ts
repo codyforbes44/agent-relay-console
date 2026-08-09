@@ -3,6 +3,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { TOOLS_BY_NAME } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
 import { apiError, json, preflight, toolDescriptor } from "@/lib/api/catalog.server";
+import {
+  CONFIRMATION_HEADER,
+  issueConfirmation,
+  redeemConfirmation,
+  releaseConfirmation,
+  storeConfirmationResponse,
+} from "@/lib/api/confirmations.server";
 import { getOrgSettings, requiresConfirmation } from "@/lib/api/settings.server";
 import { isToolEnabled } from "@/lib/api/org-tools.server";
 import { authenticateAgentKey, readBearer } from "@/lib/api/keys.server";
@@ -101,35 +108,83 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         }
 
         // Confirmation policy is configured per workspace (settings page).
+        // Authorization is a one-shot token bound to these exact arguments —
+        // an agent cannot pre-confirm a call whose preview no human ever saw.
         const orgSettings = await getOrgSettings(supabaseAdmin, identity.orgId);
         const needsConfirmation = requiresConfirmation(
           orgSettings.confirmationDefault,
           tool.sideEffecting,
         );
-        if (needsConfirmation && request.headers.get("x-confirm-side-effects") !== "true") {
-          await recordUsage(supabaseAdmin, {
-            orgId: identity.orgId,
-            keyId: identity.keyId,
-            toolName,
-            credits: 0,
-            status: "rejected",
-            errorCode: "confirmation_required",
-            latencyMs: Date.now() - started,
-            requestId,
-          });
-          return apiError(
-            428,
-            "confirmation_required",
-            "This tool has side effects. Retry with header 'x-confirm-side-effects: true' to authorize it.",
-            {
-              tool: toolName,
-              credits: tool.credits,
-              preview: {
-                summary: tool.summarize(parsed.data),
-                args: parsed.data,
+        let confirmationId: string | null = null;
+
+        if (needsConfirmation) {
+          const token = request.headers.get(CONFIRMATION_HEADER);
+
+          if (!token) {
+            const issued = await issueConfirmation(supabaseAdmin, {
+              orgId: identity.orgId,
+              keyId: identity.keyId,
+              tool,
+              args: parsed.data,
+            });
+            await recordUsage(supabaseAdmin, {
+              orgId: identity.orgId,
+              keyId: identity.keyId,
+              toolName,
+              credits: 0,
+              status: "rejected",
+              errorCode: "confirmation_required",
+              latencyMs: Date.now() - started,
+              requestId,
+            });
+            return apiError(
+              428,
+              "confirmation_required",
+              `This tool has side effects. Show the preview to your operator, then retry the identical request with header '${CONFIRMATION_HEADER}: <confirmationToken>'.`,
+              {
+                tool: toolName,
+                credits: tool.credits,
+                preview: issued.preview,
+                confirmationToken: issued.token,
+                expiresAt: issued.expiresAt,
               },
-            },
-          );
+            );
+          }
+
+          const redeemed = await redeemConfirmation(supabaseAdmin, {
+            token,
+            orgId: identity.orgId,
+            toolName,
+            args: parsed.data,
+          });
+
+          if (!redeemed.ok) {
+            await recordUsage(supabaseAdmin, {
+              orgId: identity.orgId,
+              keyId: identity.keyId,
+              toolName,
+              credits: 0,
+              status: "rejected",
+              errorCode: redeemed.failure.code,
+              latencyMs: Date.now() - started,
+              requestId,
+            });
+            return apiError(
+              redeemed.failure.status,
+              redeemed.failure.code,
+              redeemed.failure.message,
+              redeemed.failure.extra ?? {},
+            );
+          }
+
+          if (redeemed.replay) {
+            return json({ ...redeemed.replay, replayed: true }, 200, {
+              "x-request-id": requestId,
+              "x-confirmation-replayed": "true",
+            });
+          }
+
+          confirmationId = redeemed.id;
         }
 
         // Idempotency: first writer wins, replays return the stored response uncharged.
@@ -160,6 +215,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         }
 
         const releaseIdem = async () => {
+          if (confirmationId) await releaseConfirmation(supabaseAdmin, confirmationId);
           if (!idemClaimed || !idemKey) return;
           await supabaseAdmin
             .from("api_idempotency")
@@ -294,6 +350,8 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           ...(paymentReceipt ? { payment: paymentReceipt } : {}),
           result,
         };
+
+        if (confirmationId) await storeConfirmationResponse(supabaseAdmin, confirmationId, payload);
 
         if (idemClaimed && idemKey) {
           await supabaseAdmin
