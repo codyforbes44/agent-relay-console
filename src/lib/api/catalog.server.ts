@@ -74,6 +74,27 @@ export function openApiDocument(origin: string) {
             : ""
         }`,
         security: [{ agentKey: [] }],
+        parameters: [
+          {
+            name: "idempotency-key",
+            in: "header",
+            required: false,
+            schema: { type: "string" },
+            description:
+              "Replay-safe key scoped to your API key. A repeated completed call returns the stored response and is not charged again.",
+          },
+          ...(tool.sideEffecting
+            ? [
+                {
+                  name: "x-confirm-side-effects",
+                  in: "header",
+                  required: true,
+                  schema: { type: "string", enum: ["true"] },
+                  description: "Must be 'true' to authorize this side-effecting call.",
+                },
+              ]
+            : []),
+        ],
         requestBody: {
           required: true,
           content: { "application/json": { schema: inputSchemaOf(tool) } },
@@ -82,10 +103,15 @@ export function openApiDocument(origin: string) {
           "200": { description: "Tool result" },
           "401": { description: "Missing or invalid API key" },
           "402": { description: "Insufficient credits" },
-          "422": { description: "Input validation failed" },
+          "403": { description: "Key lacks the tools:invoke scope" },
+          "404": { description: "Unknown tool" },
+          "409": { description: "A call with this idempotency-key is still running" },
+          "422": { description: "Invalid JSON body or input validation failed" },
           "428": { description: "Side-effect confirmation header required" },
-          "429": { description: "Rate limited" },
+          "429": { description: "Rate limited (60 calls/minute per key)" },
+          "502": { description: "Tool execution failed" },
         },
+
       },
     };
   }

@@ -43,6 +43,20 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           return apiError(429, "rate_limited", "Too many calls for this key, retry in a minute");
         }
 
+        let body: unknown;
+        try {
+          body = await request.json();
+        } catch {
+          return apiError(422, "invalid_json", "Request body must be JSON");
+        }
+
+        const parsed = tool.schema.safeParse(body);
+        if (!parsed.success) {
+          return apiError(422, "invalid_input", "Input does not match the tool schema", {
+            issues: parsed.error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
+          });
+        }
+
         // Side-effecting tools need an explicit, per-call authorization signal.
         if (tool.sideEffecting && request.headers.get("x-confirm-side-effects") !== "true") {
           await recordUsage(supabaseAdmin, {
@@ -59,37 +73,69 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
             428,
             "confirmation_required",
             "This tool has side effects. Retry with header 'x-confirm-side-effects: true' to authorize it.",
-            { tool: toolName, credits: tool.credits },
+            {
+              tool: toolName,
+              credits: tool.credits,
+              preview: {
+                summary: tool.summarize(parsed.data),
+                args: parsed.data,
+              },
+            },
           );
         }
 
-        let body: unknown;
-        try {
-          body = await request.json();
-        } catch {
-          return apiError(422, "invalid_json", "Request body must be JSON");
+        // Idempotency: first writer wins, replays return the stored response uncharged.
+        const idemKey = request.headers.get("idempotency-key");
+        let idemClaimed = false;
+        if (idemKey) {
+          const { error: idemError } = await supabaseAdmin.from("api_idempotency").insert({
+            key_id: identity.keyId,
+            idem_key: idemKey,
+            org_id: identity.orgId,
+            tool_name: toolName,
+          });
+          if (idemError) {
+            const { data: existing } = await supabaseAdmin
+              .from("api_idempotency")
+              .select("response")
+              .eq("key_id", identity.keyId)
+              .eq("idem_key", idemKey)
+              .maybeSingle();
+            if (existing?.response) {
+              return json({ ...(existing.response as Record<string, unknown>), replayed: true }, 200, {
+                "idempotency-replayed": "true",
+              });
+            }
+            return apiError(409, "request_in_progress", "A call with this idempotency-key is still running");
+          }
+          idemClaimed = true;
         }
 
-        const parsed = tool.schema.safeParse(body);
-        if (!parsed.success) {
-          return apiError(422, "invalid_input", "Input does not match the tool schema", {
-            issues: parsed.error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
-          });
-        }
+        const releaseIdem = async () => {
+          if (!idemClaimed || !idemKey) return;
+          await supabaseAdmin
+            .from("api_idempotency")
+            .delete()
+            .eq("key_id", identity.keyId)
+            .eq("idem_key", idemKey);
+        };
 
         const balance = await getBalance(supabaseAdmin, identity.orgId);
         if (balance < tool.credits) {
+          await releaseIdem();
           return apiError(402, "insufficient_credits", "Not enough credits for this call", {
             required: tool.credits,
             balance,
           });
         }
 
+
         let result: Record<string, unknown>;
         try {
           result = await runTool(toolName, parsed.data);
         } catch (e) {
           const message = e instanceof Error ? e.message : "Tool execution failed";
+          await releaseIdem();
           await recordUsage(supabaseAdmin, {
             orgId: identity.orgId,
             keyId: identity.keyId,
@@ -127,18 +173,28 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           latencyMs,
         });
 
-        return json(
-          {
-            ok: true,
-            requestId,
-            tool: toolName,
-            demo: tool.demo,
-            credits: { charged: tool.credits, balance: balance - tool.credits },
-            result,
-          },
-          200,
-          { "x-request-id": requestId, "x-credits-charged": String(tool.credits) },
-        );
+        const payload = {
+          ok: true,
+          requestId,
+          tool: toolName,
+          demo: tool.demo,
+          credits: { charged: tool.credits, balance: balance - tool.credits },
+          result,
+        };
+
+        if (idemClaimed && idemKey) {
+          await supabaseAdmin
+            .from("api_idempotency")
+            .update({ response: payload as unknown as Record<string, never> })
+            .eq("key_id", identity.keyId)
+            .eq("idem_key", idemKey);
+        }
+
+        return json(payload, 200, {
+          "x-request-id": requestId,
+          "x-credits-charged": String(tool.credits),
+        });
+
       },
     },
   },

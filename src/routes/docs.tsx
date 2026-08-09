@@ -57,8 +57,8 @@ GET /.well-known/agent-manifest.json`}</Code>
         <Section title="2. Authentication">
           <p className="mb-3 text-sm text-muted-foreground">
             Every call carries a workspace key as a bearer token. Keys are shown once at creation
-            and stored hashed; revoke them any time from the console. New workspaces start with 500
-            free credits.
+            and stored hashed; revoke them any time from the console. Invoking tools requires the{" "}
+            <Mono>tools:invoke</Mono> scope. New workspaces start with 500 free credits.
           </p>
           <Code>{`Authorization: Bearer sk_agent_xxxxxxxx_...`}</Code>
         </Section>
@@ -71,38 +71,66 @@ GET /.well-known/agent-manifest.json`}</Code>
   -d '{"query":"refund policy"}'`}</Code>
           <p className="mt-3 text-sm text-muted-foreground">
             Arguments are validated against the tool&apos;s JSON Schema. Invalid input returns{" "}
-            <Mono>400 invalid_request</Mono> with the failing field paths, and no credits are
-            charged.
+            <Mono>422 invalid_input</Mono> with the failing field paths, and no credits are charged.
+            A successful call responds with:
+          </p>
+          <Code>{`{
+  "ok": true,
+  "requestId": "b0e1…",
+  "tool": "search_knowledge_base",
+  "demo": true,
+  "credits": { "charged": 1, "balance": 499 },
+  "result": { … }
+}`}</Code>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Responses also carry <Mono>x-request-id</Mono> and <Mono>x-credits-charged</Mono>{" "}
+            headers. Fetch a single tool&apos;s schema without a key with{" "}
+            <Mono>GET /api/public/v1/tools/{"{name}"}</Mono>. CORS is open, so browser-based agents
+            can call the API directly.
           </p>
         </Section>
 
         <Section title="4. Side effects require confirmation">
           <p className="mb-3 text-sm text-muted-foreground">
             Tools that send email, write to a CRM, create payments or delete records return{" "}
-            <Mono>428 confirmation_required</Mono> together with a preview of exactly what would
-            happen. Repeat the call with the confirmation header to execute it.
+            <Mono>428 confirmation_required</Mono> with a preview of the exact arguments that would
+            run and the credit cost. Repeat the call with the confirmation header to execute it. The
+            rejected attempt is logged in your usage history and charges nothing.
           </p>
           <Code>{`-H "x-confirm-side-effects: true"`}</Code>
         </Section>
 
         <Section title="5. Idempotency">
           <p className="mb-3 text-sm text-muted-foreground">
-            Send an <Mono>idempotency-key</Mono> header on any write. Repeating a call with the same
-            key returns the original stored response and is not charged again — safe for agent retry
-            loops and timeouts.
+            Send an <Mono>idempotency-key</Mono> header on any call. The key is scoped to your API
+            key. Repeating a completed call with the same key returns the original stored response
+            with <Mono>&quot;replayed&quot;: true</Mono> and is not charged again — safe for agent
+            retry loops and timeouts. If the first call is still running, the retry gets{" "}
+            <Mono>409 request_in_progress</Mono>; failed calls release the key so you can retry.
           </p>
         </Section>
 
-        <Section title="6. Errors">
+        <Section title="6. Rate limits">
+          <p className="mb-3 text-sm text-muted-foreground">
+            60 calls per minute per API key, counted over a rolling window. Over the limit you get{" "}
+            <Mono>429 rate_limited</Mono>. Mint additional keys for parallel workers.
+          </p>
+        </Section>
+
+        <Section title="7. Errors">
           <ul className="divide-y divide-border rounded-lg border border-border text-sm">
             {[
-              ["400 invalid_request", "Arguments failed schema validation. Not charged."],
-              ["401 unauthorized", "Missing, malformed or revoked bearer key."],
-              ["402 insufficient_credits", "Workspace balance too low for this tool's price."],
+              ["401 missing_api_key", "No Authorization: Bearer header on the request."],
+              ["401 invalid_api_key", "Key is unknown, revoked or expired."],
+              ["403 insufficient_scope", "Key lacks the tools:invoke scope."],
               ["404 unknown_tool", "No tool with that name in the catalog."],
+              ["409 request_in_progress", "Same idempotency-key is still executing."],
+              ["422 invalid_json", "Body was not valid JSON."],
+              ["422 invalid_input", "Arguments failed schema validation. Not charged."],
+              ["402 insufficient_credits", "Balance below this tool's price. Includes required + balance."],
               ["428 confirmation_required", "Side-effecting tool called without confirmation."],
-              ["429 rate_limited", "Over 60 calls per minute. Back off and retry."],
-              ["500 internal_error", "Unexpected failure. Credits are not deducted."],
+              ["429 rate_limited", "Over 60 calls per minute for this key. Back off and retry."],
+              ["502 tool_failed", "Upstream tool execution failed. Credits are not deducted."],
             ].map(([code, body]) => (
               <li key={code} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:gap-4">
                 <span className="w-56 shrink-0 font-mono text-xs text-primary">{code}</span>
@@ -111,12 +139,13 @@ GET /.well-known/agent-manifest.json`}</Code>
             ))}
           </ul>
           <p className="mt-3 text-sm text-muted-foreground">
-            Every error body has the same shape:
+            Every error body has the same shape, sometimes with extra context fields:
           </p>
-          <Code>{`{ "ok": false, "error": { "code": "insufficient_credits", "message": "..." } }`}</Code>
+          <Code>{`{ "ok": false, "error": { "code": "insufficient_credits", "message": "...", "required": 5, "balance": 2 } }`}</Code>
         </Section>
 
-        <Section title="7. Catalog & credit prices">
+        <Section title="8. Catalog & credit prices">
+
           <ul className="divide-y divide-border rounded-lg border border-border">
             {PUBLIC_TOOLS.map((t) => (
               <li key={t.name} className="flex items-start justify-between gap-4 px-4 py-3">
@@ -163,18 +192,28 @@ GET /.well-known/agent-manifest.json`}</Code>
           </p>
         </Section>
 
-        <Section title="8. MCP server">
+        <Section title="9. MCP server">
           <p className="mb-3 text-sm text-muted-foreground">
             The same catalog is exposed over Model Context Protocol for clients like Claude, Cursor
             and ChatGPT. Connect with OAuth 2.1 — you approve the client once, then calls are
-            metered against your workspace credits exactly like HTTP calls.
+            metered against your workspace credits exactly like HTTP calls. Side-effecting tools are
+            marked with the MCP <Mono>destructiveHint</Mono> annotation, so compliant clients ask
+            the human to approve the call before it runs.
+
           </p>
           <Code>{`${SITE_URL}/mcp   # Streamable HTTP, OAuth 2.1 (dynamic client registration)`}</Code>
         </Section>
 
-        <Section title="9. Account status">
+        <Section title="10. Account status">
           <Code>{`GET /api/public/v1/me
-{ "ok": true, "credits": { "balance": 500 }, "rateLimit": { "perMinute": 60 } }`}</Code>
+{
+  "ok": true,
+  "orgId": "…",
+  "scopes": ["tools:invoke"],
+  "credits": { "balance": 500 },
+  "usage": { "totalCalls": 12 },
+  "rateLimit": { "perMinute": 60 }
+}`}</Code>
           <p className="mt-3 text-sm text-muted-foreground">
             Poll this before a long run, or read the balance from the console&apos;s{" "}
             <Link to="/usage" className="underline">
@@ -183,6 +222,7 @@ GET /.well-known/agent-manifest.json`}</Code>
             .
           </p>
         </Section>
+
       </main>
     </PublicShell>
   );

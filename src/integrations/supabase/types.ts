@@ -61,6 +61,33 @@ export type Database = {
           },
         ]
       }
+      api_idempotency: {
+        Row: {
+          created_at: string
+          idem_key: string
+          key_id: string
+          org_id: string
+          response: Json | null
+          tool_name: string
+        }
+        Insert: {
+          created_at?: string
+          idem_key: string
+          key_id: string
+          org_id: string
+          response?: Json | null
+          tool_name: string
+        }
+        Update: {
+          created_at?: string
+          idem_key?: string
+          key_id?: string
+          org_id?: string
+          response?: Json | null
+          tool_name?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
