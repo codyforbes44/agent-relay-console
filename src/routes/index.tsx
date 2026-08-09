@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ShieldCheck, Workflow, Terminal } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { LegalFooter } from "@/components/LegalFooter";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
