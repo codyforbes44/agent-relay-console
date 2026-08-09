@@ -13,10 +13,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as DotwellKnownAgentManifestDotjsonRouteImport } from './routes/[.]well-known/agent-manifest[.]json'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedKeysRouteImport } from './routes/_authenticated/keys'
 import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage'
 import { Route as ApiAgentRouteImport } from './routes/api/agent'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedChatThreadIdRouteImport } from './routes/_authenticated/chat.$threadId'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
@@ -43,10 +47,27 @@ const DocsRoute = DocsRouteImport.update({
   path: '/docs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const DotwellKnownAgentManifestDotjsonRoute =
   DotwellKnownAgentManifestDotjsonRouteImport.update({
     id: '/.well-known/agent-manifest.json',
     path: '/.well-known/agent-manifest.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
 const AuthenticatedKeysRoute = AuthenticatedKeysRouteImport.update({
@@ -64,6 +85,12 @@ const ApiAgentRoute = ApiAgentRouteImport.update({
   path: '/api/agent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
   id: '/chat/',
   path: '/chat/',
@@ -102,10 +129,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/docs': typeof DocsRoute
+  '/mcp': typeof McpRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/keys': typeof AuthenticatedKeysRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
@@ -117,10 +148,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/docs': typeof DocsRoute
+  '/mcp': typeof McpRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/keys': typeof AuthenticatedKeysRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
@@ -134,10 +169,14 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/docs': typeof DocsRoute
+  '/mcp': typeof McpRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/keys': typeof AuthenticatedKeysRoute
   '/_authenticated/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
@@ -151,10 +190,14 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/docs'
+    | '/mcp'
+    | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
+    | '/.well-known/oauth-protected-resource'
     | '/keys'
     | '/usage'
     | '/api/agent'
+    | '/.mcp/invoke-tool/$tool'
     | '/chat/$threadId'
     | '/chat/'
     | '/api/public/v1/me'
@@ -166,10 +209,14 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/docs'
+    | '/mcp'
+    | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
+    | '/.well-known/oauth-protected-resource'
     | '/keys'
     | '/usage'
     | '/api/agent'
+    | '/.mcp/invoke-tool/$tool'
     | '/chat/$threadId'
     | '/chat'
     | '/api/public/v1/me'
@@ -182,10 +229,14 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/docs'
+    | '/mcp'
+    | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/keys'
     | '/_authenticated/usage'
     | '/api/agent'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/chat/$threadId'
     | '/_authenticated/chat/'
     | '/api/public/v1/me'
@@ -199,8 +250,12 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   DocsRoute: typeof DocsRoute
+  McpRoute: typeof McpRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   DotwellKnownAgentManifestDotjsonRoute: typeof DotwellKnownAgentManifestDotjsonRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiAgentRoute: typeof ApiAgentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
   ApiPublicV1ToolsRoute: typeof ApiPublicV1ToolsRouteWithChildren
@@ -236,11 +291,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.well-known/agent-manifest.json': {
       id: '/.well-known/agent-manifest.json'
       path: '/.well-known/agent-manifest.json'
       fullPath: '/.well-known/agent-manifest.json'
       preLoaderRoute: typeof DotwellKnownAgentManifestDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/keys': {
@@ -262,6 +338,13 @@ declare module '@tanstack/react-router' {
       path: '/api/agent'
       fullPath: '/api/agent'
       preLoaderRoute: typeof ApiAgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/chat/': {
@@ -342,8 +425,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   DocsRoute: DocsRoute,
+  McpRoute: McpRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   DotwellKnownAgentManifestDotjsonRoute: DotwellKnownAgentManifestDotjsonRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiAgentRoute: ApiAgentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
   ApiPublicV1ToolsRoute: ApiPublicV1ToolsRouteWithChildren,

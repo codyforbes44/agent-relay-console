@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://svwbtoiscivvuhwnrmza.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "agent-hub",
+      "version": "0.1.0",
+      "title": "Agent Hub"
+    },
+    "tools": [
+      {
+        "name": "search_knowledge_base",
+        "title": "Search knowledge base",
+        "description": "Search the workspace knowledge base for internal documentation, policies and notes. Read-only. Costs 1 credit(s) per call.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Natural language search query"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "lookup_crm_contact",
+        "title": "Look up CRM contact",
+        "description": "Fetch a single CRM contact by email address. Read-only. Costs 1 credit(s) per call.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "description": "Contact email address"
+            }
+          },
+          "required": [
+            "email"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_records",
+        "title": "List records",
+        "description": "List records of a given type (contacts, invoices, tickets) with an optional status filter. Read-only. Costs 1 credit(s) per call.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Record type: contacts, invoices or tickets"
+            },
+            "status": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Optional status filter, or null"
+            }
+          },
+          "required": [
+            "type",
+            "status"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "send_email",
+        "title": "Send email",
+        "description": "Send an email to a recipient. Side-effecting: requires explicit user confirmation. Costs 5 credit(s) per call.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "destructiveHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "to": {
+              "type": "string",
+              "description": "Recipient email address"
+            },
+            "subject": {
+              "type": "string",
+              "description": "Email subject"
+            },
+            "body": {
+              "type": "string",
+              "description": "Plain text email body"
+            }
+          },
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_crm_record",
+        "title": "Update CRM record",
+        "description": "Update fields on a CRM record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "destructiveHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "recordId": {
+              "type": "string",
+              "description": "CRM record id"
+            },
+            "fields": {
+              "type": "string",
+              "description": "JSON object of fields to update, as a string"
+            }
+          },
+          "required": [
+            "recordId",
+            "fields"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_payment",
+        "title": "Create payment",
+        "description": "Create a payment charge for a customer. Side-effecting: requires explicit user confirmation. Costs 10 credit(s) per call.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "destructiveHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "customerId": {
+              "type": "string",
+              "description": "Customer id"
+            },
+            "amountCents": {
+              "type": "number",
+              "description": "Amount in cents"
+            },
+            "currency": {
+              "type": "string",
+              "description": "ISO currency code, e.g. usd"
+            }
+          },
+          "required": [
+            "customerId",
+            "amountCents",
+            "currency"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "delete_record",
+        "title": "Delete record",
+        "description": "Permanently delete a record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "destructiveHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Record type"
+            },
+            "recordId": {
+              "type": "string",
+              "description": "Record id"
+            }
+          },
+          "required": [
+            "type",
+            "recordId"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
