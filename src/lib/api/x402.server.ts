@@ -115,14 +115,25 @@ export function encodePaymentResponse(value: unknown): string {
 
 async function facilitatorCall(config: X402Config, path: string, body: unknown) {
   const headers: Record<string, string> = { "content-type": "application/json" };
-  const apiKey = process.env["X402_FACILITATOR_API_KEY"]?.trim();
-  if (apiKey) headers["authorization"] = `Bearer ${apiKey}`;
+  const url = new URL(`${config.facilitatorUrl}${path}`);
 
-  const res = await fetch(`${config.facilitatorUrl}${path}`, {
+  // Coinbase CDP requires a per-request signed JWT; other facilitators accept
+  // a static bearer token (or none at all).
+  const { cdpCredentials, cdpJwt } = await import("./cdp-jwt.server");
+  const cdp = cdpCredentials();
+  const apiKey = process.env["X402_FACILITATOR_API_KEY"]?.trim();
+  if (cdp && url.hostname.endsWith("coinbase.com")) {
+    headers["authorization"] = `Bearer ${await cdpJwt(cdp, "POST", url.host, url.pathname)}`;
+  } else if (apiKey) {
+    headers["authorization"] = `Bearer ${apiKey}`;
+  }
+
+  const res = await fetch(url.toString(), {
     method: "POST",
     headers,
     body: JSON.stringify(body),
   });
+
   const text = await res.text();
   let parsed: Record<string, unknown> = {};
   try {
