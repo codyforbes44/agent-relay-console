@@ -9,7 +9,17 @@ import type { KeyIdentity } from "@/lib/api/keys.server";
 
 export const RATE_LIMIT_PER_MINUTE = 60;
 
+/** Workspaces flagged unlimited (internal/admin) never run out of credits. */
+export const UNLIMITED_BALANCE = Number.MAX_SAFE_INTEGER;
+
+export async function hasUnlimitedCredits(admin: SupabaseClient, orgId: string): Promise<boolean> {
+  const { data, error } = await admin.rpc("org_unlimited_credits", { _org_id: orgId });
+  if (error) return false;
+  return data === true;
+}
+
 export async function getBalance(admin: SupabaseClient, orgId: string): Promise<number> {
+  if (await hasUnlimitedCredits(admin, orgId)) return UNLIMITED_BALANCE;
   const { data, error } = await admin.rpc("org_credit_balance", { _org_id: orgId });
   if (error) throw new Error(error.message);
   return Number(data ?? 0);
@@ -55,7 +65,7 @@ export async function recordUsage(admin: SupabaseClient, input: MeterInput) {
     .single();
   if (error) return;
 
-  if (input.credits > 0) {
+  if (input.credits > 0 && !(await hasUnlimitedCredits(admin, input.orgId))) {
     await admin.from("credit_ledger").insert({
       org_id: input.orgId,
       delta: -input.credits,

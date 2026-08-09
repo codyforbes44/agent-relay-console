@@ -103,8 +103,9 @@ export const getAccountSummary = createServerFn({ method: "GET" })
     if (!allowed) throw new Error("Forbidden");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: balance }, { data: events }] = await Promise.all([
+    const [{ data: balance }, { data: unlimited }, { data: events }] = await Promise.all([
       supabaseAdmin.rpc("org_credit_balance", { _org_id: data.orgId }),
+      supabaseAdmin.rpc("org_unlimited_credits", { _org_id: data.orgId }),
       supabaseAdmin
         .from("usage_events")
         .select("id, tool_name, credits, status, error_code, latency_ms, created_at")
@@ -116,6 +117,7 @@ export const getAccountSummary = createServerFn({ method: "GET" })
     const rows = events ?? [];
     return {
       balance: Number(balance ?? 0),
+      unlimited: unlimited === true,
       totalCalls: rows.length,
       spentLast50: rows.reduce((sum, r) => sum + (r.credits ?? 0), 0),
       events: rows,

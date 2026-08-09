@@ -30,6 +30,8 @@ export const orgQuery = () =>
       const { data, error } = await supabase
         .from("org_members")
         .select("org_id, role, organizations(id, name)")
+        // Super admins can read every membership row, so always scope to self.
+        .eq("user_id", userId)
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();

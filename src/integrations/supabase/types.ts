@@ -552,6 +552,7 @@ export type Database = {
           name: string
           origin: string
           slug: string
+          unlimited_credits: boolean
         }
         Insert: {
           claimed_at?: string | null
@@ -561,6 +562,7 @@ export type Database = {
           name: string
           origin?: string
           slug: string
+          unlimited_credits?: boolean
         }
         Update: {
           claimed_at?: string | null
@@ -570,6 +572,7 @@ export type Database = {
           name?: string
           origin?: string
           slug?: string
+          unlimited_credits?: boolean
         }
         Relationships: []
       }
@@ -943,6 +946,7 @@ export type Database = {
         Returns: number
       }
       org_credit_balance: { Args: { _org_id: string }; Returns: number }
+      org_unlimited_credits: { Args: { _org_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "member"
