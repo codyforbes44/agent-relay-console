@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as DotwellKnownAgentManifestDotjsonRouteImport } from './routes/[.]well-known/agent-manifest[.]json'
@@ -60,6 +61,11 @@ const McpRoute = McpRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundsRoute = RefundsRouteImport.update({
+  id: '/refunds',
+  path: '/refunds',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
+  '/refunds': typeof RefundsRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
+  '/refunds': typeof RefundsRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
+  '/refunds': typeof RefundsRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/mcp'
     | '/pricing'
+    | '/refunds'
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/mcp'
     | '/pricing'
+    | '/refunds'
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/mcp'
     | '/pricing'
+    | '/refunds'
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
@@ -313,6 +325,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   McpRoute: typeof McpRoute
   PricingRoute: typeof PricingRoute
+  RefundsRoute: typeof RefundsRoute
   TermsRoute: typeof TermsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   DotwellKnownAgentManifestDotjsonRoute: typeof DotwellKnownAgentManifestDotjsonRoute
@@ -368,6 +381,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refunds': {
+      id: '/refunds'
+      path: '/refunds'
+      fullPath: '/refunds'
+      preLoaderRoute: typeof RefundsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -529,6 +549,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   McpRoute: McpRoute,
   PricingRoute: PricingRoute,
+  RefundsRoute: RefundsRoute,
   TermsRoute: TermsRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   DotwellKnownAgentManifestDotjsonRoute: DotwellKnownAgentManifestDotjsonRoute,
