@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundsRouteImport } from './routes/refunds'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -61,6 +62,11 @@ const McpRoute = McpRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundsRoute = RefundsRouteImport.update({
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -220,6 +228,7 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/refunds': typeof RefundsRoute
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/mcp'
     | '/pricing'
+    | '/privacy'
     | '/refunds'
     | '/terms'
     | '/.mcp/list-tools'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/mcp'
     | '/pricing'
+    | '/privacy'
     | '/refunds'
     | '/terms'
     | '/.mcp/list-tools'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/mcp'
     | '/pricing'
+    | '/privacy'
     | '/refunds'
     | '/terms'
     | '/.mcp/list-tools'
@@ -325,6 +337,7 @@ export interface RootRouteChildren {
   DocsRoute: typeof DocsRoute
   McpRoute: typeof McpRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   RefundsRoute: typeof RefundsRoute
   TermsRoute: typeof TermsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
@@ -381,6 +394,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/refunds': {
@@ -549,6 +569,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocsRoute: DocsRoute,
   McpRoute: McpRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   RefundsRoute: RefundsRoute,
   TermsRoute: TermsRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
