@@ -366,7 +366,10 @@ function AdminPanel() {
                     </div>
                   </li>
                 ))}
-                {!d.usage.length && <p className="text-sm text-muted-foreground">No calls yet.</p>}
+                {!filteredUsage.length && (
+                  <p className="text-sm text-muted-foreground">No calls to show.</p>
+                )}
+
               </ul>
             </CardContent>
           </Card>
