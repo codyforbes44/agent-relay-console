@@ -59,7 +59,9 @@ automation, no password, no email verification loop.
 - Account and balance: ${origin}/api/public/v1/me
 - Human docs: ${origin}/docs
 
-## Tools
+## Starter demo catalog
+
+These tools are simulated fixtures for integration testing. Every response includes "demo": true until the live integrations are connected. Workspace owners can disable individual tools in the console.
 
 ${tools}
 `;

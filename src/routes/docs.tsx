@@ -268,12 +268,12 @@ GET /.well-known/agent-manifest.json`}</Code>
           <TryToolPanel />
         </Section>
 
-        <Section title="9. Catalog, examples & credit prices">
+        <Section title="9. Starter catalog, examples & credit prices">
           <p className="mb-3 text-sm text-muted-foreground">
-            Every tool below ships a copy-pasteable request and response. The same payloads are
-            published in <Mono>GET /api/public/v1/tools</Mono> (as{" "}
-            <Mono>example.request</Mono> / <Mono>example.response</Mono>), in the OpenAPI document
-            and in each MCP tool description, so agents never have to guess a schema.
+            The current tools are a simulated starter set for integration testing. Every response
+            carries <Mono>&quot;demo&quot;: true</Mono> until the underlying integrations (CRM,
+            email, payment processor) are live. Production catalogs will include workspace-level
+            tool visibility controls.
           </p>
           <div className="space-y-4">
             {PUBLIC_TOOLS.map((t) => (
@@ -347,7 +347,35 @@ structuredContent: ${JSON.stringify({
         </Section>
 
 
-        <Section title="10. MCP server">
+        <Section title="10. Security best practices for operators">
+          <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+            <li>
+              Issue a dedicated API key for each MCP client or autonomous agent. Narrow the{" "}
+              <Mono>allowedTools</Mono> list to only the tools that agent needs, and set a per-key
+              daily or lifetime credit cap.
+            </li>
+            <li>
+              Disable any tool you do not expect your agents to use from the console{" "}
+              <Mono>/tools</Mono> page. Workspace-level disables apply across every key and MCP
+              connection.
+            </li>
+            <li>
+              Side-effecting tools (send_email, update_crm_record, create_payment, delete_record)
+              require either the <Mono>x-confirm-side-effects: true</Mono> header or an MCP client
+              confirmation prompt. Do not suppress these gates in agent code.
+            </li>
+            <li>
+              Rotate keys regularly. The rotation endpoint keeps the old key valid for 10 minutes,
+              so you can update your agents without downtime.
+            </li>
+            <li>
+              Monitor the <Mono>audit_logs</Mono> table and usage page for unexpected tool names or
+              credit spend spikes.
+            </li>
+          </ul>
+        </Section>
+
+        <Section title="11. MCP server">
           <p className="mb-3 text-sm text-muted-foreground">
             The same catalog is exposed over Model Context Protocol for clients like Claude, Cursor
             and ChatGPT. Connect with OAuth 2.1 — you approve the client once, then calls are
@@ -366,10 +394,16 @@ structuredContent: ${JSON.stringify({
             HTTP-only — over MCP the client&apos;s own approval prompt is the confirmation step.
             Usage from MCP appears in the same console usage history.
           </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            <strong>Tool visibility note:</strong> The MCP list-tools endpoint may show the full
+            starter catalog even when a workspace has disabled a tool. Workspace-level disables and
+            per-key <Mono>allowedTools</Mono> are enforced at invocation time, so a disabled or
+            disallowed tool returns a clear <Mono>tool_disabled</Mono> error instead of running.
+          </p>
         </Section>
 
 
-        <Section title="11. Account status">
+        <Section title="12. Account status">
           <Code>{`GET /api/public/v1/me
 {
   "ok": true,

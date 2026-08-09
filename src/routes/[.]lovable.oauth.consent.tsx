@@ -3,6 +3,8 @@ import { useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
+import { AlertTriangle } from "lucide-react";
 
 type OAuthApi = {
   getAuthorizationDetails: (id: string) => Promise<{ data: AuthorizationDetails | null; error: Error | null }>;
@@ -74,15 +76,37 @@ function Consent() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-md">
         <p className="font-mono text-xs tracking-[0.3em] text-primary">RELAY</p>
         <h1 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
           Connect {clientName} to your workspace
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {clientName} will be able to call Relay tools as you. Each call debits credits from your
-          workspace balance.
+          workspace balance. Side-effecting tools still require an explicit per-call confirmation from
+          you or your client.
         </p>
+
+        <div className="mt-6 rounded-lg border border-border bg-card p-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tool catalog</p>
+          <ul className="mt-3 space-y-2">
+            {PUBLIC_TOOLS.map((t) => (
+              <li key={t.name} className="flex items-center justify-between text-sm">
+                <span className="font-mono text-card-foreground">{t.name}</span>
+                <span className="flex items-center gap-2 text-muted-foreground">
+                  {t.credits} cr
+                  {t.sideEffecting && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-destructive/30 bg-destructive/10 px-2 py-0.5 text-[10px] text-destructive">
+                      <AlertTriangle className="size-3" />
+                      confirm
+                    </span>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         {error && (
           <p role="alert" className="mt-4 text-sm text-destructive">
             {error}

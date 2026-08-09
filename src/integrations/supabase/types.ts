@@ -464,6 +464,44 @@ export type Database = {
           },
         ]
       }
+      org_tools: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          org_id: string
+          requires_confirmation: boolean
+          tool_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          org_id: string
+          requires_confirmation?: boolean
+          tool_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          org_id?: string
+          requires_confirmation?: boolean
+          tool_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_tools_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           claimed_at: string | null

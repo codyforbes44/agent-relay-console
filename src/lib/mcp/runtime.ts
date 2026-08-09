@@ -3,6 +3,7 @@ import type { z } from "zod";
 
 import { TOOLS_BY_NAME, type ToolContract } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
+import { isToolEnabled } from "@/lib/api/org-tools.server";
 import { supabaseForUser } from "./supabase";
 
 type Result = {
@@ -36,8 +37,13 @@ async function runMetered(
   const orgId = await resolveOrgId(ctx);
   if (!orgId) return fail("No workspace found for this account");
 
-  const started = Date.now();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  if (!(await isToolEnabled(supabaseAdmin, orgId, contract.name))) {
+    return fail(`Tool ${contract.name} is disabled for this workspace`);
+  }
+
+  const started = Date.now();
   const { getBalance, recordUsage } = await import("@/lib/api/metering.server");
 
   const balance = await getBalance(supabaseAdmin, orgId);
@@ -72,6 +78,19 @@ async function runMetered(
     status: "success",
     latencyMs: Date.now() - started,
     requestId: crypto.randomUUID(),
+  });
+
+  await supabaseAdmin.from("audit_logs").insert({
+    org_id: orgId,
+    user_id: ctx.getUserId() ?? null,
+    action: "mcp_tool_invoked",
+    tool_name: contract.name,
+    payload: {
+      client_id: ctx.getClientId() ?? null,
+      credits: contract.credits,
+      side_effecting: contract.sideEffecting,
+      demo: contract.demo,
+    },
   });
 
   const payload = {

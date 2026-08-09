@@ -201,9 +201,12 @@ function Landing() {
         </section>
 
         <section className="mx-auto max-w-3xl px-6 pb-20">
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">Tool catalog</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">Starter tool catalog</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Prices are per successful call. Side-effecting tools are marked and gated.
+            Prices are per successful call. Side-effecting tools are marked and gated. These are
+            simulated integrations for testing — every response includes{" "}
+            <span className="font-mono">&quot;demo&quot;: true</span> until the live providers are
+            wired in.
           </p>
           <ul className="mt-5 divide-y divide-border rounded-lg border border-border">
             {PUBLIC_TOOLS.map((t) => (

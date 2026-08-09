@@ -75,6 +75,13 @@ export const API_ERRORS: ApiErrorSpec[] = [
   },
   {
     status: 403,
+    code: "tool_disabled",
+    cause: "The workspace owner has disabled this tool for the org.",
+    action: "Enable the tool in the console, or call a different tool.",
+    retryable: false,
+  },
+  {
+    status: 403,
     code: "insufficient_scope",
     cause: "The key is valid but does not carry the tools:invoke scope.",
     action: "Issue a key with tools:invoke from the console and retry with it.",
