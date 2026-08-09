@@ -28,6 +28,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedKeysRouteImport } from './routes/_authenticated/keys'
+import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
 import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage'
 import { Route as ApiAgentRouteImport } from './routes/api/agent'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -141,6 +142,11 @@ const AuthenticatedKeysRoute = AuthenticatedKeysRouteImport.update({
   path: '/keys',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedToolsRoute = AuthenticatedToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedUsageRoute = AuthenticatedUsageRouteImport.update({
   id: '/usage',
   path: '/usage',
@@ -242,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/keys': typeof AuthenticatedKeysRoute
+  '/tools': typeof AuthenticatedToolsRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/keys': typeof AuthenticatedKeysRoute
+  '/tools': typeof AuthenticatedToolsRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -314,6 +322,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/keys': typeof AuthenticatedKeysRoute
+  '/_authenticated/tools': typeof AuthenticatedToolsRoute
   '/_authenticated/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -351,6 +360,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/billing'
     | '/keys'
+    | '/tools'
     | '/usage'
     | '/api/agent'
     | '/.lovable/oauth/consent'
@@ -386,6 +396,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/billing'
     | '/keys'
+    | '/tools'
     | '/usage'
     | '/api/agent'
     | '/.lovable/oauth/consent'
@@ -422,6 +433,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/billing'
     | '/_authenticated/keys'
+    | '/_authenticated/tools'
     | '/_authenticated/usage'
     | '/api/agent'
     | '/.lovable/oauth/consent'
@@ -604,6 +616,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKeysRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tools': {
+      id: '/_authenticated/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof AuthenticatedToolsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/usage': {
       id: '/_authenticated/usage'
       path: '/usage'
@@ -716,6 +735,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedKeysRoute: typeof AuthenticatedKeysRoute
+  AuthenticatedToolsRoute: typeof AuthenticatedToolsRoute
   AuthenticatedUsageRoute: typeof AuthenticatedUsageRoute
   AuthenticatedChatThreadIdRoute: typeof AuthenticatedChatThreadIdRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
@@ -725,6 +745,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedKeysRoute: AuthenticatedKeysRoute,
+  AuthenticatedToolsRoute: AuthenticatedToolsRoute,
   AuthenticatedUsageRoute: AuthenticatedUsageRoute,
   AuthenticatedChatThreadIdRoute: AuthenticatedChatThreadIdRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
