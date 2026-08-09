@@ -21,8 +21,102 @@ export async function hasUnlimitedCredits(admin: SupabaseClient, orgId: string):
 export async function getBalance(admin: SupabaseClient, orgId: string): Promise<number> {
   if (await hasUnlimitedCredits(admin, orgId)) return UNLIMITED_BALANCE;
   const { data, error } = await admin.rpc("org_credit_balance", { _org_id: orgId });
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error(JSON.stringify({ event: "balance_read_failed", orgId, message: error.message }));
+    throw new BalanceUnavailableError(error.message);
+  }
   return Number(data ?? 0);
+}
+
+/** Thrown when the ledger cannot be read; callers map this to a 503. */
+export class BalanceUnavailableError extends Error {
+  readonly code = "balance_unavailable";
+  constructor(message: string) {
+    super(message);
+    this.name = "BalanceUnavailableError";
+  }
+}
+
+export type ReserveInput = {
+  orgId: string;
+  keyId: string;
+  toolName: string;
+  credits: number;
+  requestId: string;
+  maxPerCall?: number | null;
+  dailyCap?: number | null;
+  totalCap?: number | null;
+};
+
+export type ReserveResult =
+  | { status: "ok"; usageEventId: string; balance: number; unlimited: boolean }
+  | { status: "insufficient"; balance: number; required: number }
+  | { status: "budget_exceeded"; window: string; spent: number; required: number; limit: number }
+  | { status: "error"; message: string };
+
+/**
+ * Atomically authorizes and charges a call *before* the tool runs.
+ * Balance and owner-set spend caps are evaluated inside one transaction under
+ * a per-org lock, so concurrent calls cannot double-spend.
+ */
+export async function reserveCredits(admin: SupabaseClient, input: ReserveInput): Promise<ReserveResult> {
+  const { data, error } = await admin.rpc("reserve_credits", {
+    _org_id: input.orgId,
+    _key_id: input.keyId,
+    _tool_name: input.toolName,
+    _credits: input.credits,
+    _request_id: input.requestId,
+    _latency_ms: 0,
+    _max_per_call: input.maxPerCall ?? null,
+    _daily_cap: input.dailyCap ?? null,
+    _total_cap: input.totalCap ?? null,
+  });
+  if (error) {
+    console.error(JSON.stringify({ event: "reserve_credits_failed", orgId: input.orgId, message: error.message }));
+    return { status: "error", message: error.message };
+  }
+  const row = data as Record<string, unknown>;
+  const status = String(row?.status ?? "error");
+  if (status === "ok") {
+    return {
+      status: "ok",
+      usageEventId: String(row.usageEventId),
+      unlimited: row.unlimited === true,
+      balance: row.unlimited === true ? UNLIMITED_BALANCE : Number(row.balance ?? 0),
+    };
+  }
+  if (status === "insufficient") {
+    return { status: "insufficient", balance: Number(row.balance ?? 0), required: Number(row.required ?? input.credits) };
+  }
+  if (status === "budget_exceeded") {
+    return {
+      status: "budget_exceeded",
+      window: String(row.window ?? "call"),
+      spent: Number(row.spent ?? 0),
+      required: Number(row.required ?? input.credits),
+      limit: Number(row.limit ?? 0),
+    };
+  }
+  return { status: "error", message: "Unexpected reservation result" };
+}
+
+/** Compensating entry when a tool throws after its credits were reserved. */
+export async function refundReservedCredits(admin: SupabaseClient, usageEventId: string, reason: string) {
+  const { error } = await admin.rpc("refund_reserved_credits", {
+    _usage_event_id: usageEventId,
+    _reason: reason,
+  });
+  if (error) {
+    console.error(JSON.stringify({ event: "refund_failed", usageEventId, message: error.message }));
+  }
+}
+
+/** Post-execution patch of the reserved usage row (latency only). */
+export async function finalizeUsage(admin: SupabaseClient, usageEventId: string, latencyMs: number) {
+  const { error } = await admin.from("usage_events").update({ latency_ms: latencyMs }).eq("id", usageEventId);
+  if (error) {
+    console.error(JSON.stringify({ event: "metering_write_failed", usageEventId, message: error.message }));
+  }
 }
 
 export async function checkRateLimit(admin: SupabaseClient, keyId: string): Promise<boolean> {
