@@ -204,7 +204,33 @@ function ConnectPage() {
             <CopyRow value={installCommand} label="command" />
           </Section>
 
+          <Section title="Cursor">
+            <Steps
+              items={[
+                <>
+                  Open Cursor → Settings → <span className="text-foreground">MCP &amp; Integrations</span>{" "}
+                  → “Add custom MCP”.
+                </>,
+                <>
+                  Add an entry named <code className="font-mono">relay</code> with the server URL
+                  above as a streamable HTTP server:
+                </>,
+                <>Save, then complete the sign-in prompt Cursor opens in your browser.</>,
+                <>Toggle RELAY on in the MCP list and ask Cursor’s agent to use it.</>,
+              ]}
+            />
+            <CopyRow
+              value={`{
+  "mcpServers": {
+    "relay": { "url": "${mcpUrl}" }
+  }
+}`}
+              label="config"
+            />
+          </Section>
+
           <Section title="Other MCP clients">
+
             <Steps
               items={[
                 <>Open the client’s MCP server or custom connector settings.</>,
