@@ -2,7 +2,18 @@
 
 Your review is accurate — I verified each finding against the code and database. The unifying diagnosis holds: authorization is check-then-atomically-claim, money is check-then-hope. This plan fixes that, in severity order.
 
-One correction to your open question: the payment crediting path is already safe. `credit_ledger` has a unique partial index on `(source, external_ref)`, and `creditSettledPayment` treats a unique violation as success, so a settled tx cannot be credited twice. `payment_intents.nonce` is also unique. No change needed there.
+One correction to your open question: the payment crediting path is already safe. `credit_ledger` has a unique partial index on `(source, external_ref)`, and `creditSettledPayment` treats a unique violation as success, so a settled tx cannot be credited twice. `payment_intents.nonce` is also unique. No change needed there — though the `payment_intents` upsert does run unconditionally after a swallowed duplicate, re-stamping `settled`; harmless, and I'll gate it on `credited` while touching the file.
+
+## 0. Catalog drift: prod is current, the stale payload was not
+
+I fetched both surfaces before writing this. `https://3bi.ai/api/public/v1/tools` (anonymous) returns all ten tools with `fetch_url` (2 cr / $0.02), `crawl_site` (6 / $0.06) and `extract_structured` (8 / $0.08) present, the full pricing block (`usdPerCredit`, `packs`, `purchase`, `pricingUrl`), and no `filteredForOrg`. It matches localhost exactly. So the deploy is not behind the code and there is nothing to redeploy — the seven-tool `{unit, freeGrant}` payload was a stale earlier read, not a live surface.
+
+The CI guards are still worth adding, because nothing currently prevents the code from regressing into that shape:
+
+- `scripts/check-api-consistency.mjs` — assert at least one `publicApi && credits > 0` tool exists and every billable tool is serialized with `credits > 0` and a positive `usdPerCall`; assert the top-level `pricing` block carries `unit`, `currency`, `usdPerCredit`, `freeGrant`, non-empty `packs[]`, `purchase` and `pricingUrl`, each failing individually. Not re-asserting name-completeness — `catalogNames === expectedNames` already covers it.
+- `package.json` — add `"check:api:prod": "node scripts/check-api-consistency.mjs https://3bi.ai"`, run as a post-deploy smoke step rather than a pre-merge gate, so the deployed surface is guarded as well as the build.
+- Serialization order in `catalog()`: billable tools before the zero-credit `sandbox_*` ones, so a cold agent reads the value story first. `PUBLIC_TOOLS` order already puts them first today; the change is an explicit sort so it can't drift.
+
 
 ## 1. Atomic credit reservation (fixes findings 1 and 2)
 
