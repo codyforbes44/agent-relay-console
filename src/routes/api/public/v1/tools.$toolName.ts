@@ -22,7 +22,7 @@ import {
   recordIntent,
 } from "@/lib/api/payments.server";
 import { readPaymentHeader, verifyAndSettle } from "@/lib/api/x402.server";
-import { MACHINE_TOPUP_MIN_CREDITS } from "@/lib/billing/packs";
+import { MACHINE_TOPUP_MIN_CREDITS, usdForCredits } from "@/lib/billing/packs";
 
 function log(event: string, fields: Record<string, unknown>) {
   console.log(JSON.stringify({ event, at: new Date().toISOString(), ...fields }));
@@ -42,6 +42,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
       POST: async ({ params, request }) => {
         const requestId = crypto.randomUUID();
         const started = Date.now();
+        const origin = new URL(request.url).origin;
         const toolName = params.toolName;
 
         const tool = TOOLS_BY_NAME[toolName];
@@ -275,9 +276,16 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           if (balance < tool.credits) {
             await releaseIdem();
             if (!offer) {
+              // No x402 config: still answer with everything needed to top up.
               return apiError(402, "insufficient_credits", "Not enough credits for this call", {
                 required: tool.credits,
                 balance,
+                usdRequired: usdForCredits(tool.credits),
+                checkout: {
+                  machine: { url: `${origin}/api/public/v1/credits/purchase`, method: "POST" },
+                  human: { url: `${origin}/pricing` },
+                  pricingUrl: `${origin}/api/public/v1/pricing`,
+                },
               });
             }
             await recordIntent(supabaseAdmin, {

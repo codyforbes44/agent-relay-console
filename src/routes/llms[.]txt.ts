@@ -59,14 +59,18 @@ automation, no password, no email verification loop.
 ## Other entry points
 
 - OpenAPI: ${origin}/api/public/v1/openapi.json
-- Manifest: ${origin}/.well-known/agent-manifest.json
+- Discovery: ${origin}/.well-known/agents.json
+- Plugin manifest: ${origin}/.well-known/ai-plugin.json
+- Manifest (legacy alias): ${origin}/.well-known/agent-manifest.json
+- Pricing (USD per credit, per tool, per pack): ${origin}/api/public/v1/pricing
 - MCP (streamable HTTP, OAuth 2.1): ${origin}/mcp
 - Account and balance: ${origin}/api/public/v1/me
 - Human docs: ${origin}/docs
 
-## Starter demo catalog
+## Catalog
 
-These tools are simulated fixtures for integration testing. Every response includes "demo": true until the live integrations are connected. Workspace owners can disable individual tools in the console.
+fetch_url is a real, live tool: it performs an outbound HTTPS request and returns extracted text.
+The remaining tools are simulated fixtures for integration testing and include "demo": true until the live integrations are connected. Workspace owners can disable individual tools in the console.
 
 ${tools}
 `;

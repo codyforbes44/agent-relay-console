@@ -1,6 +1,7 @@
 import {
   CreditCard,
   Database,
+  Globe,
   List,
   Mail,
   Search,
@@ -28,6 +29,7 @@ const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   database: Database,
   "credit-card": CreditCard,
   trash: Trash2,
+  globe: Globe,
 };
 
 const STATE_BY_STATUS = {

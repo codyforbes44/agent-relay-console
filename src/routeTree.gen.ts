@@ -24,6 +24,8 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as DotwellKnownAgentManifestDotjsonRouteImport } from './routes/[.]well-known/agent-manifest[.]json'
+import { Route as DotwellKnownAgentsDotjsonRouteImport } from './routes/[.]well-known/agents[.]json'
+import { Route as DotwellKnownAiPluginDotjsonRouteImport } from './routes/[.]well-known/ai-plugin[.]json'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
@@ -40,6 +42,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicV1ClaimRouteImport } from './routes/api/public/v1/claim'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
+import { Route as ApiPublicV1PricingRouteImport } from './routes/api/public/v1/pricing'
 import { Route as ApiPublicV1SignupRouteImport } from './routes/api/public/v1/signup'
 import { Route as ApiPublicV1ToolsRouteImport } from './routes/api/public/v1/tools'
 import { Route as ApiPublicV1CreditsPurchaseRouteImport } from './routes/api/public/v1/credits.purchase'
@@ -120,6 +123,18 @@ const DotwellKnownAgentManifestDotjsonRoute =
   DotwellKnownAgentManifestDotjsonRouteImport.update({
     id: '/.well-known/agent-manifest.json',
     path: '/.well-known/agent-manifest.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotwellKnownAgentsDotjsonRoute =
+  DotwellKnownAgentsDotjsonRouteImport.update({
+    id: '/.well-known/agents.json',
+    path: '/.well-known/agents.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotwellKnownAiPluginDotjsonRoute =
+  DotwellKnownAiPluginDotjsonRouteImport.update({
+    id: '/.well-known/ai-plugin.json',
+    path: '/.well-known/ai-plugin.json',
     getParentRoute: () => rootRouteImport,
   } as any)
 const Char91DotwellKnownChar93OauthProtectedResourceRoute =
@@ -207,6 +222,11 @@ const ApiPublicV1OpenapiDotjsonRoute =
     path: '/api/public/v1/openapi.json',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV1PricingRoute = ApiPublicV1PricingRouteImport.update({
+  id: '/api/public/v1/pricing',
+  path: '/api/public/v1/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1SignupRoute = ApiPublicV1SignupRouteImport.update({
   id: '/api/public/v1/signup',
   path: '/api/public/v1/signup',
@@ -250,6 +270,8 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/.well-known/agents.json': typeof DotwellKnownAgentsDotjsonRoute
+  '/.well-known/ai-plugin.json': typeof DotwellKnownAiPluginDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -266,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/pricing': typeof ApiPublicV1PricingRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
   '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
@@ -287,6 +310,8 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/.well-known/agents.json': typeof DotwellKnownAgentsDotjsonRoute
+  '/.well-known/ai-plugin.json': typeof DotwellKnownAiPluginDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/billing': typeof AuthenticatedBillingRoute
@@ -303,6 +328,7 @@ export interface FileRoutesByTo {
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/pricing': typeof ApiPublicV1PricingRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
   '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
@@ -326,6 +352,8 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/.well-known/agents.json': typeof DotwellKnownAgentsDotjsonRoute
+  '/.well-known/ai-plugin.json': typeof DotwellKnownAiPluginDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
@@ -342,6 +370,7 @@ export interface FileRoutesById {
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/pricing': typeof ApiPublicV1PricingRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
   '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
@@ -365,6 +394,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
+    | '/.well-known/agents.json'
+    | '/.well-known/ai-plugin.json'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/billing'
@@ -381,6 +412,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/pricing'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
     | '/api/public/v1/credits/purchase'
@@ -402,6 +434,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
+    | '/.well-known/agents.json'
+    | '/.well-known/ai-plugin.json'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/billing'
@@ -418,6 +452,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/pricing'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
     | '/api/public/v1/credits/purchase'
@@ -440,6 +475,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
+    | '/.well-known/agents.json'
+    | '/.well-known/ai-plugin.json'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/_authenticated/billing'
@@ -456,6 +493,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/pricing'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
     | '/api/public/v1/credits/purchase'
@@ -479,6 +517,8 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   DotwellKnownAgentManifestDotjsonRoute: typeof DotwellKnownAgentManifestDotjsonRoute
+  DotwellKnownAgentsDotjsonRoute: typeof DotwellKnownAgentsDotjsonRoute
+  DotwellKnownAiPluginDotjsonRoute: typeof DotwellKnownAiPluginDotjsonRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiAgentRoute: typeof ApiAgentRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -487,6 +527,7 @@ export interface RootRouteChildren {
   ApiPublicV1ClaimRoute: typeof ApiPublicV1ClaimRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
+  ApiPublicV1PricingRoute: typeof ApiPublicV1PricingRoute
   ApiPublicV1SignupRoute: typeof ApiPublicV1SignupRoute
   ApiPublicV1ToolsRoute: typeof ApiPublicV1ToolsRouteWithChildren
   ApiPublicV1CreditsPurchaseRoute: typeof ApiPublicV1CreditsPurchaseRoute
@@ -598,6 +639,20 @@ declare module '@tanstack/react-router' {
       path: '/.well-known/agent-manifest.json'
       fullPath: '/.well-known/agent-manifest.json'
       preLoaderRoute: typeof DotwellKnownAgentManifestDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/agents.json': {
+      id: '/.well-known/agents.json'
+      path: '/.well-known/agents.json'
+      fullPath: '/.well-known/agents.json'
+      preLoaderRoute: typeof DotwellKnownAgentsDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/ai-plugin.json': {
+      id: '/.well-known/ai-plugin.json'
+      path: '/.well-known/ai-plugin.json'
+      fullPath: '/.well-known/ai-plugin.json'
+      preLoaderRoute: typeof DotwellKnownAiPluginDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.well-known/oauth-protected-resource': {
@@ -712,6 +767,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1OpenapiDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/pricing': {
+      id: '/api/public/v1/pricing'
+      path: '/api/public/v1/pricing'
+      fullPath: '/api/public/v1/pricing'
+      preLoaderRoute: typeof ApiPublicV1PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/signup': {
       id: '/api/public/v1/signup'
       path: '/api/public/v1/signup'
@@ -802,6 +864,8 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   DotwellKnownAgentManifestDotjsonRoute: DotwellKnownAgentManifestDotjsonRoute,
+  DotwellKnownAgentsDotjsonRoute: DotwellKnownAgentsDotjsonRoute,
+  DotwellKnownAiPluginDotjsonRoute: DotwellKnownAiPluginDotjsonRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiAgentRoute: ApiAgentRoute,
@@ -811,6 +875,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1ClaimRoute: ApiPublicV1ClaimRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
+  ApiPublicV1PricingRoute: ApiPublicV1PricingRoute,
   ApiPublicV1SignupRoute: ApiPublicV1SignupRoute,
   ApiPublicV1ToolsRoute: ApiPublicV1ToolsRouteWithChildren,
   ApiPublicV1CreditsPurchaseRoute: ApiPublicV1CreditsPurchaseRoute,

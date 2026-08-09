@@ -8,6 +8,8 @@ import {
 } from "@/lib/agent/contracts";
 import { TOOL_ERRORS } from "@/lib/api/errors";
 import { visibleToolsForOrg } from "@/lib/api/org-tools.server";
+import { pricingDocument } from "@/lib/api/pricing.server";
+import { usdForCredits } from "@/lib/billing/packs";
 
 
 export const CORS_HEADERS: Record<string, string> = {
@@ -144,6 +146,7 @@ export function toolDescriptor(tool: ToolContract, origin: string) {
     sideEffecting: tool.sideEffecting,
     demo: tool.demo,
     credits: tool.credits,
+    usdPerCall: usdForCredits(tool.credits),
     invokeUrl,
     inputSchema: inputSchemaOf(tool),
     example: {
@@ -179,7 +182,18 @@ export function catalog(origin: string, tools: ToolContract[] = PUBLIC_TOOLS) {
       signupMethod: "POST",
       humanSignup: `${origin}/auth`,
     },
-    pricing: { unit: "credit", freeGrant: 500 },
+    pricing: (() => {
+      const p = pricingDocument(origin);
+      return {
+        unit: "credit",
+        currency: "USD",
+        usdPerCredit: p.usdPerCredit,
+        freeGrant: p.freeGrant,
+        packs: p.packs,
+        pricingUrl: `${origin}/api/public/v1/pricing`,
+        purchase: p.purchase,
+      };
+    })(),
     tools: tools.map((t) => toolDescriptor(t, origin)),
   };
 }

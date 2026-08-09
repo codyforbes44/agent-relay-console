@@ -153,12 +153,15 @@ curl -X POST ${SITE_URL}/api/public/v1/tools/send_email \\
 
         <Section title="1. Discovery">
           <p className="mb-3 text-sm text-muted-foreground">
-            Three machine-readable entry points. All are unauthenticated so an agent can plan before
-            it has a key.
+            Machine-readable entry points. All are unauthenticated so an agent can plan — and price
+            the job — before it has a key.
           </p>
-          <Code>{`GET /api/public/v1/tools          # catalog with JSON Schemas + credit prices
-GET /api/public/v1/openapi.json   # OpenAPI 3.1 document
-GET /.well-known/agent-manifest.json`}</Code>
+          <Code>{`GET /api/public/v1/tools             # catalog: JSON Schemas, credits and usdPerCall
+GET /api/public/v1/pricing           # USD per credit, per tool and per pack
+GET /api/public/v1/openapi.json      # OpenAPI 3.1 document
+GET /.well-known/agents.json         # agent-native discovery document
+GET /.well-known/ai-plugin.json      # OpenAI-style plugin manifest
+GET /.well-known/agent-manifest.json # legacy alias of agents.json`}</Code>
         </Section>
 
         <Section title="2. Authentication">

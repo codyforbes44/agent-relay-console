@@ -15,7 +15,7 @@ export type ToolContract = {
   description: string;
   /** Side-effecting tools require explicit user confirmation before running. */
   sideEffecting: boolean;
-  icon: "search" | "user" | "list" | "mail" | "database" | "credit-card" | "trash";
+  icon: "search" | "user" | "list" | "mail" | "database" | "credit-card" | "trash" | "globe";
   schema: z.ZodType<Record<string, unknown>>;
   /** Credits burned per successful call on the public API. */
   credits: number;
@@ -34,6 +34,39 @@ export type ToolContract = {
 const str = (v: unknown) => (typeof v === "string" ? v : JSON.stringify(v ?? ""));
 
 export const TOOL_CONTRACTS: ToolContract[] = [
+  {
+    // The first non-demo tool: a real outbound fetch with readable text
+    // extraction. This is the call agents already pay for elsewhere.
+    name: "fetch_url",
+    label: "Fetch URL",
+    description:
+      "Fetch a public web page or JSON endpoint over HTTPS and return its readable text content plus metadata. Real network call, not a simulation. Read-only.",
+    sideEffecting: false,
+    icon: "globe",
+    credits: 2,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      url: z.string().describe("Absolute https:// URL to fetch"),
+      maxChars: z
+        .number()
+        .optional()
+        .describe("Truncate the extracted text to this many characters (default 8000, max 50000)"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: { url: "https://example.com" },
+    exampleResult: {
+      ok: true,
+      url: "https://example.com/",
+      status: 200,
+      contentType: "text/html",
+      title: "Example Domain",
+      text: "Example Domain. This domain is for use in illustrative examples in documents...",
+      chars: 208,
+      truncated: false,
+      fetchedAt: "2026-08-09T20:15:18.358Z",
+    },
+    summarize: (a) => str(a['url']),
+  },
   {
     name: "search_knowledge_base",
     label: "Search knowledge base",
