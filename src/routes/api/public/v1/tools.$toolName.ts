@@ -48,6 +48,23 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           return apiError(403, "insufficient_scope", "This key cannot invoke tools");
         }
 
+        const violation = await checkKeyGuardrails(supabaseAdmin, identity, toolName, tool.credits);
+        if (violation) {
+          await recordUsage(supabaseAdmin, {
+            orgId: identity.orgId,
+            keyId: identity.keyId,
+            toolName,
+            credits: 0,
+            status: "rejected",
+            errorCode: violation.code,
+            latencyMs: Date.now() - started,
+            requestId,
+          });
+          return apiError(violation.status, violation.code, violation.message, violation.extra ?? {});
+        }
+
+
+
         if (!(await checkRateLimit(supabaseAdmin, identity.keyId))) {
           return apiError(429, "rate_limited", "Too many calls for this key, retry in a minute");
         }
