@@ -83,6 +83,16 @@ function ConnectPage() {
       if (!active || !data) return;
       setOrgId(data.org_id);
       setOrgName((data.organizations as { name: string } | null)?.name ?? "Workspace");
+
+      const { data: settings } = await supabase
+        .from("org_settings")
+        .select("mcp_base_url, mcp_path_pattern")
+        .eq("org_id", data.org_id)
+        .maybeSingle();
+      if (!active || !settings) return;
+      const base = (settings.mcp_base_url ?? "").replace(/\/+$/, "");
+      const path = (settings.mcp_path_pattern ?? "").replace(/\{org_id\}/g, data.org_id);
+      if (base && path) setCustomMcpUrl(`${base}${path.startsWith("/") ? "" : "/"}${path}`);
     })();
     return () => {
       active = false;
@@ -90,7 +100,7 @@ function ConnectPage() {
   }, []);
 
   const baseMcpUrl = new URL("/mcp", origin).toString();
-  const mcpUrl = orgId ? `${baseMcpUrl}?tenant=${orgId}` : baseMcpUrl;
+  const mcpUrl = customMcpUrl ?? (orgId ? `${baseMcpUrl}?tenant=${orgId}` : baseMcpUrl);
   const installCommand = `claude mcp add --scope user --transport http ${SERVER_NAME} '${mcpUrl.replaceAll("'", "'\\''")}'`;
   const claudeLink = `https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=${encodeURIComponent("RELAY")}&connectorUrl=${encodeURIComponent(mcpUrl)}`;
 
