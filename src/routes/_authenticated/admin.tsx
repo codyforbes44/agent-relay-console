@@ -71,7 +71,13 @@ function AdminPanel() {
   });
   const roles = useQuery({ queryKey: ["admin", "roles"], queryFn: () => rolesFn() });
 
+  const [orgQuery, setOrgQuery] = useState("");
+  const [userQuery, setUserQuery] = useState("");
+  const [keyQuery, setKeyQuery] = useState("");
+  const [errorsOnly, setErrorsOnly] = useState(false);
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["admin"] });
+
 
   const adjust = useMutation({
     mutationFn: useServerFn(adminAdjustCredits),
