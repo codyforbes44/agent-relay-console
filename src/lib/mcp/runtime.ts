@@ -1,4 +1,4 @@
-import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
+import { defineMcp, defineTool, type ToolContext } from "@lovable.dev/mcp-js";
 import type { z } from "zod";
 
 import { TOOLS_BY_NAME, type ToolContract } from "@/lib/agent/contracts";
@@ -85,8 +85,10 @@ async function runMetered(
   };
 }
 
+type McpTool = Parameters<typeof defineMcp>[0]["tools"][number];
+
 /** Builds an MCP tool from the shared typed contract registry. */
-export function mcpToolFor(name: string) {
+export function mcpToolFor(name: string): McpTool {
   const contract = TOOLS_BY_NAME[name];
   if (!contract) throw new Error(`Unknown tool contract: ${name}`);
 
@@ -104,5 +106,5 @@ export function mcpToolFor(name: string) {
       openWorldHint: true,
     },
     handler: (args: Record<string, unknown>, ctx: ToolContext) => runMetered(contract, args, ctx),
-  });
+  });  }) as unknown as McpTool;
 }
