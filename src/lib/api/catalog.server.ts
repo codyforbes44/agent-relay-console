@@ -54,7 +54,9 @@ export function catalog(origin: string) {
     auth: {
       type: "bearer",
       header: "Authorization: Bearer sk_agent_...",
-      signup: `${origin}/auth`,
+      signup: `${origin}/api/public/v1/signup`,
+      signupMethod: "POST",
+      humanSignup: `${origin}/auth`,
     },
     pricing: { unit: "credit", freeGrant: 500 },
     tools: PUBLIC_TOOLS.map((t) => toolDescriptor(t, origin)),
@@ -115,6 +117,57 @@ export function openApiDocument(origin: string) {
       },
     };
   }
+
+  paths["/api/public/v1/signup"] = {
+    post: {
+      operationId: "signup",
+      summary: "Create a workspace and API key (no auth required)",
+      description:
+        "Agent self-serve onboarding. Returns a one-time API key, a free starter credit grant and a claim URL for a human operator.",
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                label: { type: "string", maxLength: 80 },
+                email: { type: "string", format: "email" },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        "201": { description: "Workspace created; apiKey is shown once" },
+        "422": { description: "Invalid signup payload" },
+        "429": { description: "Too many workspaces created from this address" },
+      },
+    },
+  };
+  paths["/api/public/v1/claim"] = {
+    post: {
+      operationId: "createClaimLink",
+      summary: "Mint a claim URL so a human can take ownership and buy credits",
+      security: [{ agentKey: [] }],
+      responses: {
+        "200": { description: "Claim URL and expiry" },
+        "401": { description: "Missing or invalid API key" },
+        "409": { description: "Workspace already claimed" },
+      },
+    },
+  };
+  paths["/api/public/v1/keys/rotate"] = {
+    post: {
+      operationId: "rotateKey",
+      summary: "Rotate the calling key (old key keeps working briefly)",
+      security: [{ agentKey: [] }],
+      responses: {
+        "200": { description: "New apiKey, shown once" },
+        "401": { description: "Missing or invalid API key" },
+      },
+    },
+  };
 
   paths["/api/public/v1/me"] = {
     get: {

@@ -17,11 +17,20 @@ export const Route = createFileRoute("/.well-known/agent-manifest.json")({
           description_for_model:
             "Metered tools for autonomous agents: knowledge search, CRM lookups, record listing, email, CRM writes, payments and deletions. Authenticate with a workspace API key; each call costs credits.",
           description_for_human: "Pay-per-call tools for AI agents.",
-          auth: { type: "bearer", signup_url: `${origin}/auth` },
+          auth: {
+            type: "bearer",
+            // Agents mint their own key here — no browser, no human.
+            signup_url: `${origin}/api/public/v1/signup`,
+            signup_method: "POST",
+            human_signup_url: `${origin}/auth`,
+            claim_url: `${origin}/api/public/v1/claim`,
+            rotate_url: `${origin}/api/public/v1/keys/rotate`,
+          },
           api: { type: "openapi", url: `${origin}/api/public/v1/openapi.json` },
           catalog_url: `${origin}/api/public/v1/tools`,
           mcp: { transport: "streamable-http", url: `${origin}/mcp`, auth: "oauth2.1" },
           docs_url: `${origin}/docs`,
+          llms_txt: `${origin}/llms.txt`,
 
           tool_names: PUBLIC_TOOLS.map((t) => t.name),
         });
