@@ -37,8 +37,13 @@ async function runMetered(
   const orgId = await resolveOrgId(ctx);
   if (!orgId) return fail("No workspace found for this account");
 
-  const started = Date.now();
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  if (!(await isToolEnabled(supabaseAdmin, orgId, contract.name))) {
+    return fail(`Tool ${contract.name} is disabled for this workspace`);
+  }
+
+  const started = Date.now();
   const { getBalance, recordUsage } = await import("@/lib/api/metering.server");
 
   const balance = await getBalance(supabaseAdmin, orgId);
