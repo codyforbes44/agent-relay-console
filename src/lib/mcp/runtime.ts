@@ -106,5 +106,5 @@ export function mcpToolFor(name: string): McpTool {
       openWorldHint: true,
     },
     handler: (args: Record<string, unknown>, ctx: ToolContext) => runMetered(contract, args, ctx),
-  });  }) as unknown as McpTool;
+  }) as unknown as McpTool;
 }
