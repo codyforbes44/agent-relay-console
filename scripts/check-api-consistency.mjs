@@ -154,7 +154,8 @@ try {
 const docs = await get("/docs", { json: false });
 for (const t of publicTools) {
   if (!docs.includes(t.name)) fail(`docs page: tool ${t.name} is not documented`);
-  if (!docs.includes(`${t.credits} cr`)) fail(`docs page: no credit badge for ${t.credits} cr`);
+  const badge = new RegExp(`${t.credits}(<!-- -->)? cr`);
+  if (!badge.test(docs)) fail(`docs page: no credit badge for ${t.credits} cr`);
 }
 for (const e of errors) {
   if (!docs.includes(e.code)) fail(`docs page: error code ${e.code} missing from reference table`);
