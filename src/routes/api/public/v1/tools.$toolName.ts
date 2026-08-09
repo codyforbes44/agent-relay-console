@@ -135,6 +135,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           result = await runTool(toolName, parsed.data);
         } catch (e) {
           const message = e instanceof Error ? e.message : "Tool execution failed";
+          await releaseIdem();
           await recordUsage(supabaseAdmin, {
             orgId: identity.orgId,
             keyId: identity.keyId,
@@ -172,18 +173,28 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           latencyMs,
         });
 
-        return json(
-          {
-            ok: true,
-            requestId,
-            tool: toolName,
-            demo: tool.demo,
-            credits: { charged: tool.credits, balance: balance - tool.credits },
-            result,
-          },
-          200,
-          { "x-request-id": requestId, "x-credits-charged": String(tool.credits) },
-        );
+        const payload = {
+          ok: true,
+          requestId,
+          tool: toolName,
+          demo: tool.demo,
+          credits: { charged: tool.credits, balance: balance - tool.credits },
+          result,
+        };
+
+        if (idemClaimed && idemKey) {
+          await supabaseAdmin
+            .from("api_idempotency")
+            .update({ response: payload })
+            .eq("key_id", identity.keyId)
+            .eq("idem_key", idemKey);
+        }
+
+        return json(payload, 200, {
+          "x-request-id": requestId,
+          "x-credits-charged": String(tool.credits),
+        });
+
       },
     },
   },
