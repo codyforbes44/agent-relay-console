@@ -16,8 +16,6 @@ type AuthorizationDetails = {
   redirect_to?: string;
 };
 
-const oauth = () => (supabase.auth as unknown as { oauth: OAuthApi }).oauth;
-
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
@@ -30,6 +28,7 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
     if (!data.session) throw redirect({ to: "/auth", search: { next } });
   },
   loader: async ({ location }) => {
+    const oauth = () => (supabase.auth as unknown as { oauth: OAuthApi }).oauth;
     const authorizationId = new URLSearchParams(location.search).get("authorization_id")!;
     const { data, error } = await oauth().getAuthorizationDetails(authorizationId);
     if (error) throw error;
@@ -53,6 +52,7 @@ function Consent() {
   const clientName = details?.client?.name ?? "an app";
 
   async function decide(approve: boolean) {
+    const oauth = () => (supabase.auth as unknown as { oauth: OAuthApi }).oauth;
     setBusy(true);
     setError(null);
     const { data, error: err } = approve
