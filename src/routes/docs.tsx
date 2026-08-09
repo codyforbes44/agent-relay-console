@@ -63,10 +63,15 @@ curl -X POST ${SITE_URL}/api/public/v1/tools/search_knowledge_base \\
   -H "Authorization: Bearer $RELAY_KEY" -H "content-type: application/json" \\
   -d '{"query":"refund policy"}'
 
-# 4. call a side-effecting tool (requires explicit confirmation)
+# 4a. call a side-effecting tool — returns 428 with a preview + confirmationToken
 curl -X POST ${SITE_URL}/api/public/v1/tools/send_email \\
   -H "Authorization: Bearer $RELAY_KEY" -H "content-type: application/json" \\
-  -H "x-confirm-side-effects: true" -H "idempotency-key: $(uuidgen)" \\
+  -d '{"to":"ops@example.com","subject":"hi","body":"hello"}'
+
+# 4b. human approves the preview, then resend the IDENTICAL body with the token
+curl -X POST ${SITE_URL}/api/public/v1/tools/send_email \\
+  -H "Authorization: Bearer $RELAY_KEY" -H "content-type: application/json" \\
+  -H "x-confirmation-token: $CONFIRMATION_TOKEN" -H "idempotency-key: $(uuidgen)" \\
   -d '{"to":"ops@example.com","subject":"hi","body":"hello"}'`}</Code>
         </Section>
 
@@ -196,10 +201,19 @@ GET /.well-known/agent-manifest.json`}</Code>
           <p className="mb-3 text-sm text-muted-foreground">
             Tools that send email, write to a CRM, create payments or delete records return{" "}
             <Mono>428 confirmation_required</Mono> with a preview of the exact arguments that would
-            run and the credit cost. Repeat the call with the confirmation header to execute it. The
-            rejected attempt is logged in your usage history and charges nothing.
+            run, the credit cost, and a single-use <Mono>confirmationToken</Mono>. Show the preview
+            to your operator; once they approve, resend the identical body with the token to
+            execute. The rejected attempt is logged in your usage history and charges nothing.
           </p>
-          <Code>{`-H "x-confirm-side-effects: true"`}</Code>
+          <Code>{`-H "x-confirmation-token: $CONFIRMATION_TOKEN"`}</Code>
+          <p className="mt-3 text-sm text-muted-foreground">
+            The token is bound to the exact arguments that were previewed, is valid for 10 minutes
+            and can be redeemed once. Changing any field returns{" "}
+            <Mono>409 confirmation_mismatch</Mono>; reusing a token returns{" "}
+            <Mono>409 confirmation_used</Mono>; letting it lapse returns{" "}
+            <Mono>410 confirmation_expired</Mono>. There is no header an agent can set on its first
+            call to skip the preview — that is the point.
+          </p>
         </Section>
 
         <Section title="5. Idempotency">
@@ -297,7 +311,7 @@ GET /.well-known/agent-manifest.json`}</Code>
   -H "Authorization: Bearer $RELAY_KEY" \\
   -H "content-type: application/json" \\
   -H "idempotency-key: run-42" \\${
-    t.sideEffecting ? `\n  -H "x-confirm-side-effects: true" \\` : ""
+    t.sideEffecting ? `\n  -H "x-confirmation-token: $CONFIRMATION_TOKEN" \\` : ""
   }
   -d '${JSON.stringify(t.example)}'`}</Code>
                 <p className="mt-3 text-xs font-medium text-foreground">Response — 200</p>
@@ -306,7 +320,7 @@ GET /.well-known/agent-manifest.json`}</Code>
                   Replaying the same <Mono>idempotency-key</Mono> returns this exact body with{" "}
                   <Mono>&quot;replayed&quot;: true</Mono> and charges nothing.
                   {t.sideEffecting
-                    ? " Without the confirmation header the call returns 428 with a preview of these arguments."
+                    ? " Call it first without a token: the 428 response carries a preview of these arguments plus the single-use confirmationToken used above."
                     : ""}
                 </p>
                 <p className="mt-3 text-xs font-medium text-foreground">MCP</p>
@@ -361,8 +375,9 @@ structuredContent: ${JSON.stringify({
             </li>
             <li>
               Side-effecting tools (send_email, update_crm_record, create_payment, delete_record)
-              require either the <Mono>x-confirm-side-effects: true</Mono> header or an MCP client
-              confirmation prompt. Do not suppress these gates in agent code.
+              always take two calls: an unconfirmed call that returns a preview and a single-use
+              token, then the confirmed call. Because the token is issued by the server and bound
+              to the previewed arguments, an agent cannot authorize itself in advance.
             </li>
             <li>
               Rotate keys regularly. The rotation endpoint keeps the old key valid for 10 minutes,
@@ -390,8 +405,9 @@ structuredContent: ${JSON.stringify({
             come back as JSON text plus <Mono>structuredContent</Mono> with the same{" "}
             <Mono>demo</Mono> and <Mono>credits</Mono> fields, and failures (including an exhausted
             balance) surface as an MCP tool error rather than an HTTP status code. The{" "}
-            <Mono>idempotency-key</Mono> and <Mono>x-confirm-side-effects</Mono> headers are
-            HTTP-only — over MCP the client&apos;s own approval prompt is the confirmation step.
+            <Mono>idempotency-key</Mono> header is HTTP-only. Confirmation is not: over MCP the
+            same gate is expressed as a <Mono>confirmation_token</Mono> argument — the first call
+            returns the preview and token as a tool error, the second call carries the token.
             Usage from MCP appears in the same console usage history.
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
