@@ -405,11 +405,23 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         if (confirmationId) await storeConfirmationResponse(supabaseAdmin, confirmationId, payload);
 
         if (idemClaimed && idemKey) {
+          // Retention only: completed claims expire after 24h so the stored
+          // responses do not grow unbounded. In-flight claims never expire.
           await supabaseAdmin
             .from("api_idempotency")
-            .update({ response: payload as unknown as Record<string, never> })
+            .update({
+              response: payload as unknown as Record<string, never>,
+              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            })
             .eq("key_id", identity.keyId)
             .eq("idem_key", idemKey);
+
+          // Opportunistic purge of expired completed rows.
+          void supabaseAdmin
+            .from("api_idempotency")
+            .delete()
+            .lt("expires_at", new Date().toISOString())
+            .then(() => undefined);
         }
 
         return json(payload, 200, {
