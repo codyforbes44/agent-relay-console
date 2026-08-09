@@ -43,7 +43,7 @@ On the header question: the app is served through Cloudflare, so `cf-connecting-
 
 ## 4. Idempotency retention — no reclaim (finding 5)
 
-No time-based reclaim of in-flight claims. Nothing bounds tool execution today (`tools.server.ts` has only a per-fetch timeout, and `crawl_site` fetches sequentially), so deleting a "stale" claim could delete a live one and re-execute — reintroducing exactly the duplicate-execution class this plan exists to remove. Instead: a null-response claim keeps returning `409 request_in_progress`, with the message extended to "if the original request is known to have failed, retry with a new idempotency-key."
+No time-based reclaim of in-flight claims. Reclaiming assumes the original call is dead, and nothing in the code bounds end-to-end tool execution — `tools.server.ts` has only a per-fetch timeout. (I'm not asserting any specific tool exceeds five minutes; the point is that no bound exists, so any threshold races the clock.) Option (b): a null-response claim keeps returning `409 request_in_progress`, with the message extended to "if the original request is known to have failed, retry with a new idempotency-key." That removes the race outright instead of tuning it.
 
 Retention only: add `expires_at` to `api_idempotency` (24h from completion) plus an index, and purge expired completed rows opportunistically so the JSONB responses don't grow unbounded. A hard end-to-end deadline on `runTool` is a sensible follow-up, and a reclaim threshold strictly above it can be revisited then — not in this change.
 
@@ -56,8 +56,8 @@ Retention only: add `expires_at` to `api_idempotency` (24h from completion) plus
 
 ## Technical notes
 
-- Two migrations: one for the three RPCs (`reserve_credits`, `refund_reserved_credits`, `consume_signup_quota`), one for the `api_idempotency.expires_at` column and index. All functions are `security definer` with `set search_path = public`, granted to `service_role` only.
-- Touched files: `src/lib/api/metering.server.ts`, `src/lib/api/confirmations.server.ts`, `src/lib/api/signup.server.ts`, `src/lib/api/keys.server.ts`, `src/lib/api/x402.server.ts`, `src/routes/api/public/v1/tools.$toolName.ts`, `src/lib/mcp/runtime.ts` (same reservation path), plus docs.
+- Two migrations: one for the three RPCs (`reserve_credits`, `refund_reserved_credits`, `consume_signup_quota`) plus the two supporting indexes, one for the `api_idempotency.expires_at` column and index. All functions are `security definer` with `set search_path = public`, granted to `service_role` only.
+- Touched files: `src/lib/api/metering.server.ts`, `src/lib/api/confirmations.server.ts`, `src/lib/api/signup.server.ts`, `src/lib/api/keys.server.ts`, `src/lib/api/payments.server.ts`, `src/lib/api/x402.server.ts`, `src/lib/api/catalog.server.ts`, `src/routes/api/public/v1/tools.$toolName.ts`, `src/lib/mcp/runtime.ts` (same `getBalance` → run → `recordUsage` pattern, so it gets the same reservation path), `scripts/check-api-consistency.mjs`, `package.json`, plus docs.
 - Verification:
   - Concurrency: N parallel invocations against a 1-credit workspace → exactly one success, ending balance never negative.
   - Rate limit: because `usage_events` is now written at reservation time, in-flight calls are counted — assert that N parallel calls yield at most `RATE_LIMIT_PER_MINUTE` counted in the window, so a future refactor moving the insert back after execution fails the test.
@@ -65,3 +65,4 @@ Retention only: add `expires_at` to `api_idempotency` (24h from completion) plus
   - Refund: tool throws after reservation → compensating ledger entry present, usage event marked `error`, balance restored to its pre-call value.
   - x402: settle-then-reserve-retry — an insufficient reservation followed by a settled payment succeeds on the retried reservation and charges exactly once.
   - Confirmations: second redeem of an in-flight token returns 409 with the fresh-preview guidance.
+  - Catalog: `npm run check:api` against the local dev server first (confirms the new field names match what the route serializes), then `npm run check:api:prod` against the live origin.
