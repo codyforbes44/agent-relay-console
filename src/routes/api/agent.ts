@@ -95,7 +95,7 @@ export const Route = createFileRoute("/api/agent")({
         }
 
         const supabase = userClient(token);
-        const { data: userData, error: userError } = await supabase.auth.getUser();
+        const { data: userData, error: userError } = await supabase.auth.getUser(token);
         const user = userData?.user;
         if (userError || !user) return jsonError(401, "Session expired, please sign in again");
 
