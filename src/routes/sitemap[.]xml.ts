@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
-const BASE_URL = "https://agent-relay-console.lovable.app";
+const BASE_URL = "https://3bi.ai";
 
 interface SitemapEntry {
   path: string;
