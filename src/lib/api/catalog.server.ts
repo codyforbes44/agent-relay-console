@@ -125,20 +125,27 @@ export function openApiDocument(origin: string) {
         ],
         requestBody: {
           required: true,
-          content: { "application/json": { schema: inputSchemaOf(tool) } },
+          content: {
+            "application/json": {
+              schema: inputSchemaOf(tool),
+              examples: { default: { summary: "Example call", value: tool.example } },
+            },
+          },
         },
         responses: {
-          "200": { description: "Tool result" },
-          "401": { description: "Missing or invalid API key" },
-          "402": { description: "Insufficient credits" },
-          "403": { description: "Key lacks the tools:invoke scope" },
-          "404": { description: "Unknown tool" },
-          "409": { description: "A call with this idempotency-key is still running" },
-          "422": { description: "Invalid JSON body or input validation failed" },
-          "428": { description: "Side-effect confirmation header required" },
-          "429": { description: "Rate limited (60 calls/minute per key)" },
-          "502": { description: "Tool execution failed" },
+          "200": {
+            description: "Tool result",
+            content: {
+              "application/json": {
+                examples: {
+                  default: { summary: "Success", value: exampleSuccessEnvelope(tool) },
+                },
+              },
+            },
+          },
+          ...errorResponses(tool.sideEffecting),
         },
+
 
       },
     };
