@@ -26,7 +26,17 @@ function fail(text: string): Result {
 /** Resolves the caller's workspace via RLS-scoped membership. */
 async function resolveOrgId(ctx: ToolContext): Promise<string | null> {
   const supabase = supabaseForUser(ctx);
-  const { data } = await supabase.from("org_members").select("org_id").limit(1).maybeSingle();
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return null;
+  // Super admins can read every membership row, so always scope to self.
+  const { data } = await supabase
+    .from("org_members")
+    .select("org_id")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
   return (data as { org_id?: string } | null)?.org_id ?? null;
 }
 
