@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { TOOLS_BY_NAME } from "@/lib/agent/contracts";
+import { resolveTool } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
 import { apiError, json, preflight, toolDescriptor } from "@/lib/api/catalog.server";
 import {
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
       OPTIONS: async () => preflight(),
 
       GET: async ({ params, request }) => {
-        const tool = TOOLS_BY_NAME[params.toolName];
+        const { tool } = resolveTool(params.toolName);
         if (!tool?.publicApi) return apiError(404, "unknown_tool", `No such tool: ${params.toolName}`);
         return json({ ok: true, tool: toolDescriptor(tool, new URL(request.url).origin) });
       },
@@ -43,10 +43,11 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         const requestId = crypto.randomUUID();
         const started = Date.now();
         const origin = new URL(request.url).origin;
-        const toolName = params.toolName;
-
-        const tool = TOOLS_BY_NAME[toolName];
-        if (!tool?.publicApi) return apiError(404, "unknown_tool", `No such tool: ${toolName}`);
+        // Deprecated pre-sandbox names still resolve, but everything downstream
+        // (metering, confirmations, audit) uses the canonical name.
+        const requestedName = params.toolName;
+        const { tool, canonicalName: toolName, deprecatedAlias } = resolveTool(requestedName);
+        if (!tool?.publicApi) return apiError(404, "unknown_tool", `No such tool: ${requestedName}`);
 
         const raw = readBearer(request);
         if (!raw) return apiError(401, "missing_api_key", "Provide Authorization: Bearer sk_agent_...");
@@ -354,6 +355,9 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           requestId,
           tool: toolName,
           demo: tool.demo,
+          ...(deprecatedAlias
+            ? { deprecated: { calledAs: deprecatedAlias, use: toolName } }
+            : {}),
           credits: { charged: tool.credits, balance: balance - tool.credits },
           ...(paymentReceipt ? { payment: paymentReceipt } : {}),
           result,

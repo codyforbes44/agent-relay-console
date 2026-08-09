@@ -58,18 +58,18 @@ curl -X POST ${SITE_URL}/api/public/v1/signup -H "content-type: application/json
 # 2. discover the catalog (typed JSON Schema per tool)
 curl ${SITE_URL}/api/public/v1/tools
 
-# 3. call a read-only tool
-curl -X POST ${SITE_URL}/api/public/v1/tools/search_knowledge_base \\
+# 3. call a live read-only tool (2 credits)
+curl -X POST ${SITE_URL}/api/public/v1/tools/fetch_url \\
   -H "Authorization: Bearer $RELAY_KEY" -H "content-type: application/json" \\
-  -d '{"query":"refund policy"}'
+  -d '{"url":"https://example.com"}'
 
 # 4a. call a side-effecting tool — returns 428 with a preview + confirmationToken
-curl -X POST ${SITE_URL}/api/public/v1/tools/send_email \\
+curl -X POST ${SITE_URL}/api/public/v1/tools/sandbox_send_email \\
   -H "Authorization: Bearer $RELAY_KEY" -H "content-type: application/json" \\
   -d '{"to":"ops@example.com","subject":"hi","body":"hello"}'
 
 # 4b. human approves the preview, then resend the IDENTICAL body with the token
-curl -X POST ${SITE_URL}/api/public/v1/tools/send_email \\
+curl -X POST ${SITE_URL}/api/public/v1/tools/sandbox_send_email \\
   -H "Authorization: Bearer $RELAY_KEY" -H "content-type: application/json" \\
   -H "x-confirmation-token: $CONFIRMATION_TOKEN" -H "idempotency-key: $(uuidgen)" \\
   -d '{"to":"ops@example.com","subject":"hi","body":"hello"}'`}</Code>
@@ -174,11 +174,11 @@ GET /.well-known/agent-manifest.json # legacy alias of agents.json`}</Code>
         </Section>
 
         <Section title="3. Invoke a tool">
-          <Code>{`curl -X POST ${SITE_URL}/api/public/v1/tools/search_knowledge_base \\
+          <Code>{`curl -X POST ${SITE_URL}/api/public/v1/tools/fetch_url \\
   -H "Authorization: Bearer $RELAY_KEY" \\
   -H "content-type: application/json" \\
   -H "idempotency-key: 9f1c-run-42" \\
-  -d '{"query":"refund policy"}'`}</Code>
+  -d '{"url":"https://example.com"}'`}</Code>
           <p className="mt-3 text-sm text-muted-foreground">
             Arguments are validated against the tool&apos;s JSON Schema. Invalid input returns{" "}
             <Mono>422 invalid_input</Mono> with the failing field paths, and no credits are charged.
@@ -187,9 +187,9 @@ GET /.well-known/agent-manifest.json # legacy alias of agents.json`}</Code>
           <Code>{`{
   "ok": true,
   "requestId": "b0e1…",
-  "tool": "search_knowledge_base",
-  "demo": true,
-  "credits": { "charged": 1, "balance": 499 },
+  "tool": "fetch_url",
+  "demo": false,
+  "credits": { "charged": 2, "balance": 498 },
   "result": { … }
 }`}</Code>
           <p className="mt-3 text-sm text-muted-foreground">
@@ -377,7 +377,7 @@ structuredContent: ${JSON.stringify({
               connection.
             </li>
             <li>
-              Side-effecting tools (send_email, update_crm_record, create_payment, delete_record)
+              Side-effecting tools (sandbox_send_email, sandbox_update_crm_record, sandbox_create_payment, sandbox_delete_record)
               always take two calls: an unconfirmed call that returns a preview and a single-use
               token, then the confirmed call. Because the token is issued by the server and bound
               to the previewed arguments, an agent cannot authorize itself in advance.

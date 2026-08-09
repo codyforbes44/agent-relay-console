@@ -60,7 +60,7 @@ function userClient(token: string): SupabaseClient {
 
 const SYSTEM_PROMPT = `You are the workspace agent for an internal operations team.
 You can call typed tools. Read-only tools run immediately.
-Side-effecting tools (send_email, update_crm_record, create_payment, delete_record) are NOT executed
+Side-effecting tools (sandbox_send_email, sandbox_update_crm_record, sandbox_create_payment, sandbox_delete_record) are NOT executed
 when you call them: they are queued for explicit human approval. When a tool returns
 status "awaiting_confirmation", stop, do not retry it, and tell the user in one short sentence
 what you are about to do and that you need their approval.

@@ -44,11 +44,11 @@ export const Route = createFileRoute("/")({
 const QUICKSTART = `# 1. discover
 curl ${SITE_URL}/api/public/v1/tools
 
-# 2. call (read-only tools need no confirmation)
-curl -X POST ${SITE_URL}/api/public/v1/tools/search_knowledge_base \\
+# 2. call a live tool (read-only tools need no confirmation)
+curl -X POST ${SITE_URL}/api/public/v1/tools/fetch_url \\
   -H "Authorization: Bearer $RELAY_KEY" \\
   -H "content-type: application/json" \\
-  -d '{"query":"refund policy"}'`;
+  -d '{"url":"https://example.com"}'`;
 
 const STEPS = [
   {

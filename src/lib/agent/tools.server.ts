@@ -123,6 +123,173 @@ async function fetchUrl(args: Record<string, unknown>): Promise<Record<string, u
   }
 }
 
+/** Shared fetch+extract used by fetch_url, crawl_site and extract_structured. */
+async function fetchReadable(
+  rawUrl: string,
+  maxChars: number,
+): Promise<{ ok: true; url: string; status: number; title: string | null; text: string } | { ok: false; error: string }> {
+  const result = (await fetchUrl({ url: rawUrl, maxChars })) as Record<string, unknown>;
+  if (result['ok'] !== true) {
+    return { ok: false, error: String(result['error'] ?? "Fetch failed") };
+  }
+  return {
+    ok: true,
+    url: String(result['url']),
+    status: Number(result['status']),
+    title: (result['title'] as string | null) ?? null,
+    text: String(result['text'] ?? ""),
+  };
+}
+
+/** Same-origin links, in document order, de-duplicated. */
+function sameOriginLinks(html: string, base: URL, limit: number): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>([base.toString()]);
+  const re = /<a\s[^>]*href=["']([^"']+)["']/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) && out.length < limit) {
+    const href = m[1];
+    if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("javascript:")) continue;
+    let next: URL;
+    try {
+      next = new URL(href, base);
+    } catch {
+      continue;
+    }
+    next.hash = "";
+    if (next.protocol !== "https:" || next.host !== base.host) continue;
+    const key = next.toString();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(key);
+  }
+  return out;
+}
+
+/**
+ * Crawls a small set of same-origin pages starting from a seed URL.
+ * Sequential by design: the target site sees one request at a time.
+ */
+async function crawlSite(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const seed = String(args['url'] ?? "").trim();
+  let base: URL;
+  try {
+    base = new URL(seed);
+  } catch {
+    return { ok: false, error: "url must be an absolute https:// URL" };
+  }
+  const maxPages = Math.min(Math.max(Number(args['maxPages'] ?? 3) || 3, 1), 10);
+  const maxChars = Math.min(Math.max(Number(args['maxCharsPerPage'] ?? 4000) || 4000, 200), 20_000);
+
+  const first = await fetchReadable(base.toString(), maxChars);
+  if (!first.ok) return { ok: false, error: first.error };
+
+  const pages: Record<string, unknown>[] = [
+    { url: first.url, status: first.status, title: first.title, text: first.text, chars: first.text.length },
+  ];
+
+  if (maxPages > 1) {
+    // Re-fetch raw HTML for link discovery; fetchUrl returns stripped text.
+    let links: string[] = [];
+    try {
+      const res = await fetch(base.toString(), {
+        redirect: "follow",
+        headers: { "user-agent": "RelayFetchBot/1.0 (+https://3bi.ai/docs)" },
+      });
+      links = sameOriginLinks(await res.text(), new URL(res.url || base.toString()), maxPages - 1);
+    } catch {
+      links = [];
+    }
+    for (const link of links) {
+      const page = await fetchReadable(link, maxChars);
+      if (!page.ok) {
+        pages.push({ url: link, error: page.error });
+        continue;
+      }
+      pages.push({ url: page.url, status: page.status, title: page.title, text: page.text, chars: page.text.length });
+    }
+  }
+
+  return ok({
+    seed: base.toString(),
+    pageCount: pages.length,
+    pages,
+    crawledAt: new Date().toISOString(),
+  });
+}
+
+/**
+ * Turns a page (or supplied text) into structured JSON for the requested
+ * fields, using the server-side model gateway. No provider key ever leaves
+ * the server, and the caller only pays credits.
+ */
+async function extractStructured(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const fields = Array.isArray(args['fields']) ? (args['fields'] as unknown[]).map(String).filter(Boolean) : [];
+  if (fields.length === 0) return { ok: false, error: "fields must be a non-empty array of field names" };
+
+  let source = typeof args['text'] === "string" ? (args['text'] as string) : "";
+  let sourceUrl: string | null = null;
+  if (!source) {
+    const url = String(args['url'] ?? "").trim();
+    if (!url) return { ok: false, error: "Provide either url or text" };
+    const page = await fetchReadable(url, 12_000);
+    if (!page.ok) return { ok: false, error: page.error };
+    source = page.text;
+    sourceUrl = page.url;
+  }
+  if (!source.trim()) return { ok: false, error: "Nothing readable to extract from" };
+
+  const apiKey = process.env['LOVABLE_API_KEY'];
+  if (!apiKey) return { ok: false, error: "Extraction is temporarily unavailable" };
+
+  const instruction = String(args['instruction'] ?? "").trim();
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You extract structured data from documents. Reply with a single JSON object containing exactly the requested keys. Use null when a value is not present. No prose, no markdown fences.",
+        },
+        {
+          role: "user",
+          content: `Fields: ${fields.join(", ")}\n${instruction ? `Instruction: ${instruction}\n` : ""}Document:\n${source.slice(0, 12_000)}`,
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    if (res.status === 429) return { ok: false, error: "Extraction rate limit reached, retry shortly" };
+    return { ok: false, error: `Extraction failed [${res.status}]: ${body.slice(0, 300)}` };
+  }
+
+  const payload = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  const raw = payload.choices?.[0]?.message?.content ?? "";
+  const cleaned = raw.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(cleaned) as Record<string, unknown>;
+  } catch {
+    return { ok: false, error: "Model did not return valid JSON", raw: cleaned.slice(0, 500) };
+  }
+
+  const fieldsOut: Record<string, unknown> = {};
+  for (const f of fields) fieldsOut[f] = f in data ? data[f] : null;
+
+  return ok({
+    sourceUrl,
+    fields: fieldsOut,
+    missing: fields.filter((f) => fieldsOut[f] === null || fieldsOut[f] === undefined),
+    extractedAt: new Date().toISOString(),
+  });
+}
+
 export async function runTool(
   name: string,
   args: Record<string, unknown>,
@@ -130,19 +297,23 @@ export async function runTool(
   switch (name) {
     case "fetch_url":
       return fetchUrl(args);
-    case "search_knowledge_base": {
+    case "crawl_site":
+      return crawlSite(args);
+    case "extract_structured":
+      return extractStructured(args);
+    case "sandbox_search_knowledge_base": {
       const q = String(args['query'] ?? "").toLowerCase();
       const hits = KB.filter(
         (d) => d.title.toLowerCase().includes(q) || d.body.toLowerCase().includes(q),
       );
       return ok({ matches: (hits.length ? hits : KB).slice(0, 3) });
     }
-    case "lookup_crm_contact": {
+    case "sandbox_lookup_crm_contact": {
       const email = String(args['email'] ?? "").toLowerCase();
       const contact = CONTACTS.find((c) => c.email.toLowerCase() === email);
       return contact ? ok({ contact }) : { ok: false, error: "No contact found for that email" };
     }
-    case "list_records": {
+    case "sandbox_list_records": {
       const type = String(args['type'] ?? "contacts");
       const status = args['status'] ? String(args['status']) : null;
       const limit = Math.min(Math.max(Number(args['limit'] ?? 25) || 25, 1), 100);
@@ -174,7 +345,7 @@ export async function runTool(
         nextCursor: next < filtered.length ? String(next) : null,
       });
     }
-    case "send_email":
+    case "sandbox_send_email":
       return ok({
         simulated: true,
         messageId: `sim_${crypto.randomUUID().slice(0, 8)}`,
@@ -182,14 +353,14 @@ export async function runTool(
         subject: args['subject'],
         deliveredAt: new Date().toISOString(),
       });
-    case "update_crm_record":
+    case "sandbox_update_crm_record":
       return ok({
         simulated: true,
         recordId: args['recordId'],
         updatedFields: args['fields'],
         updatedAt: new Date().toISOString(),
       });
-    case "create_payment":
+    case "sandbox_create_payment":
       return ok({
         simulated: true,
         paymentId: `pay_${crypto.randomUUID().slice(0, 8)}`,
@@ -198,7 +369,7 @@ export async function runTool(
         currency: args['currency'],
         status: "succeeded",
       });
-    case "delete_record":
+    case "sandbox_delete_record":
       return ok({
         simulated: true,
         deleted: { type: args['type'], recordId: args['recordId'] },
