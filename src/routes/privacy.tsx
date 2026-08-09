@@ -1,31 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { LegalFooter } from "@/components/LegalFooter";
+import { PublicShell } from "@/components/public/PublicShell";
+import { publicHead } from "@/lib/site";
 
 export const Route = createFileRoute("/privacy")({
-  head: () => ({
-    meta: [
-      { title: "Privacy Notice — Agent Relay Console" },
-      {
-        name: "description",
-        content:
-          "How Agent Relay Console collects, uses, shares and retains personal data for its metered agent tool API, and the rights you have over that data.",
-      },
-      { property: "og:title", content: "Privacy Notice — Agent Relay Console" },
-      {
-        property: "og:description",
-        content: "Data we collect, why we collect it, who we share it with, and your rights.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () =>
+    publicHead({
+      path: '/privacy',
+      title: 'Privacy Notice — Agent Relay Console',
+      description:
+        'How Agent Relay Console collects, uses, shares and retains personal data for its metered agent tool API, and the rights you have over that data.',
+    }),
   component: PrivacyPage,
 });
 
 function PrivacyPage() {
   return (
-    <>
+    <PublicShell>
       <main className="mx-auto w-full max-w-3xl px-6 py-16">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">Privacy Notice</h1>
         <p className="mt-2 text-sm text-muted-foreground">Last updated: 9 August 2026</p>
@@ -152,8 +143,7 @@ function PrivacyPage() {
           </Section>
         </div>
       </main>
-      <LegalFooter />
-    </>
+    </PublicShell>
   );
 }
 
