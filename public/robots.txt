@@ -34,6 +34,7 @@ Allow: /
 User-agent: *
 Allow: /
 Disallow: /auth
+Disallow: /claim
 Disallow: /chat
 Disallow: /keys
 Disallow: /usage
