@@ -56,7 +56,9 @@ export async function authenticateAgentKey(
     .select("id, org_id, key_hash, scopes, revoked_at")
     .eq("key_prefix", parsed.prefix)
     .maybeSingle();
-  if (error || !data || data.revoked_at) return null;
+  if (error || !data) return null;
+  // revoked_at may be set in the future (rotation grace period).
+  if (data.revoked_at && new Date(data.revoked_at).getTime() <= Date.now()) return null;
 
   const hash = await sha256Hex(parsed.secret);
   // Constant-time-ish compare on equal-length hex digests.
