@@ -64,6 +64,21 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           return apiError(violation.status, violation.code, violation.message, violation.extra ?? {});
         }
 
+        // Workspace-level tool visibility: a disabled tool cannot be invoked.
+        if (!(await isToolEnabled(supabaseAdmin, identity.orgId, toolName))) {
+          await recordUsage(supabaseAdmin, {
+            orgId: identity.orgId,
+            keyId: identity.keyId,
+            toolName,
+            credits: 0,
+            status: "rejected",
+            errorCode: "tool_disabled",
+            latencyMs: Date.now() - started,
+            requestId,
+          });
+          return apiError(403, "tool_disabled", `Tool ${toolName} is disabled for this workspace`);
+        }
+
 
 
         if (!(await checkRateLimit(supabaseAdmin, identity.keyId))) {
