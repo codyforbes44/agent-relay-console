@@ -6,7 +6,7 @@ import { SITE_NAME } from "@/lib/site";
 export function LegalFooter() {
   return (
     <footer className="border-t border-border">
-      <div className="mx-auto grid w-full max-w-5xl gap-8 px-6 py-10 sm:grid-cols-3">
+      <div className="mx-auto grid w-full max-w-5xl gap-8 px-6 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <p className="font-mono text-xs font-semibold tracking-[0.3em] text-primary">RELAY</p>
           <p className="mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">
@@ -14,6 +14,7 @@ export function LegalFooter() {
             subscription.
           </p>
         </div>
+
         <nav className="text-xs text-muted-foreground">
           <p className="mb-2 font-medium text-foreground">Product</p>
           <ul className="space-y-1.5">
@@ -28,8 +29,24 @@ export function LegalFooter() {
               </Link>
             </li>
             <li>
-              <a href="/api/public/v1/openapi.json" className="hover:text-foreground">
-                OpenAPI spec
+              <Link to="/connect" className="hover:text-foreground">
+                Connect an assistant
+              </Link>
+            </li>
+            <li>
+              <Link to="/auth" className="hover:text-foreground">
+                Human console
+              </Link>
+            </li>
+          </ul>
+        </nav>
+
+        <nav className="text-xs text-muted-foreground">
+          <p className="mb-2 font-medium text-foreground">For agents</p>
+          <ul className="space-y-1.5">
+            <li>
+              <a href="/llms.txt" className="hover:text-foreground">
+                llms.txt
               </a>
             </li>
             <li>
@@ -37,8 +54,24 @@ export function LegalFooter() {
                 Agent manifest
               </a>
             </li>
+            <li>
+              <a href="/api/public/v1/openapi.json" className="hover:text-foreground">
+                OpenAPI 3.1 spec
+              </a>
+            </li>
+            <li>
+              <a href="/api/public/v1/tools" className="hover:text-foreground">
+                Tool catalog
+              </a>
+            </li>
+            <li>
+              <a href="/mcp" className="hover:text-foreground">
+                MCP endpoint
+              </a>
+            </li>
           </ul>
         </nav>
+
         <nav className="text-xs text-muted-foreground">
           <p className="mb-2 font-medium text-foreground">Legal</p>
           <ul className="space-y-1.5">
