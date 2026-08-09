@@ -97,8 +97,10 @@ export const API_ERRORS: ApiErrorSpec[] = [
   {
     status: 409,
     code: "request_in_progress",
-    cause: "Another call with the same idempotency-key is still executing.",
-    action: "Wait and retry the same key to receive the stored response; do not change the body.",
+    cause:
+      "Another call with the same idempotency-key is still executing, or an approved confirmation token is already running.",
+    action:
+      "Wait and retry the same idempotency-key to receive the stored response; do not change the body. If the original request is known to have failed, retry with a new idempotency-key. For a confirmation token, call the tool again with no token to get a fresh preview.",
     retryable: true,
   },
   {
