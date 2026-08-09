@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
+import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
+import { LegalFooter } from "@/components/LegalFooter";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/docs")({
