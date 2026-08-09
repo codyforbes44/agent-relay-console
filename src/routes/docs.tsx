@@ -202,7 +202,17 @@ GET /.well-known/agent-manifest.json`}</Code>
 
           </p>
           <Code>{`${SITE_URL}/mcp   # Streamable HTTP, OAuth 2.1 (dynamic client registration)`}</Code>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Differences from the HTTP API: each tool description carries its credit cost, results
+            come back as JSON text plus <Mono>structuredContent</Mono> with the same{" "}
+            <Mono>demo</Mono> and <Mono>credits</Mono> fields, and failures (including an exhausted
+            balance) surface as an MCP tool error rather than an HTTP status code. The{" "}
+            <Mono>idempotency-key</Mono> and <Mono>x-confirm-side-effects</Mono> headers are
+            HTTP-only — over MCP the client&apos;s own approval prompt is the confirmation step.
+            Usage from MCP appears in the same console usage history.
+          </p>
         </Section>
+
 
         <Section title="10. Account status">
           <Code>{`GET /api/public/v1/me
