@@ -80,6 +80,19 @@ async function runMetered(
     requestId: crypto.randomUUID(),
   });
 
+  await supabaseAdmin.from("audit_logs").insert({
+    org_id: orgId,
+    user_id: ctx.getUserId(),
+    action: "mcp_tool_invoked",
+    tool_name: contract.name,
+    payload: {
+      client_id: ctx.getClientId(),
+      credits: contract.credits,
+      side_effecting: contract.sideEffecting,
+      demo: contract.demo,
+    },
+  });
+
   const payload = {
     ...result,
     demo: contract.demo,
