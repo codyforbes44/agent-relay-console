@@ -72,7 +72,7 @@ export function ToolCallCard({
           )}
         </div>
         <ToolInput input={call.args} />
-        <ToolOutput output={call.result ?? null} errorText={call.error} />
+        <ToolOutput output={call.result ?? null} errorText={call.error ?? undefined} />
       </ToolContent>
 
       {call.status === "awaiting_confirmation" && onDecision && (
