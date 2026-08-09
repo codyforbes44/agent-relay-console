@@ -66,6 +66,7 @@ function ConnectPage() {
   const [origin, setOrigin] = useState(SITE_URL);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [orgName, setOrgName] = useState<string | null>(null);
+  const [customMcpUrl, setCustomMcpUrl] = useState<string | null>(null);
 
   useEffect(() => setOrigin(window.location.origin), []);
 
