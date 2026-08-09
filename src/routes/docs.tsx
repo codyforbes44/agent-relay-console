@@ -268,12 +268,12 @@ GET /.well-known/agent-manifest.json`}</Code>
           <TryToolPanel />
         </Section>
 
-        <Section title="9. Catalog, examples & credit prices">
+        <Section title="9. Starter catalog, examples & credit prices">
           <p className="mb-3 text-sm text-muted-foreground">
-            Every tool below ships a copy-pasteable request and response. The same payloads are
-            published in <Mono>GET /api/public/v1/tools</Mono> (as{" "}
-            <Mono>example.request</Mono> / <Mono>example.response</Mono>), in the OpenAPI document
-            and in each MCP tool description, so agents never have to guess a schema.
+            The current tools are a simulated starter set for integration testing. Every response
+            carries <Mono>&quot;demo&quot;: true</Mono> until the underlying integrations (CRM,
+            email, payment processor) are live. Production catalogs will include workspace-level
+            tool visibility controls.
           </p>
           <div className="space-y-4">
             {PUBLIC_TOOLS.map((t) => (
