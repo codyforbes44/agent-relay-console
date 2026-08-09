@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 
 import { PublicShell } from "@/components/public/PublicShell";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import { SITE_URL, publicHead } from "@/lib/site";
 
 const SERVER_NAME = "relay";
+
 
 export const Route = createFileRoute("/connect")({
   head: () =>
