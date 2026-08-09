@@ -524,11 +524,11 @@ function OrgRow({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
         />
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={pending}
-          onClick={() => {
+        <Confirm
+          title="Adjust credit balance?"
+          description={`This writes ${delta || "0"} credits to ${org.name} and is recorded in the ledger.`}
+          confirmLabel="Apply adjustment"
+          onConfirm={() => {
             const n = Number(delta);
             if (!Number.isInteger(n) || n === 0) {
               toast.error("Enter a non-zero whole number");
@@ -542,7 +542,9 @@ function OrgRow({
             setDelta("");
             setReason("");
           }}
-        >
+          trigger={
+            <Button size="sm" variant="outline" disabled={pending}>
+
           Adjust credits
         </Button>
       </div>
