@@ -34,6 +34,7 @@ import { Route as AuthenticatedChatThreadIdRouteImport } from './routes/_authent
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
+import { Route as ApiPublicV1SignupRouteImport } from './routes/api/public/v1/signup'
 import { Route as ApiPublicV1ToolsRouteImport } from './routes/api/public/v1/tools'
 import { Route as ApiPublicV1ToolsToolNameRouteImport } from './routes/api/public/v1/tools.$toolName'
 
@@ -168,6 +169,11 @@ const ApiPublicV1OpenapiDotjsonRoute =
     path: '/api/public/v1/openapi.json',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV1SignupRoute = ApiPublicV1SignupRouteImport.update({
+  id: '/api/public/v1/signup',
+  path: '/api/public/v1/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1ToolsRoute = ApiPublicV1ToolsRouteImport.update({
   id: '/api/public/v1/tools',
   path: '/api/public/v1/tools',
@@ -205,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
@@ -263,6 +271,7 @@ export interface FileRoutesById {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/signup'
     | '/api/public/v1/tools'
     | '/api/public/v1/tools/$toolName'
   fileRoutesByTo: FileRoutesByTo
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/signup'
     | '/api/public/v1/tools'
     | '/api/public/v1/tools/$toolName'
   id:
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/signup'
     | '/api/public/v1/tools'
     | '/api/public/v1/tools/$toolName'
   fileRoutesById: FileRoutesById
@@ -374,6 +386,7 @@ export interface RootRouteChildren {
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
+  ApiPublicV1SignupRoute: typeof ApiPublicV1SignupRoute
   ApiPublicV1ToolsRoute: typeof ApiPublicV1ToolsRouteWithChildren
 }
 
@@ -554,6 +567,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1OpenapiDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/signup': {
+      id: '/api/public/v1/signup'
+      path: '/api/public/v1/signup'
+      fullPath: '/api/public/v1/signup'
+      preLoaderRoute: typeof ApiPublicV1SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/tools': {
       id: '/api/public/v1/tools'
       path: '/api/public/v1/tools'
@@ -624,6 +644,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
+  ApiPublicV1SignupRoute: ApiPublicV1SignupRoute,
   ApiPublicV1ToolsRoute: ApiPublicV1ToolsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
