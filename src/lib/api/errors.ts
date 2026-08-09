@@ -119,11 +119,41 @@ export const API_ERRORS: ApiErrorSpec[] = [
   {
     status: 428,
     code: "confirmation_required",
-    cause: "A side-effecting tool was called without explicit authorization.",
+    cause:
+      "A side-effecting tool was called without a confirmation token. Nothing was executed or charged.",
     action:
-      "Show error.preview to your operator, then repeat the call with x-confirm-side-effects: true.",
+      "Show error.preview to your operator. Once they approve, repeat the identical request with header x-confirmation-token: <error.confirmationToken>.",
     retryable: true,
-    extra: ["tool", "credits", "preview"],
+    extra: ["tool", "credits", "preview", "confirmationToken", "expiresAt"],
+  },
+  {
+    status: 403,
+    code: "confirmation_invalid",
+    cause: "The x-confirmation-token header is unknown or belongs to another workspace.",
+    action: "Call the tool without a token to receive a fresh preview and token, then retry.",
+    retryable: false,
+  },
+  {
+    status: 409,
+    code: "confirmation_mismatch",
+    cause:
+      "The token is bound to a specific tool and argument set; this request differs from what was previewed.",
+    action: "Send the exact body that was previewed, or request a new confirmation for the new body.",
+    retryable: false,
+  },
+  {
+    status: 409,
+    code: "confirmation_used",
+    cause: "That confirmation token was already redeemed. Tokens are single-use.",
+    action: "Request a new confirmation for the next call.",
+    retryable: false,
+  },
+  {
+    status: 410,
+    code: "confirmation_expired",
+    cause: "The confirmation token passed its 10-minute validity window.",
+    action: "Call again without a token to get a new preview and token.",
+    retryable: true,
   },
   {
     status: 429,
