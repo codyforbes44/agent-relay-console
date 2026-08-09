@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
           children: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            name: SITE_NAME,
+            name: SITE_PRODUCT_NAME,
             url: SITE_URL,
             applicationCategory: "DeveloperApplication",
             operatingSystem: "Any",
