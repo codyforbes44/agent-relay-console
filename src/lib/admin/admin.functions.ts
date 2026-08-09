@@ -20,7 +20,7 @@ export const getAdminOverview = createServerFn({ method: "GET" })
     if (guard.error) throw new Error(guard.error.message);
     if (guard.data !== true) throw new Error("Forbidden");
 
-    const [orgs, profiles, keys, usage, ledger, purchases] = await Promise.all([
+    const [orgs, profiles, keys, usage, ledger, purchases, audit] = await Promise.all([
       supabase.from("organizations").select("id, name, slug, created_at, created_by"),
       supabase.from("profiles").select("id, email, display_name, created_at"),
       supabase.from("agent_keys").select("id, org_id, label, key_prefix, revoked_at, last_used_at, created_at"),
@@ -35,11 +35,17 @@ export const getAdminOverview = createServerFn({ method: "GET" })
         .select("id, org_id, credits, amount_cents, currency, environment, created_at")
         .order("created_at", { ascending: false })
         .limit(50),
+      supabase
+        .from("audit_logs")
+        .select("id, org_id, action, tool_name, user_id, created_at")
+        .order("created_at", { ascending: false })
+        .limit(100),
     ]);
 
-    for (const r of [orgs, profiles, keys, usage, ledger, purchases]) {
+    for (const r of [orgs, profiles, keys, usage, ledger, purchases, audit]) {
       if (r.error) throw new Error(r.error.message);
     }
+
 
     const balances = new Map<string, number>();
     for (const row of ledger.data ?? []) {
