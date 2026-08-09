@@ -781,6 +781,72 @@ export type Database = {
           },
         ]
       }
+      tool_confirmations: {
+        Row: {
+          args_hash: string
+          created_at: string
+          credits: number
+          expires_at: string
+          id: string
+          key_id: string | null
+          org_id: string
+          preview: Json
+          redeemed_at: string | null
+          response: Json | null
+          status: string
+          token_hash: string
+          tool_name: string
+          updated_at: string
+        }
+        Insert: {
+          args_hash: string
+          created_at?: string
+          credits?: number
+          expires_at: string
+          id?: string
+          key_id?: string | null
+          org_id: string
+          preview?: Json
+          redeemed_at?: string | null
+          response?: Json | null
+          status?: string
+          token_hash: string
+          tool_name: string
+          updated_at?: string
+        }
+        Update: {
+          args_hash?: string
+          created_at?: string
+          credits?: number
+          expires_at?: string
+          id?: string
+          key_id?: string | null
+          org_id?: string
+          preview?: Json
+          redeemed_at?: string | null
+          response?: Json | null
+          status?: string
+          token_hash?: string
+          tool_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tool_confirmations_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "agent_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tool_confirmations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_events: {
         Row: {
           created_at: string
