@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   MessageSquarePlus,
   LogOut,
@@ -8,11 +9,13 @@ import {
   BarChart3,
   BookOpen,
   CreditCard,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { threadsQuery } from "@/lib/workspace/queries";
+import { getIsSuperAdmin } from "@/lib/admin/admin.functions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +31,12 @@ export function ThreadSidebar({
   const { data: threads, isLoading } = useQuery(threadsQuery(orgId));
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const isSuperAdminFn = useServerFn(getIsSuperAdmin);
+  const { data: adminFlag } = useQuery({
+    queryKey: ["is-super-admin"],
+    queryFn: () => isSuperAdminFn(),
+    staleTime: 5 * 60_000,
+  });
 
   const signOut = useMutation({
     mutationFn: async () => {
@@ -109,6 +118,15 @@ export function ThreadSidebar({
           <CreditCard className="size-4" />
           Buy credits
         </Link>
+        {adminFlag?.isSuperAdmin && (
+          <Link
+            to="/admin"
+            className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent"
+          >
+            <ShieldCheck className="size-4" />
+            Super admin
+          </Link>
+        )}
         <Link
           to="/docs"
           className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent"
