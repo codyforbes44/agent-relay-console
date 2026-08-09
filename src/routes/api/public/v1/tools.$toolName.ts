@@ -4,7 +4,16 @@ import { TOOLS_BY_NAME } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
 import { apiError, json, preflight, toolDescriptor } from "@/lib/api/catalog.server";
 import { authenticateAgentKey, readBearer } from "@/lib/api/keys.server";
-import { checkRateLimit, getBalance, recordUsage, touchKey } from "@/lib/api/metering.server";
+import { checkKeyGuardrails, checkRateLimit, getBalance, recordUsage, touchKey } from "@/lib/api/metering.server";
+import {
+  buildOffer,
+  creditSettledPayment,
+  markIntentFailed,
+  offerBody,
+  recordIntent,
+} from "@/lib/api/payments.server";
+import { readPaymentHeader, verifyAndSettle } from "@/lib/api/x402.server";
+import { MACHINE_TOPUP_MIN_CREDITS } from "@/lib/billing/packs";
 
 function log(event: string, fields: Record<string, unknown>) {
   console.log(JSON.stringify({ event, at: new Date().toISOString(), ...fields }));
