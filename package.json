@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "check:api": "node scripts/check-api-consistency.mjs"
+    "check:api": "node scripts/check-api-consistency.mjs",
+    "check:api:prod": "node scripts/check-api-consistency.mjs https://3bi.ai"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.27",
