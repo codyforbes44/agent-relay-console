@@ -1,9 +1,12 @@
 import { z } from "zod";
 
 /**
- * Typed tool contracts shared by the agent runtime (server) and the tool
- * timeline UI (client). Handlers live in `tools.server.ts` so no provider
- * credentials or integrations ever reach the browser.
+ * Typed tool contracts shared by the agent runtime (server), the public
+ * machine API and the tool timeline UI (client). Handlers live in
+ * `tools.server.ts` so no provider credentials ever reach the browser.
+ *
+ * This registry is the single source of truth for: the human console, the
+ * public REST catalog, the OpenAPI document and per-call credit pricing.
  */
 export type ToolContract = {
   name: string;
@@ -13,6 +16,12 @@ export type ToolContract = {
   sideEffecting: boolean;
   icon: "search" | "user" | "list" | "mail" | "database" | "credit-card" | "trash";
   schema: z.ZodType<Record<string, unknown>>;
+  /** Credits burned per successful call on the public API. */
+  credits: number;
+  /** Exposed on the public machine API + OpenAPI catalog. */
+  publicApi: boolean;
+  /** Simulated fixture rather than a real integration. */
+  demo: boolean;
   /** Short human summary of the arguments, shown in the timeline. */
   summarize: (args: Record<string, unknown>) => string;
 };
@@ -27,6 +36,9 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       "Search the workspace knowledge base for internal documentation, policies and notes. Read-only.",
     sideEffecting: false,
     icon: "search",
+    credits: 1,
+    publicApi: true,
+    demo: true,
     schema: z.object({
       query: z.string().describe("Natural language search query"),
     }) as unknown as z.ZodType<Record<string, unknown>>,
@@ -38,6 +50,9 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     description: "Fetch a single CRM contact by email address. Read-only.",
     sideEffecting: false,
     icon: "user",
+    credits: 1,
+    publicApi: true,
+    demo: true,
     schema: z.object({
       email: z.string().describe("Contact email address"),
     }) as unknown as z.ZodType<Record<string, unknown>>,
@@ -50,6 +65,9 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       "List records of a given type (contacts, invoices, tickets) with an optional status filter. Read-only.",
     sideEffecting: false,
     icon: "list",
+    credits: 1,
+    publicApi: true,
+    demo: true,
     schema: z.object({
       type: z.string().describe("Record type: contacts, invoices or tickets"),
       status: z.string().nullable().describe("Optional status filter, or null"),
@@ -63,6 +81,9 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       "Send an email to a recipient. Side-effecting: requires explicit user confirmation.",
     sideEffecting: true,
     icon: "mail",
+    credits: 5,
+    publicApi: true,
+    demo: true,
     schema: z.object({
       to: z.string().describe("Recipient email address"),
       subject: z.string().describe("Email subject"),
@@ -77,6 +98,9 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       "Update fields on a CRM record. Side-effecting: requires explicit user confirmation.",
     sideEffecting: true,
     icon: "database",
+    credits: 3,
+    publicApi: true,
+    demo: true,
     schema: z.object({
       recordId: z.string().describe("CRM record id"),
       fields: z.string().describe("JSON object of fields to update, as a string"),
@@ -90,6 +114,9 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       "Create a payment charge for a customer. Side-effecting: requires explicit user confirmation.",
     sideEffecting: true,
     icon: "credit-card",
+    credits: 10,
+    publicApi: true,
+    demo: true,
     schema: z.object({
       customerId: z.string().describe("Customer id"),
       amountCents: z.number().describe("Amount in cents"),
@@ -105,6 +132,9 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       "Permanently delete a record. Side-effecting: requires explicit user confirmation.",
     sideEffecting: true,
     icon: "trash",
+    credits: 3,
+    publicApi: true,
+    demo: true,
     schema: z.object({
       type: z.string().describe("Record type"),
       recordId: z.string().describe("Record id"),
@@ -116,6 +146,8 @@ export const TOOL_CONTRACTS: ToolContract[] = [
 export const TOOLS_BY_NAME: Record<string, ToolContract> = Object.fromEntries(
   TOOL_CONTRACTS.map((t) => [t.name, t]),
 );
+
+export const PUBLIC_TOOLS = TOOL_CONTRACTS.filter((t) => t.publicApi);
 
 export type ToolCallStatus =
   | "pending"
