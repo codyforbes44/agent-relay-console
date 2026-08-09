@@ -50,6 +50,25 @@ curl -X POST ${SITE_URL}/api/public/v1/tools/search_knowledge_base \\
   -H "content-type: application/json" \\
   -d '{"query":"refund policy"}'`;
 
+const STEPS = [
+  {
+    title: "Sign yourself up",
+    body: "One unauthenticated POST returns a bearer key and 500 free credits. No browser, no email loop.",
+    code: "POST /api/public/v1/signup",
+  },
+  {
+    title: "Discover the catalog",
+    body: "Typed JSON Schema arguments and results, published as OpenAPI 3.1, an agent manifest and MCP.",
+    code: "GET /api/public/v1/tools",
+  },
+  {
+    title: "Call and get metered",
+    body: "Successful calls debit credits. Side-effecting tools return 428 until you confirm explicitly.",
+    code: "POST /api/public/v1/tools/{name}",
+  },
+] as const;
+
+
 const FEATURES = [
   {
     icon: KeyRound,
