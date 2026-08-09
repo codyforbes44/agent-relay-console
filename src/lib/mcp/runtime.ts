@@ -1,5 +1,5 @@
 import { defineMcp, defineTool, type ToolContext } from "@lovable.dev/mcp-js";
-import type { z } from "zod";
+import { z } from "zod";
 
 import { TOOLS_BY_NAME, type ToolContract } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
@@ -114,7 +114,7 @@ async function runMetered(
 
   let result: Record<string, unknown>;
   try {
-    result = await runTool(contract.name, args);
+    result = await runTool(contract.name, toolArgs);
   } catch (e) {
     await recordUsage(supabaseAdmin, {
       orgId,
@@ -126,6 +126,7 @@ async function runMetered(
       latencyMs: Date.now() - started,
       requestId: crypto.randomUUID(),
     });
+    if (confirmationId) await releaseConfirmation(supabaseAdmin, confirmationId);
     return fail(e instanceof Error ? e.message : "Tool execution failed");
   }
 
@@ -157,6 +158,8 @@ async function runMetered(
     demo: contract.demo,
     credits: { charged: contract.credits, balance: balance - contract.credits },
   };
+  if (confirmationId) await storeConfirmationResponse(supabaseAdmin, confirmationId, payload);
+
   return {
     content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
     structuredContent: payload,
@@ -181,10 +184,20 @@ export function mcpToolFor(name: string): McpTool {
       `Example arguments: ${JSON.stringify(contract.example)}.`,
       `Example result: ${JSON.stringify(contract.exampleResult)}.`,
       contract.sideEffecting
-        ? "Side-effecting: your client should ask the human to approve before calling."
+        ? "Side-effecting, two-step: call it first WITHOUT confirmation_token — it returns a preview plus a single-use confirmationToken. Show that preview to the human, and only after they approve, call again with the identical arguments plus confirmation_token. The token is bound to those exact arguments and expires in 10 minutes."
         : "Read-only and safe to retry.",
     ].join(" "),
-    inputSchema: shape,
+    inputSchema: contract.sideEffecting
+      ? {
+          ...shape,
+          confirmation_token: z
+            .string()
+            .optional()
+            .describe(
+              "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview.",
+            ),
+        }
+      : shape,
 
     annotations: {
       readOnlyHint: !contract.sideEffecting,
