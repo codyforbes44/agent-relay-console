@@ -1,6 +1,12 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { PUBLIC_TOOLS, type ToolContract } from "@/lib/agent/contracts";
+import {
+  PUBLIC_TOOLS,
+  exampleSuccessEnvelope,
+  type ToolContract,
+} from "@/lib/agent/contracts";
+import { ERROR_ENVELOPE_EXAMPLE, TOOL_ERRORS } from "@/lib/api/errors";
+
 
 export const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
