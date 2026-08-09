@@ -12,12 +12,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { cjk } from "@streamdown/cjk";
-import { code } from "@streamdown/code";
-import { math } from "@streamdown/math";
-import { mermaid } from "@streamdown/mermaid";
 import type { UIMessage } from "ai";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { ClientOnly } from "@tanstack/react-router";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
 import {
   createContext,
@@ -27,8 +24,9 @@ import {
   useEffect,
   useMemo,
   useState,
+  lazy,
+  Suspense,
 } from "react";
-import { Streamdown } from "streamdown";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
@@ -319,25 +317,25 @@ export const MessageBranchPage = ({
   );
 };
 
-export type MessageResponseProps = ComponentProps<typeof Streamdown>;
+const MessageMarkdown = lazy(() => import("./message-markdown"));
 
-const streamdownPlugins = { cjk, code, math, mermaid } as unknown as NonNullable<
-  ComponentProps<typeof Streamdown>["plugins"]
->;
-
-
+export type MessageResponseProps = ComponentProps<typeof MessageMarkdown>;
 
 export const MessageResponse = memo(
-  ({ className, ...props }: MessageResponseProps) => (
-    <Streamdown
-      className={cn(
-        "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-        className
-      )}
-      plugins={streamdownPlugins}
-      {...props}
-    />
-  ),
+  ({ className, ...props }: MessageResponseProps) => {
+    const fallback = (
+      <div className={cn("size-full whitespace-pre-wrap", className)}>
+        {props.children as ReactElement}
+      </div>
+    );
+    return (
+      <ClientOnly fallback={fallback}>
+        <Suspense fallback={fallback}>
+          <MessageMarkdown className={className} {...props} />
+        </Suspense>
+      </ClientOnly>
+    );
+  },
   (prevProps, nextProps) =>
     prevProps.children === nextProps.children &&
     nextProps.isAnimating === prevProps.isAnimating
