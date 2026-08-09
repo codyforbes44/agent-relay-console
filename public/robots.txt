@@ -33,6 +33,11 @@ Allow: /
 
 User-agent: *
 Allow: /
+Allow: /.well-known/
+Allow: /llms.txt
+Allow: /api/public/v1/tools
+Allow: /api/public/v1/openapi.json
+Allow: /api/public/v1/pricing
 Disallow: /auth
 Disallow: /claim
 Disallow: /chat
