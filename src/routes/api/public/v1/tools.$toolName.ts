@@ -22,7 +22,7 @@ import {
   recordIntent,
 } from "@/lib/api/payments.server";
 import { readPaymentHeader, verifyAndSettle } from "@/lib/api/x402.server";
-import { MACHINE_TOPUP_MIN_CREDITS } from "@/lib/billing/packs";
+import { MACHINE_TOPUP_MIN_CREDITS, usdForCredits } from "@/lib/billing/packs";
 
 function log(event: string, fields: Record<string, unknown>) {
   console.log(JSON.stringify({ event, at: new Date().toISOString(), ...fields }));
