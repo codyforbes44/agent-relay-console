@@ -31,6 +31,9 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
             <Link to="/pricing" className="hover:text-foreground" activeProps={{ className: "text-foreground" }}>
               Pricing
             </Link>
+            <Link to="/connect" className="hover:text-foreground" activeProps={{ className: "text-foreground" }}>
+              Connect
+            </Link>
             <a href="/api/public/v1/tools" className="hover:text-foreground">
               Tool catalog
             </a>
