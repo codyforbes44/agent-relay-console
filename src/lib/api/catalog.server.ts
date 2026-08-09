@@ -39,6 +39,13 @@ export function inputSchemaOf(tool: ToolContract) {
 }
 
 export function toolDescriptor(tool: ToolContract, origin: string) {
+  const headers: Record<string, string> = {
+    Authorization: "Bearer sk_agent_...",
+    "content-type": "application/json",
+    "idempotency-key": "<unique-per-attempt>",
+  };
+  if (tool.sideEffecting) headers["x-confirm-side-effects"] = "true";
+
   return {
     name: tool.name,
     label: tool.label,
@@ -48,8 +55,21 @@ export function toolDescriptor(tool: ToolContract, origin: string) {
     credits: tool.credits,
     invokeUrl: `${origin}/api/public/v1/tools/${tool.name}`,
     inputSchema: inputSchemaOf(tool),
+    example: {
+      request: {
+        method: "POST",
+        url: `${origin}/api/public/v1/tools/${tool.name}`,
+        headers,
+        body: tool.example,
+      },
+      response: exampleSuccessEnvelope(tool),
+      errors: TOOL_ERRORS.filter((e) => tool.sideEffecting || e.code !== "confirmation_required").map(
+        (e) => ({ status: e.status, code: e.code, cause: e.cause, action: e.action }),
+      ),
+    },
   };
 }
+
 
 export function catalog(origin: string) {
   return {
