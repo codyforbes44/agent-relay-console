@@ -1,59 +1,100 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import { LegalFooter } from "@/components/LegalFooter";
+import { PublicShell } from "@/components/public/PublicShell";
 import { Button } from "@/components/ui/button";
-import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
 import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
+import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
+import { publicHead } from "@/lib/site";
+
+const FAQ = [
+  {
+    q: "Do credits expire?",
+    a: "No. Credit packs are one-time purchases and the balance stays on your workspace until it is used.",
+  },
+  {
+    q: "Is there a subscription or minimum?",
+    a: "No. You buy a pack when you need one. Every new workspace also starts with 500 free credits.",
+  },
+  {
+    q: "What does one credit buy?",
+    a: "Credits are charged per successful tool call at the rates listed below — read-only lookups cost 1 credit, side-effecting actions cost more.",
+  },
+  {
+    q: "Am I charged for failed calls?",
+    a: "No. Validation errors, rate limits, unknown tools and internal errors are not charged. Only successful calls debit credits.",
+  },
+  {
+    q: "Who processes payments?",
+    a: "Paddle.com is the Merchant of Record for all orders and handles billing, tax and refunds on our behalf.",
+  },
+];
 
 export const Route = createFileRoute("/pricing")({
-  head: () => ({
-    meta: [
-      { title: "Pricing — Agent Relay Console credit packs" },
-      {
-        name: "description",
-        content:
-          "Pay-as-you-go credit packs for the Agent Relay Console tool API: 1,000 credits for $9, 5,000 for $39, 25,000 for $149. No subscription.",
-      },
-      { property: "og:title", content: "Pricing — Agent Relay Console credit packs" },
-      {
-        property: "og:description",
-        content: "Credit packs from $9. Per-tool-call credit costs listed in full.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () => {
+    const base = publicHead({
+      path: "/pricing",
+      title: "Pricing — Agent Relay Console credit packs from $9",
+      description:
+        "Pay-as-you-go credit packs for the Agent Relay Console tool API: 1,000 credits for $9, 5,000 for $39, 25,000 for $149. No subscription, credits never expire.",
+    });
+    return {
+      ...base,
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: FAQ.map((f) => ({
+              "@type": "Question",
+              name: f.q,
+              acceptedAnswer: { "@type": "Answer", text: f.a },
+            })),
+          }),
+        },
+      ],
+    };
+  },
   component: PricingPage,
 });
 
 function PricingPage() {
   return (
-    <>
+    <PublicShell>
       <main className="mx-auto w-full max-w-3xl px-6 py-16">
-        <span className="font-mono text-[11px] tracking-[0.3em] text-primary">RELAY</span>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Pricing</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Pricing</h1>
         <p className="mt-3 text-muted-foreground">
-          Agent Relay Console is pay-as-you-go. You buy credits once, and each tool call debits
-          credits from your workspace balance. There is no subscription and credits do not expire.
-          New workspaces start with 500 free credits.
+          Agent Relay Console is pay-as-you-go. You buy credits once, and each successful tool call
+          debits credits from your workspace balance. There is no subscription and credits do not
+          expire. New workspaces start with 500 free credits.
         </p>
 
         <h2 className="mt-10 text-lg font-medium text-foreground">Credit packs</h2>
-        <ul className="mt-3 divide-y divide-border rounded-lg border border-border">
-          {CREDIT_PACKS.map((pack) => (
-            <li key={pack.priceId} className="flex items-start justify-between gap-4 px-4 py-4">
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  {pack.label} — {pack.credits.toLocaleString()} credits
-                </p>
-                <p className="text-xs text-muted-foreground">{pack.blurb}</p>
-              </div>
-              <span className="shrink-0 text-base font-semibold text-foreground">
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          {CREDIT_PACKS.map((pack, i) => (
+            <div
+              key={pack.priceId}
+              className={`rounded-lg border p-5 ${
+                i === 1 ? "border-primary bg-primary/5" : "border-border bg-card"
+              }`}
+            >
+              {i === 1 ? (
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
+                  Most popular
+                </span>
+              ) : null}
+              <p className="mt-1 text-sm font-medium text-foreground">{pack.label}</p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
                 {formatUsd(pack.amountCents)}
-              </span>
-            </li>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {pack.credits.toLocaleString()} credits · $
+                {((pack.amountCents / 100 / pack.credits) * 1000).toFixed(2)} per 1k
+              </p>
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{pack.blurb}</p>
+            </div>
           ))}
-        </ul>
+        </div>
         <p className="mt-3 text-xs text-muted-foreground">
           Prices are in US dollars and exclude any sales tax or VAT, which is calculated at
           checkout. Our order process is conducted by our online reseller Paddle.com, the Merchant
@@ -65,7 +106,14 @@ function PricingPage() {
           {PUBLIC_TOOLS.map((t) => (
             <li key={t.name} className="flex items-start justify-between gap-4 px-4 py-3">
               <div>
-                <p className="font-mono text-sm text-foreground">{t.name}</p>
+                <p className="font-mono text-sm text-foreground">
+                  {t.name}
+                  {t.sideEffecting ? (
+                    <span className="ml-2 rounded-full border border-border px-2 py-0.5 font-sans text-[10px] uppercase tracking-wide text-muted-foreground">
+                      confirm
+                    </span>
+                  ) : null}
+                </p>
                 <p className="text-xs text-muted-foreground">{t.description}</p>
               </div>
               <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary">
@@ -75,7 +123,17 @@ function PricingPage() {
           ))}
         </ul>
 
-        <div className="mt-8 flex gap-3">
+        <h2 className="mt-10 text-lg font-medium text-foreground">Questions</h2>
+        <dl className="mt-3 divide-y divide-border rounded-lg border border-border">
+          {FAQ.map((f) => (
+            <div key={f.q} className="px-4 py-3">
+              <dt className="text-sm font-medium text-foreground">{f.q}</dt>
+              <dd className="mt-1 text-xs leading-relaxed text-muted-foreground">{f.a}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className="mt-8 flex flex-wrap gap-3">
           <Button asChild>
             <Link to="/auth">Create an account</Link>
           </Button>
@@ -84,7 +142,6 @@ function PricingPage() {
           </Button>
         </div>
       </main>
-      <LegalFooter />
-    </>
+    </PublicShell>
   );
 }
