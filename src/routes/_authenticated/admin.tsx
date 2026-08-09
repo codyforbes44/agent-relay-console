@@ -407,12 +407,80 @@ function AdminPanel() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="audit" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Audit log</CardTitle>
+              <CardDescription>Last 100 recorded platform actions.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="divide-y divide-border">
+                {d.audit.map((a) => (
+                  <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                    <div>
+                      <p className="font-mono text-sm text-foreground">{a.action}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {orgName.get(a.org_id) ?? a.org_id}
+                        {a.tool_name ? ` · ${a.tool_name}` : ""}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(a.created_at).toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+                {!d.audit.length && (
+                  <p className="text-sm text-muted-foreground">No audit entries yet.</p>
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
 
+function Confirm({
+  title,
+  description,
+  confirmLabel,
+  destructive,
+  onConfirm,
+  trigger,
+}: {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  destructive?: boolean;
+  onConfirm: () => void;
+  trigger: ReactNode;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className={destructive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : undefined}
+          >
+            {confirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 function OrgRow({
+
   org,
   pending,
   onAdjust,
