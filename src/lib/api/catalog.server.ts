@@ -5,7 +5,7 @@ import {
   exampleSuccessEnvelope,
   type ToolContract,
 } from "@/lib/agent/contracts";
-import { ERROR_ENVELOPE_EXAMPLE, TOOL_ERRORS } from "@/lib/api/errors";
+import { TOOL_ERRORS } from "@/lib/api/errors";
 
 
 export const CORS_HEADERS: Record<string, string> = {
