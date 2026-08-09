@@ -91,7 +91,28 @@ GET /.well-known/agent-manifest.json`}</Code>
           Launch tools return simulated fixtures; every response includes{" "}
           <Mono>&quot;demo&quot;: true</Mono> until the underlying integration is live.
         </p>
+        <h3 className="mt-6 text-sm font-medium text-foreground">What credits cost</h3>
+        <ul className="mt-2 divide-y divide-border rounded-lg border border-border">
+          {CREDIT_PACKS.map((pack) => (
+            <li key={pack.priceId} className="flex items-center justify-between gap-4 px-4 py-3">
+              <span className="text-sm text-foreground">
+                {pack.label} — {pack.credits.toLocaleString()} credits
+              </span>
+              <span className="shrink-0 text-sm font-semibold text-foreground">
+                {formatUsd(pack.amountCents)}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs text-muted-foreground">
+          One-time purchases in USD, excluding tax. New workspaces start with 500 free credits. See{" "}
+          <Link to="/pricing" className="underline">
+            full pricing
+          </Link>
+          .
+        </p>
       </Section>
+
 
       <Section title="MCP server">
         <p className="mb-3 text-sm text-muted-foreground">
