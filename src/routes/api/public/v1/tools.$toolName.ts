@@ -226,10 +226,45 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
             .eq("idem_key", idemKey);
         };
 
-        let balance = await getBalance(supabaseAdmin, identity.orgId);
+        // Reserve first: balance + spend caps are checked and the debit written
+        // in one transaction, so concurrent calls cannot double-spend.
+        const reserveInput = {
+          orgId: identity.orgId,
+          keyId: identity.keyId,
+          toolName,
+          credits: tool.credits,
+          requestId,
+          maxPerCall: identity.limits.maxCreditsPerCall,
+          dailyCap: identity.limits.dailyCreditCap,
+          totalCap: identity.limits.totalCreditCap,
+        };
+
+        let reservation = await reserveCredits(supabaseAdmin, reserveInput);
         let paymentReceipt: Record<string, unknown> | null = null;
 
-        if (balance < tool.credits) {
+        if (reservation.status === "budget_exceeded") {
+          const violation = budgetViolation(reservation);
+          await releaseIdem();
+          await recordUsage(supabaseAdmin, {
+            orgId: identity.orgId,
+            keyId: identity.keyId,
+            toolName,
+            credits: 0,
+            status: "rejected",
+            errorCode: violation.code,
+            latencyMs: Date.now() - started,
+            requestId,
+          });
+          return apiError(violation.status, violation.code, violation.message, violation.extra ?? {});
+        }
+
+        if (reservation.status === "error") {
+          await releaseIdem();
+          return apiError(503, "metering_unavailable", "Credit metering is temporarily unavailable, retry shortly");
+        }
+
+        if (reservation.status === "insufficient") {
+          const balance = reservation.balance;
           // Buy at least the shortfall, in whole top-up units, so a paying
           // agent does not have to re-pay on its very next call.
           const shortfall = tool.credits - balance;
@@ -255,7 +290,8 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
                 toolName,
                 requestId,
               });
-              balance = await getBalance(supabaseAdmin, identity.orgId);
+              // Retry the reservation once against the freshly credited balance.
+              reservation = await reserveCredits(supabaseAdmin, reserveInput);
               paymentReceipt = {
                 credits: offer.credits,
                 amountUsd: offer.usd,
@@ -274,13 +310,14 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
             }
           }
 
-          if (balance < tool.credits) {
+          if (reservation.status !== "ok") {
+            const currentBalance = reservation.status === "insufficient" ? reservation.balance : balance;
             await releaseIdem();
             if (!offer) {
               // No x402 config: still answer with everything needed to top up.
               return apiError(402, "insufficient_credits", "Not enough credits for this call", {
                 required: tool.credits,
-                balance,
+                balance: currentBalance,
                 usdRequired: usdForCredits(tool.credits),
                 checkout: {
                   machine: { url: `${origin}/api/public/v1/credits/purchase`, method: "POST" },
@@ -298,14 +335,18 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
               requestId,
             });
             return json(
-              offerBody(offer, "insufficient_credits", { required: tool.credits, balance, tool: toolName }),
+              offerBody(offer, "insufficient_credits", {
+                required: tool.credits,
+                balance: currentBalance,
+                tool: toolName,
+              }),
               402,
               { "x-request-id": requestId, "x-credits-required": String(tool.credits) },
             );
           }
         }
 
-
+        const reserved = reservation;
 
         let result: Record<string, unknown>;
         try {
@@ -313,31 +354,14 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         } catch (e) {
           const message = e instanceof Error ? e.message : "Tool execution failed";
           await releaseIdem();
-          await recordUsage(supabaseAdmin, {
-            orgId: identity.orgId,
-            keyId: identity.keyId,
-            toolName,
-            credits: 0,
-            status: "error",
-            errorCode: "tool_failed",
-            latencyMs: Date.now() - started,
-            requestId,
-          });
+          await refundReservedCredits(supabaseAdmin, reserved.usageEventId, "tool_failed");
           log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message });
           return apiError(502, "tool_failed", message);
         }
 
         const latencyMs = Date.now() - started;
         await Promise.all([
-          recordUsage(supabaseAdmin, {
-            orgId: identity.orgId,
-            keyId: identity.keyId,
-            toolName,
-            credits: tool.credits,
-            status: "success",
-            latencyMs,
-            requestId,
-          }),
+          finalizeUsage(supabaseAdmin, reserved.usageEventId, latencyMs),
           touchKey(supabaseAdmin, identity.keyId),
         ]);
 
