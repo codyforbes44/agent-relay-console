@@ -3,14 +3,6 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertSuperAdmin(supabase: {
-  rpc: (fn: "is_super_admin") => Promise<{ data: unknown; error: { message: string } | null }>;
-}) {
-  const { data, error } = await supabase.rpc("is_super_admin");
-  if (error) throw new Error(error.message);
-  if (data !== true) throw new Error("Forbidden");
-}
-
 /** Returns whether the signed-in user holds the platform super-admin role. */
 export const getIsSuperAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -24,7 +16,9 @@ export const getAdminOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase } = context;
-    await assertSuperAdmin(supabase);
+    const guard = await supabase.rpc("is_super_admin");
+    if (guard.error) throw new Error(guard.error.message);
+    if (guard.data !== true) throw new Error("Forbidden");
 
     const [orgs, profiles, keys, usage, ledger, purchases] = await Promise.all([
       supabase.from("organizations").select("id, name, slug, created_at, created_by"),
@@ -94,7 +88,9 @@ export const adminAdjustCredits = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertSuperAdmin(context.supabase);
+    const guard = await context.supabase.rpc("is_super_admin");
+    if (guard.error) throw new Error(guard.error.message);
+    if (guard.data !== true) throw new Error("Forbidden");
     const { error } = await context.supabase.from("credit_ledger").insert({
       org_id: data.orgId,
       delta: data.delta,
@@ -109,7 +105,9 @@ export const adminRevokeKey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { keyId: string }) => z.object({ keyId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertSuperAdmin(context.supabase);
+    const guard = await context.supabase.rpc("is_super_admin");
+    if (guard.error) throw new Error(guard.error.message);
+    if (guard.data !== true) throw new Error("Forbidden");
     const { error } = await context.supabase
       .from("agent_keys")
       .update({ revoked_at: new Date().toISOString() })
@@ -130,7 +128,9 @@ export const adminSetRole = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    await assertSuperAdmin(context.supabase);
+    const guard = await context.supabase.rpc("is_super_admin");
+    if (guard.error) throw new Error(guard.error.message);
+    if (guard.data !== true) throw new Error("Forbidden");
     if (data.grant) {
       const { error } = await context.supabase
         .from("user_roles")
@@ -153,7 +153,9 @@ export const adminSetRole = createServerFn({ method: "POST" })
 export const getAdminRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertSuperAdmin(context.supabase);
+    const guard = await context.supabase.rpc("is_super_admin");
+    if (guard.error) throw new Error(guard.error.message);
+    if (guard.data !== true) throw new Error("Forbidden");
     const { data, error } = await context.supabase.from("user_roles").select("user_id, role");
     if (error) throw new Error(error.message);
     return data ?? [];
