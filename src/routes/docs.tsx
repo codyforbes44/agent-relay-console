@@ -394,6 +394,12 @@ structuredContent: ${JSON.stringify({
             HTTP-only — over MCP the client&apos;s own approval prompt is the confirmation step.
             Usage from MCP appears in the same console usage history.
           </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            <strong>Tool visibility note:</strong> The MCP list-tools endpoint may show the full
+            starter catalog even when a workspace has disabled a tool. Workspace-level disables and
+            per-key <Mono>allowedTools</Mono> are enforced at invocation time, so a disabled or
+            disallowed tool returns a clear <Mono>tool_disabled</Mono> error instead of running.
+          </p>
         </Section>
 
 
