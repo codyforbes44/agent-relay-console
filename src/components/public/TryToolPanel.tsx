@@ -25,7 +25,7 @@ export function TryToolPanel() {
   const [apiKey, setApiKey] = useState("");
   const [args, setArgs] = useState(() => JSON.stringify(PUBLIC_TOOLS[0]!.example, null, 2));
   const [useIdempotency, setUseIdempotency] = useState(true);
-  const [confirmSideEffects, setConfirmSideEffects] = useState(false);
+  const [confirmationToken, setConfirmationToken] = useState("");
   const [outcome, setOutcome] = useState<Outcome>(null);
   const [busy, setBusy] = useState(false);
 
@@ -33,7 +33,7 @@ export function TryToolPanel() {
     const next = PUBLIC_TOOLS.find((t) => t.name === name)!;
     setToolName(name);
     setArgs(JSON.stringify(next.example, null, 2));
-    setConfirmSideEffects(false);
+    setConfirmationToken("");
     setOutcome(null);
   }
 
@@ -45,7 +45,9 @@ export function TryToolPanel() {
     `  -H "Authorization: Bearer ${apiKey.trim() || "$RELAY_KEY"}" \\`,
     `  -H "content-type: application/json" \\`,
     ...(useIdempotency ? [`  -H "idempotency-key: ${idemKey}" \\`] : []),
-    ...(confirmSideEffects ? [`  -H "x-confirm-side-effects: true" \\`] : []),
+    ...(confirmationToken.trim()
+      ? [`  -H "x-confirmation-token: ${confirmationToken.trim()}" \\`]
+      : []),
     `  -d '${args.replace(/\s+/g, " ").trim()}'`,
   ].join("\n");
 
@@ -56,12 +58,20 @@ export function TryToolPanel() {
       const headers: Record<string, string> = { "content-type": "application/json" };
       if (apiKey.trim()) headers["Authorization"] = `Bearer ${apiKey.trim()}`;
       if (useIdempotency) headers["idempotency-key"] = `${idemKey}-${Date.now()}`;
-      if (confirmSideEffects) headers["x-confirm-side-effects"] = "true";
+      if (confirmationToken.trim()) headers["x-confirmation-token"] = confirmationToken.trim();
       const res = await fetch(path, { method: "POST", headers, body: args });
       const text = await res.text();
       let pretty = text;
       try {
-        pretty = JSON.stringify(JSON.parse(text), null, 2);
+        const parsed = JSON.parse(text) as {
+          error?: { code?: string; confirmationToken?: string };
+        };
+        pretty = JSON.stringify(parsed, null, 2);
+        // A 428 hands back the single-use token bound to this exact body —
+        // prefill it so the next click is the confirmed second step.
+        if (res.status === 428 && parsed.error?.confirmationToken) {
+          setConfirmationToken(parsed.error.confirmationToken);
+        }
       } catch {
         /* non-JSON body: show raw */
       }
@@ -74,7 +84,7 @@ export function TryToolPanel() {
   }
 
   const expected = TOOL_ERRORS.filter(
-    (e) => tool.sideEffecting || e.code !== "confirmation_required",
+    (e) => tool.sideEffecting || !e.code.startsWith("confirmation_"),
   );
 
   return (
@@ -98,7 +108,9 @@ export function TryToolPanel() {
 
       <p className="mt-3 text-xs text-muted-foreground">
         {tool.description} Costs {tool.credits} credit(s).
-        {tool.sideEffecting ? " Side-effecting — needs the confirmation header." : ""}
+        {tool.sideEffecting
+          ? " Side-effecting — send it once with no token to get the preview, then again with the token it returns."
+          : ""}
       </p>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -121,16 +133,21 @@ export function TryToolPanel() {
             </Label>
             <Switch id="try-idem" checked={useIdempotency} onCheckedChange={setUseIdempotency} />
           </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="try-confirm" className="text-xs">
-              Send x-confirm-side-effects
-            </Label>
-            <Switch
-              id="try-confirm"
-              checked={confirmSideEffects}
-              onCheckedChange={setConfirmSideEffects}
-            />
-          </div>
+          {tool.sideEffecting ? (
+            <div className="space-y-2 pt-2">
+              <Label htmlFor="try-confirm" className="text-xs">
+                x-confirmation-token (auto-filled from the 428 preview)
+              </Label>
+              <Input
+                id="try-confirm"
+                autoComplete="off"
+                placeholder="cnf_…"
+                value={confirmationToken}
+                onChange={(e) => setConfirmationToken(e.target.value)}
+                className="font-mono text-xs"
+              />
+            </div>
+          ) : null}
         </div>
 
         <div className="space-y-2">
