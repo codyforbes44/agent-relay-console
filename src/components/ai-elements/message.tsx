@@ -325,14 +325,15 @@ export const MessageResponse = memo(
   ({ className, ...props }: MessageResponseProps) => {
     const fallback = (
       <div className={cn("size-full whitespace-pre-wrap", className)}>
-        {props.children as ReactElement}
+        {props.children as unknown as ReactElement}
       </div>
     );
     return (
       <ClientOnly fallback={fallback}>
         <Suspense fallback={fallback}>
-          <MessageMarkdown className={className} {...props} />
+          <MessageMarkdown {...props} {...(className ? { className } : {})} />
         </Suspense>
+
       </ClientOnly>
     );
   },
