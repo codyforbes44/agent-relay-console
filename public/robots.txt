@@ -12,3 +12,13 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /auth
+Disallow: /chat
+Disallow: /keys
+Disallow: /usage
+Disallow: /billing
+Disallow: /admin
+Disallow: /mcp
+Disallow: /.lovable/
+
+Sitemap: https://agent-relay-console.lovable.app/sitemap.xml
