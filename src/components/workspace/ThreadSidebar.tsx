@@ -1,6 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquarePlus, LogOut, Loader2, KeyRound, BarChart3, BookOpen } from "lucide-react";
+import {
+  MessageSquarePlus,
+  LogOut,
+  Loader2,
+  KeyRound,
+  BarChart3,
+  BookOpen,
+  CreditCard,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
