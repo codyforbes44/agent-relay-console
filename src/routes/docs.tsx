@@ -397,7 +397,7 @@ structuredContent: ${JSON.stringify({
         </Section>
 
 
-        <Section title="11. Account status">
+        <Section title="12. Account status">
           <Code>{`GET /api/public/v1/me
 {
   "ok": true,
