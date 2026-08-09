@@ -64,9 +64,33 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function ConnectPage() {
   const [origin, setOrigin] = useState(SITE_URL);
+  const [orgId, setOrgId] = useState<string | null>(null);
+  const [orgName, setOrgName] = useState<string | null>(null);
+
   useEffect(() => setOrigin(window.location.origin), []);
 
-  const mcpUrl = new URL("/mcp", origin).toString();
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) return;
+      const { data } = await supabase
+        .from("org_members")
+        .select("org_id, organizations(name)")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (!active || !data) return;
+      setOrgId(data.org_id);
+      setOrgName((data.organizations as { name: string } | null)?.name ?? "Workspace");
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const baseMcpUrl = new URL("/mcp", origin).toString();
+  const mcpUrl = orgId ? `${baseMcpUrl}?tenant=${orgId}` : baseMcpUrl;
   const installCommand = `claude mcp add --scope user --transport http ${SERVER_NAME} '${mcpUrl.replaceAll("'", "'\\''")}'`;
   const claudeLink = `https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=${encodeURIComponent("RELAY")}&connectorUrl=${encodeURIComponent(mcpUrl)}`;
 
@@ -86,10 +110,24 @@ function ConnectPage() {
 
         <div className="space-y-2">
           <h2 className="text-sm font-medium uppercase tracking-widest text-muted-foreground">
-            Server URL
+            {orgId ? "Your workspace server URL" : "Server URL"}
           </h2>
           <CopyRow value={mcpUrl} label="URL" />
+          <p className="text-xs text-muted-foreground">
+            {orgId ? (
+              <>
+                Unique to <span className="text-foreground">{orgName}</span>. Calls still require
+                sign-in, and credits are billed to this workspace.
+              </>
+            ) : (
+              <>
+                Sign in to get the connection URL tagged with your workspace. The generic URL also
+                works — you pick the workspace when you authorize.
+              </>
+            )}
+          </p>
         </div>
+
 
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground">Connect</h2>
