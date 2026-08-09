@@ -36,9 +36,42 @@ export const API_ERRORS: ApiErrorSpec[] = [
     code: "insufficient_credits",
     cause: "The workspace balance is below this tool's price. Nothing was executed or charged.",
     action:
-      "Top up: POST /api/public/v1/claim returns a claim URL for your human operator to buy credits.",
+      "Pay machine-to-machine: the body carries an x402 accepts[] offer — settle it and retry the same request with an X-PAYMENT header. Humans can instead buy credits via POST /api/public/v1/claim.",
+    retryable: false,
+    extra: ["required", "balance", "accepts", "payment"],
+  },
+  {
+    status: 402,
+    code: "payment_failed",
+    cause: "An X-PAYMENT header was supplied but the facilitator could not verify or settle it.",
+    action:
+      "Re-read accepts[0] from a fresh 402, rebuild the payment payload for the exact amount, asset and network, and retry.",
     retryable: false,
     extra: ["required", "balance"],
+  },
+  {
+    status: 401,
+    code: "key_expired",
+    cause: "The key passed the expiry date set by its owner.",
+    action: "Rotate the key or issue a new one in the console.",
+    retryable: false,
+    extra: ["expiredAt"],
+  },
+  {
+    status: 403,
+    code: "budget_exceeded",
+    cause: "The call would exceed a per-call, 24-hour, or lifetime credit cap set on this key.",
+    action: "Wait for the window to roll over, or ask the key owner to raise the cap in the console.",
+    retryable: false,
+    extra: ["spent", "required", "limit", "window"],
+  },
+  {
+    status: 403,
+    code: "tool_not_allowed",
+    cause: "This key has a tool allowlist that does not include the requested tool.",
+    action: "Call an allowed tool, or ask the key owner to widen the allowlist.",
+    retryable: false,
+    extra: ["allowedTools"],
   },
   {
     status: 403,
