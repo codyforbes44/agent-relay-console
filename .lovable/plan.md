@@ -100,7 +100,7 @@ Ranked by expected return, cheapest first.
 
 1. Robots + discovery manifests + machine-readable pricing (small, unblocks everything).
 2. One real tool end to end, priced with a measured margin.
-3. Funnel instrumentation and the 402-as-checkout改.
+3. Funnel instrumentation and the 402-as-checkout response body.
 4. Registry submissions and SEO landing pages.
 5. Auto top-up and volume tiers.
 
