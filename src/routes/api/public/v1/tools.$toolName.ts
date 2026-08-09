@@ -13,7 +13,16 @@ import {
 import { getOrgSettings, requiresConfirmation } from "@/lib/api/settings.server";
 import { isToolEnabled } from "@/lib/api/org-tools.server";
 import { authenticateAgentKey, readBearer } from "@/lib/api/keys.server";
-import { checkKeyGuardrails, checkRateLimit, getBalance, recordUsage, touchKey } from "@/lib/api/metering.server";
+import {
+  budgetViolation,
+  checkKeyGuardrails,
+  checkRateLimit,
+  finalizeUsage,
+  recordUsage,
+  refundReservedCredits,
+  reserveCredits,
+  touchKey,
+} from "@/lib/api/metering.server";
 import {
   buildOffer,
   creditSettledPayment,
