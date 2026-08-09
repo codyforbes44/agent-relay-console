@@ -38,6 +38,44 @@ export function inputSchemaOf(tool: ToolContract) {
   >;
 }
 
+/** OpenAPI responses for every error the tool endpoint can return. */
+function errorResponses(sideEffecting: boolean) {
+  const relevant = TOOL_ERRORS.filter((e) => sideEffecting || e.code !== "confirmation_required");
+  const byStatus: Record<string, { description: string; content: unknown }> = {};
+  for (const err of relevant) {
+    const key = String(err.status);
+    const line = `${err.code}: ${err.cause} → ${err.action}`;
+    const existing = byStatus[key];
+    byStatus[key] = {
+      description: existing ? `${existing.description}\n${line}` : line,
+      content: {
+        "application/json": {
+          examples: {
+            ...((existing?.content as Record<string, { examples?: Record<string, unknown> }>)?.[
+              "application/json"
+            ]?.examples ?? {}),
+            [err.code]: {
+              summary: err.code,
+              value: {
+                ok: false,
+                error: {
+                  code: err.code,
+                  message: err.cause,
+                  ...(err.code === "insufficient_credits"
+                    ? { required: 5, balance: 2 }
+                    : {}),
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+  }
+  return byStatus;
+}
+
+
 export function toolDescriptor(tool: ToolContract, origin: string) {
   const headers: Record<string, string> = {
     Authorization: "Bearer sk_agent_...",
