@@ -168,6 +168,7 @@ function AdminPanel() {
           <TabsTrigger value="keys">API keys</TabsTrigger>
           <TabsTrigger value="usage">Usage</TabsTrigger>
           <TabsTrigger value="revenue">Revenue</TabsTrigger>
+          <TabsTrigger value="audit">Audit log</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orgs" className="mt-4">
@@ -177,7 +178,13 @@ function AdminPanel() {
               <CardDescription>Balances, key counts and manual credit adjustments.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {d.orgs.map((o) => (
+              <Input
+                value={orgQuery}
+                onChange={(e) => setOrgQuery(e.target.value)}
+                placeholder="Search workspaces by name or slug"
+                aria-label="Search workspaces"
+              />
+              {filteredOrgs.slice(0, 50).map((o) => (
                 <OrgRow
                   key={o.id}
                   org={o}
@@ -185,7 +192,14 @@ function AdminPanel() {
                   onAdjust={(delta, reason) => adjust.mutate({ data: { orgId: o.id, delta, reason } })}
                 />
               ))}
-              {!d.orgs.length && <p className="text-sm text-muted-foreground">No workspaces yet.</p>}
+              {!filteredOrgs.length && (
+                <p className="text-sm text-muted-foreground">No workspaces match.</p>
+              )}
+              {filteredOrgs.length > 50 && (
+                <p className="text-xs text-muted-foreground">
+                  Showing 50 of {filteredOrgs.length}. Narrow the search to see more.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -196,9 +210,15 @@ function AdminPanel() {
               <CardTitle className="text-base">Users</CardTitle>
               <CardDescription>Grant or remove the platform super admin role.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <Input
+                value={userQuery}
+                onChange={(e) => setUserQuery(e.target.value)}
+                placeholder="Search users by name or email"
+                aria-label="Search users"
+              />
               <ul className="divide-y divide-border">
-                {d.users.map((u) => {
+                {filteredUsers.slice(0, 100).map((u) => {
                   const isSuper = superAdmins.has(u.id);
                   return (
                     <li key={u.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -214,30 +234,40 @@ function AdminPanel() {
                             super admin
                           </span>
                         )}
-                        <Button
-                          size="sm"
-                          variant={isSuper ? "outline" : "default"}
-                          disabled={setRole.isPending}
-                          onClick={() =>
+                        <Confirm
+                          title={isSuper ? "Revoke super admin?" : "Grant super admin?"}
+                          description={
+                            isSuper
+                              ? `${u.email} will lose platform-wide access immediately.`
+                              : `${u.email} will gain full platform-wide access to every workspace, key and credit balance.`
+                          }
+                          confirmLabel={isSuper ? "Revoke role" : "Grant role"}
+                          onConfirm={() =>
                             setRole.mutate({
                               data: { userId: u.id, role: "super_admin", grant: !isSuper },
                             })
                           }
-                        >
-                          {isSuper ? (
-                            <>
-                              <ShieldOff className="size-3.5" /> Revoke
-                            </>
-                          ) : (
-                            <>
-                              <ShieldCheck className="size-3.5" /> Make super admin
-                            </>
-                          )}
-                        </Button>
+                          trigger={
+                            <Button size="sm" variant={isSuper ? "outline" : "default"} disabled={setRole.isPending}>
+                              {isSuper ? (
+                                <>
+                                  <ShieldOff className="size-3.5" /> Revoke
+                                </>
+                              ) : (
+                                <>
+                                  <ShieldCheck className="size-3.5" /> Make super admin
+                                </>
+                              )}
+                            </Button>
+                          }
+                        />
                       </div>
                     </li>
                   );
                 })}
+                {!filteredUsers.length && (
+                  <p className="text-sm text-muted-foreground">No users match.</p>
+                )}
               </ul>
             </CardContent>
           </Card>
@@ -249,30 +279,47 @@ function AdminPanel() {
               <CardTitle className="text-base">API keys</CardTitle>
               <CardDescription>Every agent key issued across the platform.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <Input
+                value={keyQuery}
+                onChange={(e) => setKeyQuery(e.target.value)}
+                placeholder="Search keys by label, prefix or workspace"
+                aria-label="Search API keys"
+              />
               <ul className="divide-y divide-border">
-                {d.keys.map((k) => (
+                {filteredKeys.slice(0, 100).map((k) => (
                   <li key={k.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                     <div>
-                      <p className="text-sm text-foreground">{k.label}</p>
+                      <p className="text-sm text-foreground">
+                        {k.label}{" "}
+                        <span className="text-xs text-muted-foreground">
+                          · {orgName.get(k.org_id) ?? "unknown workspace"}
+                        </span>
+                      </p>
                       <p className="font-mono text-xs text-muted-foreground">
                         {k.key_prefix}··· · {k.revoked_at ? "revoked" : "active"} ·{" "}
                         {k.last_used_at ? `used ${new Date(k.last_used_at).toLocaleString()}` : "never used"}
                       </p>
                     </div>
                     {!k.revoked_at && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={revoke.isPending}
-                        onClick={() => revoke.mutate({ data: { keyId: k.id } })}
-                      >
-                        Revoke
-                      </Button>
+                      <Confirm
+                        title="Revoke this API key?"
+                        description={`${k.label} (${k.key_prefix}···) in ${orgName.get(k.org_id) ?? "this workspace"} will stop working immediately. This cannot be undone.`}
+                        confirmLabel="Revoke key"
+                        destructive
+                        onConfirm={() => revoke.mutate({ data: { keyId: k.id } })}
+                        trigger={
+                          <Button size="sm" variant="outline" disabled={revoke.isPending}>
+                            Revoke
+                          </Button>
+                        }
+                      />
                     )}
                   </li>
                 ))}
-                {!d.keys.length && <p className="text-sm text-muted-foreground">No keys issued yet.</p>}
+                {!filteredKeys.length && (
+                  <p className="text-sm text-muted-foreground">No keys match.</p>
+                )}
               </ul>
             </CardContent>
           </Card>
@@ -285,8 +332,18 @@ function AdminPanel() {
               <CardDescription>Last 200 metered events platform-wide.</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-3">
+                <Button
+                  size="sm"
+                  variant={errorsOnly ? "default" : "outline"}
+                  onClick={() => setErrorsOnly((v) => !v)}
+                >
+                  {errorsOnly ? "Showing failures only" : "Show failures only"}
+                </Button>
+              </div>
               <ul className="divide-y divide-border">
-                {d.usage.map((e) => (
+                {filteredUsage.map((e) => (
+
                   <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
                     <div>
                       <p className="font-mono text-sm text-foreground">{e.tool_name}</p>
