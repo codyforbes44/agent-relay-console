@@ -70,6 +70,8 @@ export const getAdminOverview = createServerFn({ method: "GET" })
       keys: keys.data ?? [],
       usage: usage.data ?? [],
       purchases: purchases.data ?? [],
+      audit: audit.data ?? [],
+
       totals: {
         orgs: (orgs.data ?? []).length,
         users: (profiles.data ?? []).length,
