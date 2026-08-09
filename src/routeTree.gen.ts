@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ClaimRouteImport } from './routes/claim'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -63,6 +64,11 @@ const ClaimRoute = ClaimRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/claim': typeof ClaimRoute
   '/docs': typeof DocsRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/claim': typeof ClaimRoute
   '/docs': typeof DocsRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -275,6 +283,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/claim': typeof ClaimRoute
   '/docs': typeof DocsRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -309,6 +318,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/claim'
     | '/docs'
+    | '/llms.txt'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -341,6 +351,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/claim'
     | '/docs'
+    | '/llms.txt'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -374,6 +385,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/claim'
     | '/docs'
+    | '/llms.txt'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -408,6 +420,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ClaimRoute: typeof ClaimRoute
   DocsRoute: typeof DocsRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   McpRoute: typeof McpRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -689,6 +709,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ClaimRoute: ClaimRoute,
   DocsRoute: DocsRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   McpRoute: McpRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
