@@ -71,8 +71,11 @@ export type PaymentRequirements = {
 };
 
 /** Converts a USD amount to the asset's atomic units (USDC has 6 decimals). */
+/** USD -> atomic units. Cents are exact in integer math; scaling is BigInt. */
 export function toAtomic(usd: number, decimals: number): string {
-  return BigInt(Math.ceil(usd * 10 ** decimals)).toString();
+  const cents = BigInt(Math.ceil(Number((usd * 100).toFixed(6))));
+  if (decimals >= 2) return (cents * 10n ** BigInt(decimals - 2)).toString();
+  return (cents / 10n ** BigInt(2 - decimals)).toString();
 }
 
 export function paymentRequirements(input: {

@@ -194,7 +194,11 @@ export function catalog(origin: string, tools: ToolContract[] = PUBLIC_TOOLS) {
         purchase: p.purchase,
       };
     })(),
-    tools: tools.map((t) => toolDescriptor(t, origin)),
+    // Billable tools first: a cold agent should read the value story before
+    // the zero-credit sandbox fixtures.
+    tools: [...tools]
+      .sort((a, b) => (b.credits > 0 ? 1 : 0) - (a.credits > 0 ? 1 : 0))
+      .map((t) => toolDescriptor(t, origin)),
   };
 }
 
