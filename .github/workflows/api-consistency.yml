@@ -1,0 +1,32 @@
+name: API consistency
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Typecheck
+        run: bunx tsgo --noEmit
+      - name: Start dev server
+        run: |
+          bun run dev --port 8080 > /tmp/dev.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:8080/ && exit 0
+            sleep 2
+          done
+          echo "dev server did not start"; cat /tmp/dev.log; exit 1
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+      - name: Diff docs / catalog / manifest / OpenAPI against the implementation
+        run: node scripts/check-api-consistency.mjs http://localhost:8080

@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { PublicShell } from "@/components/public/PublicShell";
+import { TryToolPanel } from "@/components/public/TryToolPanel";
 import { Button } from "@/components/ui/button";
-import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
+import { PUBLIC_TOOLS, exampleSuccessEnvelope } from "@/lib/agent/contracts";
+import { API_ERRORS, ERROR_ENVELOPE_EXAMPLE } from "@/lib/api/errors";
 import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
 import { SITE_URL, publicHead } from "@/lib/site";
+
 
 export const Route = createFileRoute("/docs")({
   head: () =>
@@ -144,55 +147,107 @@ GET /.well-known/agent-manifest.json`}</Code>
           </p>
         </Section>
 
-        <Section title="7. Errors">
-          <ul className="divide-y divide-border rounded-lg border border-border text-sm">
-            {[
-              ["401 missing_api_key", "No Authorization: Bearer header on the request."],
-              ["401 invalid_api_key", "Key is unknown, revoked or expired."],
-              ["403 insufficient_scope", "Key lacks the tools:invoke scope."],
-              ["404 unknown_tool", "No tool with that name in the catalog."],
-              ["409 request_in_progress", "Same idempotency-key is still executing."],
-              ["422 invalid_json", "Body was not valid JSON."],
-              ["422 invalid_input", "Arguments failed schema validation. Not charged."],
-              ["402 insufficient_credits", "Balance below this tool's price. Includes required + balance."],
-              ["428 confirmation_required", "Side-effecting tool called without confirmation."],
-              ["429 rate_limited", "Over 60 calls per minute for this key. Back off and retry."],
-              ["502 tool_failed", "Upstream tool execution failed. Credits are not deducted."],
-            ].map(([code, body]) => (
-              <li key={code} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:gap-4">
-                <span className="w-56 shrink-0 font-mono text-xs text-primary">{code}</span>
-                <span className="text-xs text-muted-foreground">{body}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Every error body has the same shape, sometimes with extra context fields:
+        <Section title="7. Error code reference">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Every failure uses the same envelope:{" "}
+            <Mono>{`{ "ok": false, "error": { "code", "message", … } }`}</Mono>. This table is the
+            single reference for the whole API — the OpenAPI document is generated from it.
           </p>
-          <Code>{`{ "ok": false, "error": { "code": "insufficient_credits", "message": "...", "required": 5, "balance": 2 } }`}</Code>
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-border bg-muted/40 text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2 font-medium">Status</th>
+                  <th className="px-3 py-2 font-medium">Code</th>
+                  <th className="px-3 py-2 font-medium">Cause</th>
+                  <th className="px-3 py-2 font-medium">What to do</th>
+                  <th className="px-3 py-2 font-medium">Retry</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {API_ERRORS.map((e) => (
+                  <tr key={e.code} className="align-top">
+                    <td className="px-3 py-2 font-mono text-primary">{e.status}</td>
+                    <td className="px-3 py-2 font-mono text-foreground">
+                      {e.code}
+                      {e.extra?.length ? (
+                        <span className="block text-[10px] text-muted-foreground">
+                          + {e.extra.join(", ")}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground">{e.cause}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{e.action}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{e.retryable ? "yes" : "no"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Code>{JSON.stringify(ERROR_ENVELOPE_EXAMPLE)}</Code>
         </Section>
 
-        <Section title="8. Catalog & credit prices">
+        <Section title="8. Try a tool">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Pick a tool, edit the example body, and send it live from your browser. Leave the key
+            blank to see the real <Mono>401</Mono>, or flip the confirmation switch off on a
+            side-effecting tool to see the <Mono>428</Mono> preview payload.
+          </p>
+          <TryToolPanel />
+        </Section>
 
-          <ul className="divide-y divide-border rounded-lg border border-border">
+        <Section title="9. Catalog, examples & credit prices">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Every tool below ships a copy-pasteable request and response. The same payloads are
+            published in <Mono>GET /api/public/v1/tools</Mono> (as{" "}
+            <Mono>example.request</Mono> / <Mono>example.response</Mono>), in the OpenAPI document
+            and in each MCP tool description, so agents never have to guess a schema.
+          </p>
+          <div className="space-y-4">
             {PUBLIC_TOOLS.map((t) => (
-              <li key={t.name} className="flex items-start justify-between gap-4 px-4 py-3">
-                <div>
-                  <p className="font-mono text-sm text-foreground">
+              <details key={t.name} className="rounded-lg border border-border px-4 py-3">
+                <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-3">
+                  <span className="font-mono text-sm text-foreground">
                     {t.name}
                     {t.sideEffecting ? (
                       <span className="ml-2 rounded-full border border-border px-2 py-0.5 font-sans text-[10px] uppercase tracking-wide text-muted-foreground">
                         confirm
                       </span>
                     ) : null}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t.description}</p>
-                </div>
-                <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary">
-                  {t.credits} cr
-                </span>
-              </li>
+                  </span>
+                  <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary">
+                    {t.credits} cr
+                  </span>
+                </summary>
+                <p className="mt-2 text-xs text-muted-foreground">{t.description}</p>
+                <p className="mt-3 text-xs font-medium text-foreground">Request</p>
+                <Code>{`curl -X POST ${SITE_URL}/api/public/v1/tools/${t.name} \\
+  -H "Authorization: Bearer $RELAY_KEY" \\
+  -H "content-type: application/json" \\
+  -H "idempotency-key: run-42" \\${
+    t.sideEffecting ? `\n  -H "x-confirm-side-effects: true" \\` : ""
+  }
+  -d '${JSON.stringify(t.example)}'`}</Code>
+                <p className="mt-3 text-xs font-medium text-foreground">Response — 200</p>
+                <Code>{JSON.stringify(exampleSuccessEnvelope(t), null, 2)}</Code>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Replaying the same <Mono>idempotency-key</Mono> returns this exact body with{" "}
+                  <Mono>&quot;replayed&quot;: true</Mono> and charges nothing.
+                  {t.sideEffecting
+                    ? " Without the confirmation header the call returns 428 with a preview of these arguments."
+                    : ""}
+                </p>
+                <p className="mt-3 text-xs font-medium text-foreground">MCP</p>
+                <Code>{`tools/call → ${t.name}
+arguments: ${JSON.stringify(t.example)}
+structuredContent: ${JSON.stringify({
+                  ...t.exampleResult,
+                  demo: t.demo,
+                  credits: { charged: t.credits, balance: 500 - t.credits },
+                })}`}</Code>
+              </details>
             ))}
-          </ul>
+          </div>
           <p className="mt-3 text-xs text-muted-foreground">
             Launch tools return simulated fixtures; every response includes{" "}
             <Mono>&quot;demo&quot;: true</Mono> until the underlying integration is live.
@@ -219,7 +274,8 @@ GET /.well-known/agent-manifest.json`}</Code>
           </p>
         </Section>
 
-        <Section title="9. MCP server">
+
+        <Section title="10. MCP server">
           <p className="mb-3 text-sm text-muted-foreground">
             The same catalog is exposed over Model Context Protocol for clients like Claude, Cursor
             and ChatGPT. Connect with OAuth 2.1 — you approve the client once, then calls are
@@ -241,7 +297,7 @@ GET /.well-known/agent-manifest.json`}</Code>
         </Section>
 
 
-        <Section title="10. Account status">
+        <Section title="11. Account status">
           <Code>{`GET /api/public/v1/me
 {
   "ok": true,

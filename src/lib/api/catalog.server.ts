@@ -1,6 +1,12 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { PUBLIC_TOOLS, type ToolContract } from "@/lib/agent/contracts";
+import {
+  PUBLIC_TOOLS,
+  exampleSuccessEnvelope,
+  type ToolContract,
+} from "@/lib/agent/contracts";
+import { TOOL_ERRORS } from "@/lib/api/errors";
+
 
 export const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
@@ -32,7 +38,52 @@ export function inputSchemaOf(tool: ToolContract) {
   >;
 }
 
+/** OpenAPI responses for every error the tool endpoint can return. */
+function errorResponses(sideEffecting: boolean) {
+  const relevant = TOOL_ERRORS.filter((e) => sideEffecting || e.code !== "confirmation_required");
+  const byStatus: Record<string, { description: string; content: unknown }> = {};
+  for (const err of relevant) {
+    const key = String(err.status);
+    const line = `${err.code}: ${err.cause} → ${err.action}`;
+    const existing = byStatus[key];
+    byStatus[key] = {
+      description: existing ? `${existing.description}\n${line}` : line,
+      content: {
+        "application/json": {
+          examples: {
+            ...((existing?.content as Record<string, { examples?: Record<string, unknown> }>)?.[
+              "application/json"
+            ]?.examples ?? {}),
+            [err.code]: {
+              summary: err.code,
+              value: {
+                ok: false,
+                error: {
+                  code: err.code,
+                  message: err.cause,
+                  ...(err.code === "insufficient_credits"
+                    ? { required: 5, balance: 2 }
+                    : {}),
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+  }
+  return byStatus;
+}
+
+
 export function toolDescriptor(tool: ToolContract, origin: string) {
+  const headers: Record<string, string> = {
+    Authorization: "Bearer sk_agent_...",
+    "content-type": "application/json",
+    "idempotency-key": "<unique-per-attempt>",
+  };
+  if (tool.sideEffecting) headers["x-confirm-side-effects"] = "true";
+
   return {
     name: tool.name,
     label: tool.label,
@@ -42,8 +93,21 @@ export function toolDescriptor(tool: ToolContract, origin: string) {
     credits: tool.credits,
     invokeUrl: `${origin}/api/public/v1/tools/${tool.name}`,
     inputSchema: inputSchemaOf(tool),
+    example: {
+      request: {
+        method: "POST",
+        url: `${origin}/api/public/v1/tools/${tool.name}`,
+        headers,
+        body: tool.example,
+      },
+      response: exampleSuccessEnvelope(tool),
+      errors: TOOL_ERRORS.filter((e) => tool.sideEffecting || e.code !== "confirmation_required").map(
+        (e) => ({ status: e.status, code: e.code, cause: e.cause, action: e.action }),
+      ),
+    },
   };
 }
+
 
 export function catalog(origin: string) {
   return {
@@ -99,20 +163,27 @@ export function openApiDocument(origin: string) {
         ],
         requestBody: {
           required: true,
-          content: { "application/json": { schema: inputSchemaOf(tool) } },
+          content: {
+            "application/json": {
+              schema: inputSchemaOf(tool),
+              examples: { default: { summary: "Example call", value: tool.example } },
+            },
+          },
         },
         responses: {
-          "200": { description: "Tool result" },
-          "401": { description: "Missing or invalid API key" },
-          "402": { description: "Insufficient credits" },
-          "403": { description: "Key lacks the tools:invoke scope" },
-          "404": { description: "Unknown tool" },
-          "409": { description: "A call with this idempotency-key is still running" },
-          "422": { description: "Invalid JSON body or input validation failed" },
-          "428": { description: "Side-effect confirmation header required" },
-          "429": { description: "Rate limited (60 calls/minute per key)" },
-          "502": { description: "Tool execution failed" },
+          "200": {
+            description: "Tool result",
+            content: {
+              "application/json": {
+                examples: {
+                  default: { summary: "Success", value: exampleSuccessEnvelope(tool) },
+                },
+              },
+            },
+          },
+          ...errorResponses(tool.sideEffecting),
         },
+
 
       },
     };

@@ -19,7 +19,7 @@
       {
         "name": "search_knowledge_base",
         "title": "Search knowledge base",
-        "description": "Search the workspace knowledge base for internal documentation, policies and notes. Read-only. Costs 1 credit(s) per call.",
+        "description": "Search the workspace knowledge base for internal documentation, policies and notes. Read-only. Costs 1 credit(s) per call. Example arguments: {\"query\":\"refund policy\"}. Example result: {\"ok\":true,\"matches\":[{\"title\":\"Refund policy\",\"body\":\"Refunds are issued within 14 days of purchase for annual plans, pro-rated after that.\"}]}. Read-only and safe to retry.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -45,7 +45,7 @@
       {
         "name": "lookup_crm_contact",
         "title": "Look up CRM contact",
-        "description": "Fetch a single CRM contact by email address. Read-only. Costs 1 credit(s) per call.",
+        "description": "Fetch a single CRM contact by email address. Read-only. Costs 1 credit(s) per call. Example arguments: {\"email\":\"dana@northwind.io\"}. Example result: {\"ok\":true,\"contact\":{\"id\":\"c_1024\",\"name\":\"Dana Whitfield\",\"email\":\"dana@northwind.io\",\"company\":\"Northwind\",\"stage\":\"customer\",\"mrr\":4200}}. Read-only and safe to retry.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -71,7 +71,7 @@
       {
         "name": "list_records",
         "title": "List records",
-        "description": "List records of a given type (contacts, invoices, tickets) with an optional status filter. Read-only. Costs 1 credit(s) per call.",
+        "description": "List records of a given type (contacts, invoices, tickets) with an optional status filter. Read-only. Costs 1 credit(s) per call. Example arguments: {\"type\":\"invoices\",\"status\":null}. Example result: {\"ok\":true,\"type\":\"invoices\",\"count\":2,\"rows\":[{\"id\":\"in_881\",\"contact\":\"dana@northwind.io\",\"amountCents\":420000,\"status\":\"paid\"},{\"id\":\"in_882\",\"contact\":\"priya@fernbrook.co\",\"amountCents\":89000,\"status\":\"open\"}]}. Read-only and safe to retry.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -105,7 +105,7 @@
       {
         "name": "send_email",
         "title": "Send email",
-        "description": "Send an email to a recipient. Side-effecting: requires explicit user confirmation. Costs 5 credit(s) per call.",
+        "description": "Send an email to a recipient. Side-effecting: requires explicit user confirmation. Costs 5 credit(s) per call. Example arguments: {\"to\":\"dana@northwind.io\",\"subject\":\"Your invoice is ready\",\"body\":\"Hi Dana — invoice in_881 is attached. Thanks!\"}. Example result: {\"ok\":true,\"simulated\":true,\"messageId\":\"sim_4f2a91cd\",\"to\":\"dana@northwind.io\",\"subject\":\"Your invoice is ready\",\"deliveredAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting: your client should ask the human to approve before calling.",
         "annotations": {
           "readOnlyHint": false,
           "idempotentHint": false,
@@ -141,7 +141,7 @@
       {
         "name": "update_crm_record",
         "title": "Update CRM record",
-        "description": "Update fields on a CRM record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call.",
+        "description": "Update fields on a CRM record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call. Example arguments: {\"recordId\":\"c_1024\",\"fields\":\"{\\\"stage\\\":\\\"churn_risk\\\",\\\"owner\\\":\\\"ae_12\\\"}\"}. Example result: {\"ok\":true,\"simulated\":true,\"recordId\":\"c_1024\",\"updatedFields\":\"{\\\"stage\\\":\\\"churn_risk\\\",\\\"owner\\\":\\\"ae_12\\\"}\",\"updatedAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting: your client should ask the human to approve before calling.",
         "annotations": {
           "readOnlyHint": false,
           "idempotentHint": false,
@@ -172,7 +172,7 @@
       {
         "name": "create_payment",
         "title": "Create payment",
-        "description": "Create a payment charge for a customer. Side-effecting: requires explicit user confirmation. Costs 10 credit(s) per call.",
+        "description": "Create a payment charge for a customer. Side-effecting: requires explicit user confirmation. Costs 10 credit(s) per call. Example arguments: {\"customerId\":\"c_1024\",\"amountCents\":4200,\"currency\":\"usd\"}. Example result: {\"ok\":true,\"simulated\":true,\"paymentId\":\"pay_9c31be40\",\"customerId\":\"c_1024\",\"amountCents\":4200,\"currency\":\"usd\",\"status\":\"succeeded\"}. Side-effecting: your client should ask the human to approve before calling.",
         "annotations": {
           "readOnlyHint": false,
           "idempotentHint": false,
@@ -208,7 +208,7 @@
       {
         "name": "delete_record",
         "title": "Delete record",
-        "description": "Permanently delete a record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call.",
+        "description": "Permanently delete a record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call. Example arguments: {\"type\":\"tickets\",\"recordId\":\"t_51\"}. Example result: {\"ok\":true,\"simulated\":true,\"deleted\":{\"type\":\"tickets\",\"recordId\":\"t_51\"},\"deletedAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting: your client should ask the human to approve before calling.",
         "annotations": {
           "readOnlyHint": false,
           "idempotentHint": false,
