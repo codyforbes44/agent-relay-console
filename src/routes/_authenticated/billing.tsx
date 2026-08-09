@@ -1,3 +1,4 @@
+import { authRedirectUrl } from "@/lib/site";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -61,7 +62,7 @@ function BillingPanel({ orgId }: { orgId: string }) {
       priceId,
       customerEmail: user?.email ?? undefined,
       customData: { orgId, userId: user?.id ?? "" },
-      successUrl: `${window.location.origin}/usage?checkout=success`,
+      successUrl: authRedirectUrl("/usage?checkout=success"),
     });
   }
 

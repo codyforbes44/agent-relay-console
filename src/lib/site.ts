@@ -55,3 +55,25 @@ export function publicHead(opts: {
     links: [{ rel: "canonical", href: url }],
   };
 }
+
+/**
+ * Base URL used for auth/OAuth/checkout redirects.
+ * Production and custom-domain traffic always resolves to the canonical
+ * https://3bi.ai origin; local dev and Lovable preview hosts keep their own
+ * origin so sign-in still round-trips inside the editor preview.
+ */
+export function authBaseUrl(): string {
+  if (typeof window === "undefined") return SITE_URL;
+  const host = window.location.hostname;
+  const isLocalOrPreview =
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host.endsWith(".lovable.app") ||
+    host.endsWith(".lovableproject.com");
+  return isLocalOrPreview ? window.location.origin : SITE_URL;
+}
+
+/** Absolute redirect target on the canonical (or preview) origin. */
+export function authRedirectUrl(path = "/"): string {
+  return `${authBaseUrl()}${path === "/" ? "" : path}`;
+}

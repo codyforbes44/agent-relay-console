@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { authRedirectUrl } from "@/lib/site";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
-          options: { emailRedirectTo: next ? window.location.origin + next : window.location.origin },
+          options: { emailRedirectTo: authRedirectUrl(next ?? "/") },
         });
         if (error) throw error;
         if (!data.session) setCheckEmail(true);
@@ -90,7 +91,7 @@ function AuthPage() {
   async function onGoogle() {
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: next ? window.location.origin + next : window.location.origin,
+      redirect_uri: authRedirectUrl(next ?? "/"),
     });
     if (result.error) {
       setBusy(false);

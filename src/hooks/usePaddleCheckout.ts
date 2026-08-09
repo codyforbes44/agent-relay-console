@@ -1,3 +1,4 @@
+import { authRedirectUrl } from "@/lib/site";
 import { useState } from "react";
 
 import { getPaddlePriceId, initializePaddle } from "@/lib/paddle";
@@ -23,7 +24,7 @@ export function usePaddleCheckout() {
         customData: options.customData,
         settings: {
           displayMode: "overlay",
-          successUrl: options.successUrl ?? `${window.location.origin}/usage?checkout=success`,
+          successUrl: options.successUrl ?? authRedirectUrl("/usage?checkout=success"),
           allowLogout: false,
           variant: "one-page",
         },
