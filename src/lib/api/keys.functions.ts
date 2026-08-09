@@ -10,11 +10,51 @@ export const listAgentKeys = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
       .from("agent_keys")
-      .select("id, label, key_prefix, scopes, revoked_at, last_used_at, created_at")
+      .select(
+        "id, label, key_prefix, scopes, revoked_at, last_used_at, created_at, max_credits_per_call, daily_credit_cap, total_credit_cap, expires_at, allowed_tools",
+      )
       .eq("org_id", data.orgId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return rows ?? [];
+  });
+
+/** Owner-set spend guardrails. Empty/absent values clear the limit. */
+export const updateKeyLimits = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      keyId: string;
+      maxCreditsPerCall: number | null;
+      dailyCreditCap: number | null;
+      totalCreditCap: number | null;
+      expiresAt: string | null;
+      allowedTools: string[] | null;
+    }) =>
+      z
+        .object({
+          keyId: z.string().uuid(),
+          maxCreditsPerCall: z.number().int().positive().max(1_000_000).nullable(),
+          dailyCreditCap: z.number().int().positive().max(10_000_000).nullable(),
+          totalCreditCap: z.number().int().positive().max(100_000_000).nullable(),
+          expiresAt: z.string().datetime().nullable(),
+          allowedTools: z.array(z.string().min(1).max(64)).max(50).nullable(),
+        })
+        .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("agent_keys")
+      .update({
+        max_credits_per_call: data.maxCreditsPerCall,
+        daily_credit_cap: data.dailyCreditCap,
+        total_credit_cap: data.totalCreditCap,
+        expires_at: data.expiresAt,
+        allowed_tools: data.allowedTools?.length ? data.allowedTools : null,
+      })
+      .eq("id", data.keyId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 export const createAgentKey = createServerFn({ method: "POST" })
