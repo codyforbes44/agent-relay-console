@@ -42,7 +42,7 @@ export function inputSchemaOf(tool: ToolContract) {
 
 /** OpenAPI responses for every error the tool endpoint can return. */
 function errorResponses(sideEffecting: boolean) {
-  const relevant = TOOL_ERRORS.filter((e) => sideEffecting || e.code !== "confirmation_required");
+  const relevant = TOOL_ERRORS.filter((e) => sideEffecting || !e.code.startsWith("confirmation_"));
   const byStatus: Record<string, { description: string; content: unknown }> = {};
   for (const err of relevant) {
     const key = String(err.status);
@@ -154,7 +154,7 @@ export function toolDescriptor(tool: ToolContract, origin: string) {
         body: tool.example,
       },
       response: exampleSuccessEnvelope(tool),
-      errors: TOOL_ERRORS.filter((e) => tool.sideEffecting || e.code !== "confirmation_required").map(
+      errors: TOOL_ERRORS.filter((e) => tool.sideEffecting || !e.code.startsWith("confirmation_")).map(
         (e) => ({ status: e.status, code: e.code, cause: e.cause, action: e.action }),
       ),
     },
@@ -166,6 +166,10 @@ export function catalog(origin: string, tools: ToolContract[] = PUBLIC_TOOLS) {
   return {
     ok: true,
     version: "2026-08-09",
+    confirmation: {
+      header: "x-confirmation-token",
+      flow: "Side-effecting tools: call unconfirmed -> 428 with error.preview + error.confirmationToken -> resend the identical body with the token. Tokens are single-use, expire in 10 minutes and are bound to the exact arguments previewed.",
+    },
     docs: `${origin}/docs`,
     openapi: `${origin}/api/public/v1/openapi.json`,
     auth: {
