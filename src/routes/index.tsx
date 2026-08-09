@@ -65,7 +65,11 @@ function Landing() {
           <Button size="lg" variant="outline" asChild>
             <Link to="/docs">Agent API docs</Link>
           </Button>
+          <Button size="lg" variant="ghost" asChild>
+            <Link to="/pricing">Pricing</Link>
+          </Button>
         </div>
+
 
       </section>
 
