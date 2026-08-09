@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ShieldCheck, Workflow, Terminal } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { LegalFooter } from "@/components/LegalFooter";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -65,7 +66,11 @@ function Landing() {
           <Button size="lg" variant="outline" asChild>
             <Link to="/docs">Agent API docs</Link>
           </Button>
+          <Button size="lg" variant="ghost" asChild>
+            <Link to="/pricing">Pricing</Link>
+          </Button>
         </div>
+
 
       </section>
 
@@ -94,6 +99,7 @@ function Landing() {
           </div>
         ))}
       </section>
+      <LegalFooter />
     </main>
   );
 }

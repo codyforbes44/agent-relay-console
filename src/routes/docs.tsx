@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
+import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
+import { LegalFooter } from "@/components/LegalFooter";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/docs")({
@@ -26,6 +28,7 @@ export const Route = createFileRoute("/docs")({
 
 function DocsPage() {
   return (
+    <>
     <main className="mx-auto w-full max-w-3xl px-6 py-16">
       <span className="font-mono text-[11px] tracking-[0.3em] text-primary">RELAY</span>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
@@ -91,7 +94,28 @@ GET /.well-known/agent-manifest.json`}</Code>
           Launch tools return simulated fixtures; every response includes{" "}
           <Mono>&quot;demo&quot;: true</Mono> until the underlying integration is live.
         </p>
+        <h3 className="mt-6 text-sm font-medium text-foreground">What credits cost</h3>
+        <ul className="mt-2 divide-y divide-border rounded-lg border border-border">
+          {CREDIT_PACKS.map((pack) => (
+            <li key={pack.priceId} className="flex items-center justify-between gap-4 px-4 py-3">
+              <span className="text-sm text-foreground">
+                {pack.label} — {pack.credits.toLocaleString()} credits
+              </span>
+              <span className="shrink-0 text-sm font-semibold text-foreground">
+                {formatUsd(pack.amountCents)}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 text-xs text-muted-foreground">
+          One-time purchases in USD, excluding tax. New workspaces start with 500 free credits. See{" "}
+          <Link to="/pricing" className="underline">
+            full pricing
+          </Link>
+          .
+        </p>
       </Section>
+
 
       <Section title="MCP server">
         <p className="mb-3 text-sm text-muted-foreground">
@@ -108,8 +132,12 @@ GET /.well-known/agent-manifest.json`}</Code>
       </Section>
 
     </main>
+    <LegalFooter />
+    </>
   );
 }
+
+
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
