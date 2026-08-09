@@ -120,14 +120,78 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
             .eq("idem_key", idemKey);
         };
 
-        const balance = await getBalance(supabaseAdmin, identity.orgId);
+        let balance = await getBalance(supabaseAdmin, identity.orgId);
+        let paymentReceipt: Record<string, unknown> | null = null;
+
         if (balance < tool.credits) {
-          await releaseIdem();
-          return apiError(402, "insufficient_credits", "Not enough credits for this call", {
-            required: tool.credits,
-            balance,
+          // Buy at least the shortfall, in whole top-up units, so a paying
+          // agent does not have to re-pay on its very next call.
+          const shortfall = tool.credits - balance;
+          const topUp = Math.max(MACHINE_TOPUP_MIN_CREDITS, shortfall);
+          const offer = buildOffer({
+            resource: new URL(request.url).toString(),
+            description: `RELAY credits (${topUp}) to call ${toolName}`,
+            credits: topUp,
           });
+
+          const paymentPayload = offer ? readPaymentHeader(request) : null;
+
+          if (offer && paymentPayload) {
+            try {
+              const settlement = await verifyAndSettle(offer.config, paymentPayload, offer.requirements);
+              await creditSettledPayment(supabaseAdmin, {
+                orgId: identity.orgId,
+                keyId: identity.keyId,
+                offer,
+                payer: settlement.payer,
+                txHash: settlement.txHash,
+                purpose: "tool_call",
+                toolName,
+                requestId,
+              });
+              balance = await getBalance(supabaseAdmin, identity.orgId);
+              paymentReceipt = {
+                credits: offer.credits,
+                amountUsd: offer.usd,
+                asset: offer.config.assetName,
+                network: settlement.network,
+                payer: settlement.payer,
+                transaction: settlement.txHash,
+              };
+              log("x402_settled", { requestId, orgId: identity.orgId, credits: offer.credits, tx: settlement.txHash });
+            } catch (e) {
+              const message = e instanceof Error ? e.message : "Payment could not be settled";
+              await markIntentFailed(supabaseAdmin, offer.nonce, message);
+              await releaseIdem();
+              log("x402_failed", { requestId, orgId: identity.orgId, message });
+              return apiError(402, "payment_failed", message, { required: tool.credits, balance });
+            }
+          }
+
+          if (balance < tool.credits) {
+            await releaseIdem();
+            if (!offer) {
+              return apiError(402, "insufficient_credits", "Not enough credits for this call", {
+                required: tool.credits,
+                balance,
+              });
+            }
+            await recordIntent(supabaseAdmin, {
+              orgId: identity.orgId,
+              keyId: identity.keyId,
+              offer,
+              purpose: "tool_call",
+              toolName,
+              requestId,
+            });
+            return json(
+              offerBody(offer, "insufficient_credits", { required: tool.credits, balance, tool: toolName }),
+              402,
+              { "x-request-id": requestId, "x-credits-required": String(tool.credits) },
+            );
+          }
         }
+
 
 
         let result: Record<string, unknown>;
