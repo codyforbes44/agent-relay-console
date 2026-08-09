@@ -165,7 +165,7 @@ async function runMetered(
   const payload = {
     ...result,
     demo: contract.demo,
-    credits: { charged: contract.credits, balance: balance - contract.credits },
+    credits: { charged: contract.credits, balance: reservation.balance },
   };
   if (confirmationId) await storeConfirmationResponse(supabaseAdmin, confirmationId, payload);
 
