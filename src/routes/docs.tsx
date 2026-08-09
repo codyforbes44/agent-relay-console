@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { PublicShell } from "@/components/public/PublicShell";
+import { TryToolPanel } from "@/components/public/TryToolPanel";
 import { Button } from "@/components/ui/button";
-import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
+import { PUBLIC_TOOLS, exampleSuccessEnvelope } from "@/lib/agent/contracts";
+import { API_ERRORS, ERROR_ENVELOPE_EXAMPLE } from "@/lib/api/errors";
 import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
 import { SITE_URL, publicHead } from "@/lib/site";
+
 
 export const Route = createFileRoute("/docs")({
   head: () =>
