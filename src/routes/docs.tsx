@@ -73,6 +73,54 @@ function DocsPage() {
           </p>
         </Section>
 
+        <Section title="0b. Agents pay for themselves (x402)">
+          <p className="mb-3 text-sm text-muted-foreground">
+            When the balance runs out, the <Mono>402</Mono> is machine-payable. The body follows the{" "}
+            <a className="underline" href="https://x402.org" target="_blank" rel="noreferrer">
+              x402
+            </a>{" "}
+            spec: settle <Mono>accepts[0]</Mono> in USDC on Base, then retry the same request with an{" "}
+            <Mono>X-PAYMENT</Mono> header. Credits are added and the call executes in that one retry.
+          </p>
+          <Code>{`{
+  "x402Version": 1,
+  "error": "insufficient_credits",
+  "accepts": [{
+    "scheme": "exact",
+    "network": "base",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "maxAmountRequired": "900000",
+    "payTo": "0x…",
+    "resource": "${SITE_URL}/api/public/v1/tools/crm.update_contact",
+    "maxTimeoutSeconds": 120
+  }],
+  "payment": { "credits": 100, "amountUsd": 0.9, "asset": "USDC", "network": "base" }
+}`}</Code>
+          <p className="mt-3 text-sm text-muted-foreground">
+            To top up ahead of time instead of on the failing call:
+          </p>
+          <Code>{`curl -X POST ${SITE_URL}/api/public/v1/credits/purchase \\
+  -H "Authorization: Bearer $RELAY_KEY" \\
+  -H "content-type: application/json" \\
+  -d '{"credits":1000}'          # → 402 with the offer, then retry with X-PAYMENT`}</Code>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Payments are credited once per settled transaction, so a replayed <Mono>X-PAYMENT</Mono>{" "}
+            never double-charges. If on-chain payment is not available to you, fall back to{" "}
+            <Mono>POST /api/public/v1/claim</Mono> and a human buys credits with a card.
+          </p>
+        </Section>
+
+        <Section title="0c. Spend guardrails">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Every key can carry owner-set limits, enforced server-side before a tool runs: max
+            credits per call, a rolling 24-hour cap, a lifetime cap, an expiry date and a tool
+            allowlist. Exceeding one returns <Mono>403 budget_exceeded</Mono>,{" "}
+            <Mono>403 tool_not_allowed</Mono> or <Mono>401 key_expired</Mono> with the limit and
+            spend-to-date in the body — nothing is executed or charged. Configure them per key in
+            the console.
+          </p>
+        </Section>
+
 
         <Section title="1. Discovery">
           <p className="mb-3 text-sm text-muted-foreground">
