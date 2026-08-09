@@ -28,6 +28,7 @@ export const Route = createFileRoute("/docs")({
 
 function DocsPage() {
   return (
+    <>
     <main className="mx-auto w-full max-w-3xl px-6 py-16">
       <span className="font-mono text-[11px] tracking-[0.3em] text-primary">RELAY</span>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
