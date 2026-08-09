@@ -29,8 +29,21 @@ export const Route = createFileRoute("/.well-known/agent-manifest.json")({
           api: { type: "openapi", url: `${origin}/api/public/v1/openapi.json` },
           catalog_url: `${origin}/api/public/v1/tools`,
           mcp: { transport: "streamable-http", url: `${origin}/mcp`, auth: "oauth2.1" },
+          // Machine payments: an agent can settle its own 402 and keep going.
+          payments: {
+            protocol: "x402",
+            x402_version: 1,
+            asset: "USDC",
+            networks: ["base"],
+            purchase_url: `${origin}/api/public/v1/credits/purchase`,
+            purchase_method: "POST",
+            challenge:
+              "Any 402 response carries accepts[]. Settle it and retry the same request with an X-PAYMENT header.",
+            human_fallback_url: `${origin}/api/public/v1/claim`,
+          },
           docs_url: `${origin}/docs`,
           llms_txt: `${origin}/llms.txt`,
+
 
           tool_names: PUBLIC_TOOLS.map((t) => t.name),
         });
