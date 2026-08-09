@@ -544,9 +544,11 @@ function OrgRow({
           }}
           trigger={
             <Button size="sm" variant="outline" disabled={pending}>
+              Adjust credits
+            </Button>
+          }
+        />
 
-          Adjust credits
-        </Button>
       </div>
     </div>
   );
