@@ -196,8 +196,10 @@ GET /.well-known/agent-manifest.json`}</Code>
           <p className="mb-3 text-sm text-muted-foreground">
             The same catalog is exposed over Model Context Protocol for clients like Claude, Cursor
             and ChatGPT. Connect with OAuth 2.1 — you approve the client once, then calls are
-            metered against your workspace credits exactly like HTTP calls. Side-effecting tools
-            take a <Mono>confirm</Mono> argument instead of the HTTP header.
+            metered against your workspace credits exactly like HTTP calls. Side-effecting tools are
+            marked with the MCP <Mono>destructiveHint</Mono> annotation, so compliant clients ask
+            the human to approve the call before it runs.
+
           </p>
           <Code>{`${SITE_URL}/mcp   # Streamable HTTP, OAuth 2.1 (dynamic client registration)`}</Code>
         </Section>
