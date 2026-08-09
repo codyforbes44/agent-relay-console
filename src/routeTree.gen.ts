@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ClaimRouteImport } from './routes/claim'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -32,9 +34,12 @@ import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedChatThreadIdRouteImport } from './routes/_authenticated/chat.$threadId'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicV1ClaimRouteImport } from './routes/api/public/v1/claim'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
+import { Route as ApiPublicV1SignupRouteImport } from './routes/api/public/v1/signup'
 import { Route as ApiPublicV1ToolsRouteImport } from './routes/api/public/v1/tools'
+import { Route as ApiPublicV1KeysRotateRouteImport } from './routes/api/public/v1/keys.rotate'
 import { Route as ApiPublicV1ToolsToolNameRouteImport } from './routes/api/public/v1/tools.$toolName'
 
 const IndexRoute = IndexRouteImport.update({
@@ -51,9 +56,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClaimRoute = ClaimRouteImport.update({
+  id: '/claim',
+  path: '/claim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -157,6 +172,11 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV1ClaimRoute = ApiPublicV1ClaimRouteImport.update({
+  id: '/api/public/v1/claim',
+  path: '/api/public/v1/claim',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1MeRoute = ApiPublicV1MeRouteImport.update({
   id: '/api/public/v1/me',
   path: '/api/public/v1/me',
@@ -168,9 +188,19 @@ const ApiPublicV1OpenapiDotjsonRoute =
     path: '/api/public/v1/openapi.json',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV1SignupRoute = ApiPublicV1SignupRouteImport.update({
+  id: '/api/public/v1/signup',
+  path: '/api/public/v1/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1ToolsRoute = ApiPublicV1ToolsRouteImport.update({
   id: '/api/public/v1/tools',
   path: '/api/public/v1/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1KeysRotateRoute = ApiPublicV1KeysRotateRouteImport.update({
+  id: '/api/public/v1/keys/rotate',
+  path: '/api/public/v1/keys/rotate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicV1ToolsToolNameRoute =
@@ -183,7 +213,9 @@ const ApiPublicV1ToolsToolNameRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/claim': typeof ClaimRoute
   '/docs': typeof DocsRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -203,15 +235,20 @@ export interface FileRoutesByFullPath {
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/keys/rotate': typeof ApiPublicV1KeysRotateRoute
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/claim': typeof ClaimRoute
   '/docs': typeof DocsRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -231,9 +268,12 @@ export interface FileRoutesByTo {
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/keys/rotate': typeof ApiPublicV1KeysRotateRoute
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
 export interface FileRoutesById {
@@ -241,7 +281,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/claim': typeof ClaimRoute
   '/docs': typeof DocsRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -261,9 +303,12 @@ export interface FileRoutesById {
   '/_authenticated/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/keys/rotate': typeof ApiPublicV1KeysRotateRoute
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
 export interface FileRouteTypes {
@@ -271,7 +316,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/claim'
     | '/docs'
+    | '/llms.txt'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -291,15 +338,20 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/chat/'
     | '/api/public/payments/webhook'
+    | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/signup'
     | '/api/public/v1/tools'
+    | '/api/public/v1/keys/rotate'
     | '/api/public/v1/tools/$toolName'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/claim'
     | '/docs'
+    | '/llms.txt'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -319,16 +371,21 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/chat'
     | '/api/public/payments/webhook'
+    | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/signup'
     | '/api/public/v1/tools'
+    | '/api/public/v1/keys/rotate'
     | '/api/public/v1/tools/$toolName'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/claim'
     | '/docs'
+    | '/llms.txt'
     | '/mcp'
     | '/pricing'
     | '/privacy'
@@ -348,9 +405,12 @@ export interface FileRouteTypes {
     | '/_authenticated/chat/$threadId'
     | '/_authenticated/chat/'
     | '/api/public/payments/webhook'
+    | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/signup'
     | '/api/public/v1/tools'
+    | '/api/public/v1/keys/rotate'
     | '/api/public/v1/tools/$toolName'
   fileRoutesById: FileRoutesById
 }
@@ -358,7 +418,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ClaimRoute: typeof ClaimRoute
   DocsRoute: typeof DocsRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   McpRoute: typeof McpRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -372,9 +434,12 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicV1ClaimRoute: typeof ApiPublicV1ClaimRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
+  ApiPublicV1SignupRoute: typeof ApiPublicV1SignupRoute
   ApiPublicV1ToolsRoute: typeof ApiPublicV1ToolsRouteWithChildren
+  ApiPublicV1KeysRotateRoute: typeof ApiPublicV1KeysRotateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -400,11 +465,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/claim': {
+      id: '/claim'
+      path: '/claim'
+      fullPath: '/claim'
+      preLoaderRoute: typeof ClaimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs': {
       id: '/docs'
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -540,6 +619,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/claim': {
+      id: '/api/public/v1/claim'
+      path: '/api/public/v1/claim'
+      fullPath: '/api/public/v1/claim'
+      preLoaderRoute: typeof ApiPublicV1ClaimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/me': {
       id: '/api/public/v1/me'
       path: '/api/public/v1/me'
@@ -554,11 +640,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1OpenapiDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/signup': {
+      id: '/api/public/v1/signup'
+      path: '/api/public/v1/signup'
+      fullPath: '/api/public/v1/signup'
+      preLoaderRoute: typeof ApiPublicV1SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/tools': {
       id: '/api/public/v1/tools'
       path: '/api/public/v1/tools'
       fullPath: '/api/public/v1/tools'
       preLoaderRoute: typeof ApiPublicV1ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/keys/rotate': {
+      id: '/api/public/v1/keys/rotate'
+      path: '/api/public/v1/keys/rotate'
+      fullPath: '/api/public/v1/keys/rotate'
+      preLoaderRoute: typeof ApiPublicV1KeysRotateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/v1/tools/$toolName': {
@@ -607,7 +707,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ClaimRoute: ClaimRoute,
   DocsRoute: DocsRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   McpRoute: McpRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
@@ -622,9 +724,12 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicV1ClaimRoute: ApiPublicV1ClaimRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
+  ApiPublicV1SignupRoute: ApiPublicV1SignupRoute,
   ApiPublicV1ToolsRoute: ApiPublicV1ToolsRouteWithChildren,
+  ApiPublicV1KeysRotateRoute: ApiPublicV1KeysRotateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -126,6 +126,44 @@ export type Database = {
           },
         ]
       }
+      claim_tokens: {
+        Row: {
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          org_id: string
+          token_hash: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          org_id: string
+          token_hash: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          org_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_tokens_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -407,24 +445,30 @@ export type Database = {
       }
       organizations: {
         Row: {
+          claimed_at: string | null
           created_at: string
-          created_by: string
+          created_by: string | null
           id: string
           name: string
+          origin: string
           slug: string
         }
         Insert: {
+          claimed_at?: string | null
           created_at?: string
-          created_by: string
+          created_by?: string | null
           id?: string
           name: string
+          origin?: string
           slug: string
         }
         Update: {
+          claimed_at?: string | null
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           id?: string
           name?: string
+          origin?: string
           slug?: string
         }
         Relationships: []
@@ -464,6 +508,24 @@ export type Database = {
         Update: {
           count?: number
           user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      signup_attempts: {
+        Row: {
+          count: number
+          ip_hash: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          ip_hash: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          ip_hash?: string
           window_start?: string
         }
         Relationships: []
@@ -618,6 +680,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_organization: { Args: { _token_hash: string }; Returns: string }
       consume_rate_limit: { Args: { _max?: number }; Returns: boolean }
       has_org_access: { Args: { _org_id: string }; Returns: boolean }
       has_role: {

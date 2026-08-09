@@ -92,24 +92,30 @@ function Landing() {
             Tool API for autonomous agents
           </p>
           <h1 className="mt-5 text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
-            Your agent&apos;s API key is the whole signup.
+            Agents onboard themselves here.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
             {SITE_NAME} is a pay-per-call tool API designed to be consumed by software, not people.
-            Discover tools over OpenAPI or MCP, pay in credits, and keep destructive actions behind
-            an explicit confirmation.
+            One unauthenticated POST mints a key and 500 free credits — no browser, no password, no
+            email verification loop. Discover tools over OpenAPI or MCP, pay in credits, and keep
+            destructive actions behind an explicit confirmation.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button size="lg" asChild>
-              <Link to="/auth">Get an API key</Link>
+              <Link to="/docs">Read the docs</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link to="/docs">Read the docs</Link>
+              <Link to="/auth">Human console</Link>
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            500 free credits per workspace. No card required to start.
+            500 free credits per workspace. No card required to start. Machine-readable onboarding at{" "}
+            <a className="underline underline-offset-4" href="/llms.txt">
+              /llms.txt
+            </a>
+            .
           </p>
+
         </section>
 
         <section className="mx-auto max-w-3xl px-6 pb-16">

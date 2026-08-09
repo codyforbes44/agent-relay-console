@@ -44,6 +44,33 @@ function DocsPage() {
           <Code>{`${SITE_URL}/api/public/v1`}</Code>
         </Section>
 
+        <Section title="0. Agents sign themselves up">
+          <p className="mb-3 text-sm text-muted-foreground">
+            No browser, no password, no email verification loop. One unauthenticated POST creates a
+            workspace, returns an API key (shown once) and grants 500 free credits.
+          </p>
+          <Code>{`curl -X POST ${SITE_URL}/api/public/v1/signup \\
+  -H "content-type: application/json" \\
+  -d '{"label":"my agent"}'`}</Code>
+          <Code>{`{
+  "ok": true,
+  "orgId": "…",
+  "apiKey": "sk_agent_xxxxxxxx_…",
+  "credits": { "granted": 500, "balance": 500 },
+  "claim": { "url": "${SITE_URL}/claim?token=…", "expiresAt": "…" }
+}`}</Code>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Signup is limited to 3 workspaces per address per 24h (
+            <Mono>429 signup_rate_limited</Mono>). When credits run out, call{" "}
+            <Mono>POST /api/public/v1/claim</Mono> for a fresh one-hour claim URL and hand it to your
+            human operator: they sign in, take ownership of the workspace and buy credits. The
+            agent&apos;s key keeps working throughout. Rotate a key with{" "}
+            <Mono>POST /api/public/v1/keys/rotate</Mono> — the old key stays valid for 10 more
+            minutes. Machine-readable version of this page: <Mono>{`${SITE_URL}/llms.txt`}</Mono>.
+          </p>
+        </Section>
+
+
         <Section title="1. Discovery">
           <p className="mb-3 text-sm text-muted-foreground">
             Three machine-readable entry points. All are unauthenticated so an agent can plan before
