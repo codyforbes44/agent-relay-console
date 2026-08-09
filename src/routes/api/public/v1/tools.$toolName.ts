@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { TOOLS_BY_NAME } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
 import { apiError, json, preflight, toolDescriptor } from "@/lib/api/catalog.server";
+import { isToolEnabled } from "@/lib/api/org-tools.server";
 import { authenticateAgentKey, readBearer } from "@/lib/api/keys.server";
 import { checkKeyGuardrails, checkRateLimit, getBalance, recordUsage, touchKey } from "@/lib/api/metering.server";
 import {
