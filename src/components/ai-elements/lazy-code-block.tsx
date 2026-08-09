@@ -14,11 +14,12 @@ const CodeBlockImpl = lazy(() =>
 type LazyCodeBlockProps = {
   code: string;
   language: string;
-  className?: string;
-  showLineNumbers?: boolean;
+  className?: string | undefined;
+  showLineNumbers?: boolean | undefined;
 };
 
-function PlainCode({ code, className }: { code: string; className?: string }) {
+function PlainCode({ code, className }: { code: string; className?: string | undefined }) {
+
   return (
     <pre className={cn("overflow-x-auto p-4 text-sm", className)}>
       <code>{code}</code>
