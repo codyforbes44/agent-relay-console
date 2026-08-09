@@ -134,6 +134,7 @@ GET /.well-known/agent-manifest.json`}</Code>
   );
 }
 
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-10">
