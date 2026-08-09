@@ -275,7 +275,7 @@ structuredContent: ${JSON.stringify({
         </Section>
 
 
-        <Section title="9. MCP server">
+        <Section title="10. MCP server">
           <p className="mb-3 text-sm text-muted-foreground">
             The same catalog is exposed over Model Context Protocol for clients like Claude, Cursor
             and ChatGPT. Connect with OAuth 2.1 — you approve the client once, then calls are
@@ -297,7 +297,7 @@ structuredContent: ${JSON.stringify({
         </Section>
 
 
-        <Section title="10. Account status">
+        <Section title="11. Account status">
           <Code>{`GET /api/public/v1/me
 {
   "ok": true,
