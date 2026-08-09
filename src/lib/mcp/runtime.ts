@@ -113,42 +113,41 @@ async function runMetered(
   }
 
   const started = Date.now();
-  const { getBalance, recordUsage } = await import("@/lib/api/metering.server");
+  const { reserveCredits, refundReservedCredits, finalizeUsage } = await import(
+    "@/lib/api/metering.server"
+  );
 
-  const balance = await getBalance(supabaseAdmin, orgId);
-  if (balance < contract.credits) {
+  // Same atomic reserve-then-run path as the HTTP API: balance is checked and
+  // debited in one transaction so concurrent sessions cannot double-spend.
+  const reservation = await reserveCredits(supabaseAdmin, {
+    orgId,
+    keyId: null,
+    toolName: contract.name,
+    credits: contract.credits,
+    requestId: crypto.randomUUID(),
+  });
+
+  if (reservation.status === "insufficient") {
+    if (confirmationId) await releaseConfirmation(supabaseAdmin, confirmationId);
     return fail(
-      `Insufficient credits: this call costs ${contract.credits}, balance is ${balance}. Top up in the Relay console.`,
+      `Insufficient credits: this call costs ${contract.credits}, balance is ${reservation.balance}. Top up in the Relay console.`,
     );
+  }
+  if (reservation.status !== "ok") {
+    if (confirmationId) await releaseConfirmation(supabaseAdmin, confirmationId);
+    return fail("Credit metering is temporarily unavailable, retry shortly.");
   }
 
   let result: Record<string, unknown>;
   try {
     result = await runTool(contract.name, toolArgs);
   } catch (e) {
-    await recordUsage(supabaseAdmin, {
-      orgId,
-      keyId: "",
-      toolName: contract.name,
-      credits: 0,
-      status: "error",
-      errorCode: "tool_failed",
-      latencyMs: Date.now() - started,
-      requestId: crypto.randomUUID(),
-    });
+    await refundReservedCredits(supabaseAdmin, reservation.usageEventId, "tool_failed");
     if (confirmationId) await releaseConfirmation(supabaseAdmin, confirmationId);
     return fail(e instanceof Error ? e.message : "Tool execution failed");
   }
 
-  await recordUsage(supabaseAdmin, {
-    orgId,
-    keyId: "",
-    toolName: contract.name,
-    credits: contract.credits,
-    status: "success",
-    latencyMs: Date.now() - started,
-    requestId: crypto.randomUUID(),
-  });
+  await finalizeUsage(supabaseAdmin, reservation.usageEventId, Date.now() - started);
 
   await supabaseAdmin.from("audit_logs").insert({
     org_id: orgId,
