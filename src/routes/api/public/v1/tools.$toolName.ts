@@ -269,6 +269,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           tool: toolName,
           demo: tool.demo,
           credits: { charged: tool.credits, balance: balance - tool.credits },
+          ...(paymentReceipt ? { payment: paymentReceipt } : {}),
           result,
         };
 
