@@ -1,4 +1,5 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   PUBLIC_TOOLS,
@@ -6,6 +7,7 @@ import {
   type ToolContract,
 } from "@/lib/agent/contracts";
 import { TOOL_ERRORS } from "@/lib/api/errors";
+import { visibleToolsForOrg } from "@/lib/api/org-tools.server";
 
 
 export const CORS_HEADERS: Record<string, string> = {
