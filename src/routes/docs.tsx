@@ -287,10 +287,13 @@ GET /.well-known/agent-manifest.json # legacy alias of agents.json`}</Code>
 
         <Section title="9. Starter catalog, examples & credit prices">
           <p className="mb-3 text-sm text-muted-foreground">
-            The current tools are a simulated starter set for integration testing. Every response
-            carries <Mono>&quot;demo&quot;: true</Mono> until the underlying integrations (CRM,
-            email, payment processor) are live. Production catalogs will include workspace-level
-            tool visibility controls.
+            The catalog has two tiers. Live tools (<Mono>fetch_url</Mono>,{" "}
+            <Mono>crawl_site</Mono>, <Mono>extract_structured</Mono>) do real network and model
+            work, cost credits and return <Mono>&quot;demo&quot;: false</Mono>. Every{" "}
+            <Mono>sandbox_*</Mono> tool is free (0 credits), returns fixture data with{" "}
+            <Mono>&quot;demo&quot;: true</Mono> and changes nothing — use them to rehearse
+            auth, schemas, idempotency and the confirmation gate. Workspace owners can disable
+            any tool in the console.
           </p>
           <div className="space-y-4">
             {PUBLIC_TOOLS.map((t) => (
@@ -338,8 +341,10 @@ structuredContent: ${JSON.stringify({
             ))}
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            Launch tools return simulated fixtures; every response includes{" "}
-            <Mono>&quot;demo&quot;: true</Mono> until the underlying integration is live.
+            <Mono>sandbox_*</Mono> tools are free and return fixtures with{" "}
+            <Mono>&quot;demo&quot;: true</Mono>. Their pre-rename names (e.g.{" "}
+            <Mono>send_email</Mono>) still resolve for now and answer with a{" "}
+            <Mono>deprecated</Mono> pointer to the new name.
           </p>
           <h3 className="mt-6 text-sm font-medium text-foreground">What credits cost</h3>
           <ul className="mt-2 divide-y divide-border rounded-lg border border-border">
