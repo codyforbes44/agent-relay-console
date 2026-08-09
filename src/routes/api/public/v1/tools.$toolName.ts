@@ -4,7 +4,16 @@ import { TOOLS_BY_NAME } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
 import { apiError, json, preflight, toolDescriptor } from "@/lib/api/catalog.server";
 import { authenticateAgentKey, readBearer } from "@/lib/api/keys.server";
-import { checkRateLimit, getBalance, recordUsage, touchKey } from "@/lib/api/metering.server";
+import { checkKeyGuardrails, checkRateLimit, getBalance, recordUsage, touchKey } from "@/lib/api/metering.server";
+import {
+  buildOffer,
+  creditSettledPayment,
+  markIntentFailed,
+  offerBody,
+  recordIntent,
+} from "@/lib/api/payments.server";
+import { readPaymentHeader, verifyAndSettle } from "@/lib/api/x402.server";
+import { MACHINE_TOPUP_MIN_CREDITS } from "@/lib/billing/packs";
 
 function log(event: string, fields: Record<string, unknown>) {
   console.log(JSON.stringify({ event, at: new Date().toISOString(), ...fields }));
@@ -38,6 +47,23 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         if (!identity.scopes.includes("tools:invoke")) {
           return apiError(403, "insufficient_scope", "This key cannot invoke tools");
         }
+
+        const violation = await checkKeyGuardrails(supabaseAdmin, identity, toolName, tool.credits);
+        if (violation) {
+          await recordUsage(supabaseAdmin, {
+            orgId: identity.orgId,
+            keyId: identity.keyId,
+            toolName,
+            credits: 0,
+            status: "rejected",
+            errorCode: violation.code,
+            latencyMs: Date.now() - started,
+            requestId,
+          });
+          return apiError(violation.status, violation.code, violation.message, violation.extra ?? {});
+        }
+
+
 
         if (!(await checkRateLimit(supabaseAdmin, identity.keyId))) {
           return apiError(429, "rate_limited", "Too many calls for this key, retry in a minute");
@@ -120,14 +146,78 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
             .eq("idem_key", idemKey);
         };
 
-        const balance = await getBalance(supabaseAdmin, identity.orgId);
+        let balance = await getBalance(supabaseAdmin, identity.orgId);
+        let paymentReceipt: Record<string, unknown> | null = null;
+
         if (balance < tool.credits) {
-          await releaseIdem();
-          return apiError(402, "insufficient_credits", "Not enough credits for this call", {
-            required: tool.credits,
-            balance,
+          // Buy at least the shortfall, in whole top-up units, so a paying
+          // agent does not have to re-pay on its very next call.
+          const shortfall = tool.credits - balance;
+          const topUp = Math.max(MACHINE_TOPUP_MIN_CREDITS, shortfall);
+          const offer = buildOffer({
+            resource: new URL(request.url).toString(),
+            description: `RELAY credits (${topUp}) to call ${toolName}`,
+            credits: topUp,
           });
+
+          const paymentPayload = offer ? readPaymentHeader(request) : null;
+
+          if (offer && paymentPayload) {
+            try {
+              const settlement = await verifyAndSettle(offer.config, paymentPayload, offer.requirements);
+              await creditSettledPayment(supabaseAdmin, {
+                orgId: identity.orgId,
+                keyId: identity.keyId,
+                offer,
+                payer: settlement.payer,
+                txHash: settlement.txHash,
+                purpose: "tool_call",
+                toolName,
+                requestId,
+              });
+              balance = await getBalance(supabaseAdmin, identity.orgId);
+              paymentReceipt = {
+                credits: offer.credits,
+                amountUsd: offer.usd,
+                asset: offer.config.assetName,
+                network: settlement.network,
+                payer: settlement.payer,
+                transaction: settlement.txHash,
+              };
+              log("x402_settled", { requestId, orgId: identity.orgId, credits: offer.credits, tx: settlement.txHash });
+            } catch (e) {
+              const message = e instanceof Error ? e.message : "Payment could not be settled";
+              await markIntentFailed(supabaseAdmin, offer.nonce, message);
+              await releaseIdem();
+              log("x402_failed", { requestId, orgId: identity.orgId, message });
+              return apiError(402, "payment_failed", message, { required: tool.credits, balance });
+            }
+          }
+
+          if (balance < tool.credits) {
+            await releaseIdem();
+            if (!offer) {
+              return apiError(402, "insufficient_credits", "Not enough credits for this call", {
+                required: tool.credits,
+                balance,
+              });
+            }
+            await recordIntent(supabaseAdmin, {
+              orgId: identity.orgId,
+              keyId: identity.keyId,
+              offer,
+              purpose: "tool_call",
+              toolName,
+              requestId,
+            });
+            return json(
+              offerBody(offer, "insufficient_credits", { required: tool.credits, balance, tool: toolName }),
+              402,
+              { "x-request-id": requestId, "x-credits-required": String(tool.credits) },
+            );
+          }
         }
+
 
 
         let result: Record<string, unknown>;
@@ -179,6 +269,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           tool: toolName,
           demo: tool.demo,
           credits: { charged: tool.credits, balance: balance - tool.credits },
+          ...(paymentReceipt ? { payment: paymentReceipt } : {}),
           result,
         };
 

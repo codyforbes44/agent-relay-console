@@ -240,6 +240,21 @@ export function openApiDocument(origin: string) {
     },
   };
 
+  paths["/api/public/v1/credits/purchase"] = {
+    post: {
+      operationId: "purchaseCredits",
+      summary: "Buy credits machine-to-machine over x402 (USDC on Base)",
+      description:
+        "POST {credits} to receive a 402 with an x402 accepts[] offer. Settle it, then retry the same request with an X-PAYMENT header to have the credits added.",
+      security: [{ agentKey: [] }],
+      responses: {
+        "200": { description: "Credits added, with settlement receipt" },
+        "402": { description: "Payment required — body carries the x402 offer" },
+        "422": { description: "credits out of range" },
+      },
+    },
+  };
+
   paths["/api/public/v1/me"] = {
     get: {
       operationId: "getAccount",

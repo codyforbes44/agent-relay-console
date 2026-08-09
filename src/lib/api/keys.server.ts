@@ -42,7 +42,21 @@ export function readBearer(request: Request): string {
   return request.headers.get("x-api-key")?.trim() ?? "";
 }
 
-export type KeyIdentity = { keyId: string; orgId: string; scopes: string[] };
+/** Owner-set guardrails attached to a key. Null means "no limit". */
+export type KeyLimits = {
+  maxCreditsPerCall: number | null;
+  dailyCreditCap: number | null;
+  totalCreditCap: number | null;
+  expiresAt: string | null;
+  allowedTools: string[] | null;
+};
+
+export type KeyIdentity = {
+  keyId: string;
+  orgId: string;
+  scopes: string[];
+  limits: KeyLimits;
+};
 
 export async function authenticateAgentKey(
   admin: SupabaseClient,
@@ -53,7 +67,9 @@ export async function authenticateAgentKey(
 
   const { data, error } = await admin
     .from("agent_keys")
-    .select("id, org_id, key_hash, scopes, revoked_at")
+    .select(
+      "id, org_id, key_hash, scopes, revoked_at, max_credits_per_call, daily_credit_cap, total_credit_cap, expires_at, allowed_tools",
+    )
     .eq("key_prefix", parsed.prefix)
     .maybeSingle();
   if (error || !data) return null;
@@ -67,5 +83,16 @@ export async function authenticateAgentKey(
   for (let i = 0; i < hash.length; i++) diff |= hash.charCodeAt(i) ^ data.key_hash.charCodeAt(i);
   if (diff !== 0) return null;
 
-  return { keyId: data.id, orgId: data.org_id, scopes: data.scopes ?? [] };
+  return {
+    keyId: data.id,
+    orgId: data.org_id,
+    scopes: data.scopes ?? [],
+    limits: {
+      maxCreditsPerCall: data.max_credits_per_call ?? null,
+      dailyCreditCap: data.daily_credit_cap ?? null,
+      totalCreditCap: data.total_credit_cap ?? null,
+      expiresAt: data.expires_at ?? null,
+      allowedTools: data.allowed_tools ?? null,
+    },
+  };
 }

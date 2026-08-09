@@ -16,40 +16,55 @@ export type Database = {
     Tables: {
       agent_keys: {
         Row: {
+          allowed_tools: string[] | null
           created_at: string
           created_by: string | null
+          daily_credit_cap: number | null
+          expires_at: string | null
           id: string
           key_hash: string
           key_prefix: string
           label: string
           last_used_at: string | null
+          max_credits_per_call: number | null
           org_id: string
           revoked_at: string | null
           scopes: string[]
+          total_credit_cap: number | null
         }
         Insert: {
+          allowed_tools?: string[] | null
           created_at?: string
           created_by?: string | null
+          daily_credit_cap?: number | null
+          expires_at?: string | null
           id?: string
           key_hash: string
           key_prefix: string
           label?: string
           last_used_at?: string | null
+          max_credits_per_call?: number | null
           org_id: string
           revoked_at?: string | null
           scopes?: string[]
+          total_credit_cap?: number | null
         }
         Update: {
+          allowed_tools?: string[] | null
           created_at?: string
           created_by?: string | null
+          daily_credit_cap?: number | null
+          expires_at?: string | null
           id?: string
           key_hash?: string
           key_prefix?: string
           label?: string
           last_used_at?: string | null
+          max_credits_per_call?: number | null
           org_id?: string
           revoked_at?: string | null
           scopes?: string[]
+          total_credit_cap?: number | null
         }
         Relationships: [
           {
@@ -204,27 +219,33 @@ export type Database = {
           created_at: string
           delta: number
           description: string | null
+          external_ref: string | null
           id: string
           kind: string
           org_id: string
+          source: string | null
           usage_event_id: string | null
         }
         Insert: {
           created_at?: string
           delta: number
           description?: string | null
+          external_ref?: string | null
           id?: string
           kind: string
           org_id: string
+          source?: string | null
           usage_event_id?: string | null
         }
         Update: {
           created_at?: string
           delta?: number
           description?: string | null
+          external_ref?: string | null
           id?: string
           kind?: string
           org_id?: string
+          source?: string | null
           usage_event_id?: string | null
         }
         Relationships: [
@@ -473,6 +494,87 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_intents: {
+        Row: {
+          amount_atomic: string
+          amount_usd: number
+          asset: string
+          created_at: string
+          credits: number
+          error: string | null
+          id: string
+          key_id: string | null
+          network: string
+          nonce: string
+          org_id: string
+          pay_to: string
+          payer: string | null
+          purpose: string
+          request_id: string | null
+          settled_at: string | null
+          status: string
+          tool_name: string | null
+          tx_hash: string | null
+        }
+        Insert: {
+          amount_atomic: string
+          amount_usd: number
+          asset: string
+          created_at?: string
+          credits: number
+          error?: string | null
+          id?: string
+          key_id?: string | null
+          network: string
+          nonce: string
+          org_id: string
+          pay_to: string
+          payer?: string | null
+          purpose?: string
+          request_id?: string | null
+          settled_at?: string | null
+          status?: string
+          tool_name?: string | null
+          tx_hash?: string | null
+        }
+        Update: {
+          amount_atomic?: string
+          amount_usd?: number
+          asset?: string
+          created_at?: string
+          credits?: number
+          error?: string | null
+          id?: string
+          key_id?: string | null
+          network?: string
+          nonce?: string
+          org_id?: string
+          pay_to?: string
+          payer?: string | null
+          purpose?: string
+          request_id?: string | null
+          settled_at?: string | null
+          status?: string
+          tool_name?: string | null
+          tx_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_intents_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "agent_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_intents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -691,6 +793,10 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: never; Returns: boolean }
+      key_credits_spent: {
+        Args: { _key_id: string; _since: string }
+        Returns: number
+      }
       org_credit_balance: { Args: { _org_id: string }; Returns: number }
     }
     Enums: {
