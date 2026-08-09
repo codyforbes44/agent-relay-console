@@ -75,7 +75,9 @@ function BillingPanel({ orgId }: { orgId: string }) {
             {isLoading ? (
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
             ) : (
-              `${(data?.balance ?? 0).toLocaleString()} credits`
+              data?.unlimited
+                ? "Unlimited"
+                : `${(data?.balance ?? 0).toLocaleString()} credits`
             )}
           </CardTitle>
         </CardHeader>
