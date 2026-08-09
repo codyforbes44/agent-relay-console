@@ -11,6 +11,7 @@ import {
   CreditCard,
   ShieldCheck,
   Wrench,
+  Settings,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -111,6 +112,13 @@ export function ThreadSidebar({
         >
           <Wrench className="size-4" />
           Tool catalog
+        </Link>
+        <Link
+          to="/settings"
+          className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent"
+        >
+          <Settings className="size-4" />
+          Workspace settings
         </Link>
         <Link
           to="/usage"

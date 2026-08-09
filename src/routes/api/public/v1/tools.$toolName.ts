@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { TOOLS_BY_NAME } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
 import { apiError, json, preflight, toolDescriptor } from "@/lib/api/catalog.server";
+import { getOrgSettings, requiresConfirmation } from "@/lib/api/settings.server";
 import { isToolEnabled } from "@/lib/api/org-tools.server";
 import { authenticateAgentKey, readBearer } from "@/lib/api/keys.server";
 import { checkKeyGuardrails, checkRateLimit, getBalance, recordUsage, touchKey } from "@/lib/api/metering.server";
@@ -99,8 +100,13 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           });
         }
 
-        // Side-effecting tools need an explicit, per-call authorization signal.
-        if (tool.sideEffecting && request.headers.get("x-confirm-side-effects") !== "true") {
+        // Confirmation policy is configured per workspace (settings page).
+        const orgSettings = await getOrgSettings(supabaseAdmin, identity.orgId);
+        const needsConfirmation = requiresConfirmation(
+          orgSettings.confirmationDefault,
+          tool.sideEffecting,
+        );
+        if (needsConfirmation && request.headers.get("x-confirm-side-effects") !== "true") {
           await recordUsage(supabaseAdmin, {
             orgId: identity.orgId,
             keyId: identity.keyId,
