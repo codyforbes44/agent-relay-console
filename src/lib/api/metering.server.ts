@@ -75,26 +75,31 @@ export async function reserveCredits(admin: SupabaseClient, input: ReserveInput)
     console.error(JSON.stringify({ event: "reserve_credits_failed", orgId: input.orgId, message: error.message }));
     return { status: "error", message: error.message };
   }
-  const row = data as Record<string, unknown>;
-  const status = String(row?.status ?? "error");
+  const row = (data ?? {}) as Record<string, unknown>;
+  const status = String(row["status"] ?? "error");
   if (status === "ok") {
+    const unlimited = row["unlimited"] === true;
     return {
       status: "ok",
-      usageEventId: String(row.usageEventId),
-      unlimited: row.unlimited === true,
-      balance: row.unlimited === true ? UNLIMITED_BALANCE : Number(row.balance ?? 0),
+      usageEventId: String(row["usageEventId"]),
+      unlimited,
+      balance: unlimited ? UNLIMITED_BALANCE : Number(row["balance"] ?? 0),
     };
   }
   if (status === "insufficient") {
-    return { status: "insufficient", balance: Number(row.balance ?? 0), required: Number(row.required ?? input.credits) };
+    return {
+      status: "insufficient",
+      balance: Number(row["balance"] ?? 0),
+      required: Number(row["required"] ?? input.credits),
+    };
   }
   if (status === "budget_exceeded") {
     return {
       status: "budget_exceeded",
-      window: String(row.window ?? "call"),
-      spent: Number(row.spent ?? 0),
-      required: Number(row.required ?? input.credits),
-      limit: Number(row.limit ?? 0),
+      window: String(row["window"] ?? "call"),
+      spent: Number(row["spent"] ?? 0),
+      required: Number(row["required"] ?? input.credits),
+      limit: Number(row["limit"] ?? 0),
     };
   }
   return { status: "error", message: "Unexpected reservation result" };
