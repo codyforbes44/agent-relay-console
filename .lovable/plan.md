@@ -6,8 +6,9 @@ One correction to your open question: the payment crediting path is already safe
 
 ## 1. Atomic credit reservation (fixes findings 1 and 2)
 
-New Postgres function `reserve_credits(_org_id, _key_id, _tool_name, _credits, _request_id, _latency_ms)`:
+New Postgres function `reserve_credits(_org_id, _key_id, _tool_name, _credits, _request_id, _latency_ms, _max_per_call, _daily_cap, _total_cap)`:
 - Takes a per-org advisory lock, re-reads the ledger balance inside the same transaction, and returns `insufficient` with the current balance when it's short.
+- Evaluates the key's owner-set spend guardrails in the same transaction: per-call, rolling-24h and lifetime caps are computed from `usage_events` under the lock and return a `budget_exceeded` variant with `{ spent, required, limit, window }`. This removes the same TOCTOU shape the balance check had — `checkKeyGuardrails` keeps only the non-monetary checks (expiry, allowed tools), which are not racy.
 - Otherwise inserts the `usage_events` row and the matching `credit_ledger` debit in one transaction, returning the usage event id and the post-debit balance.
 - Unlimited workspaces skip the debit but still get the usage event.
 
