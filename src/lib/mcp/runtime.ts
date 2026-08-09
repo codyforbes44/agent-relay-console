@@ -97,8 +97,17 @@ export function mcpToolFor(name: string): McpTool {
   return defineTool({
     name: contract.name,
     title: contract.label,
-    description: `${contract.description} Costs ${contract.credits} credit(s) per call.`,
+    description: [
+      contract.description,
+      `Costs ${contract.credits} credit(s) per call.`,
+      `Example arguments: ${JSON.stringify(contract.example)}.`,
+      `Example result: ${JSON.stringify(contract.exampleResult)}.`,
+      contract.sideEffecting
+        ? "Side-effecting: your client should ask the human to approve before calling."
+        : "Read-only and safe to retry.",
+    ].join(" "),
     inputSchema: shape,
+
     annotations: {
       readOnlyHint: !contract.sideEffecting,
       idempotentHint: !contract.sideEffecting,
