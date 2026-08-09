@@ -182,14 +182,14 @@ export async function touchKey(admin: SupabaseClient, keyId: string) {
 export type GuardrailViolation = { status: number; code: string; message: string; extra?: Record<string, unknown> };
 
 /**
- * Owner-set spend guardrails, enforced before a tool runs. Keys with no
- * limits configured pass straight through.
+ * Non-monetary key checks (expiry, allowed tools). These are not racy.
+ * Spend caps are enforced atomically inside `reserve_credits`.
  */
 export async function checkKeyGuardrails(
-  admin: SupabaseClient,
+  _admin: SupabaseClient,
   identity: KeyIdentity,
   toolName: string,
-  credits: number,
+  _credits: number,
 ): Promise<GuardrailViolation | null> {
   const { limits } = identity;
 
@@ -206,41 +206,28 @@ export async function checkKeyGuardrails(
     };
   }
 
-  if (limits.maxCreditsPerCall !== null && credits > limits.maxCreditsPerCall) {
-    return {
-      status: 403,
-      code: "budget_exceeded",
-      message: "This call costs more than the key's per-call credit limit",
-      extra: { required: credits, limit: limits.maxCreditsPerCall, window: "call" },
-    };
-  }
-
-  if (limits.dailyCreditCap !== null) {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const spent = await keyCreditsSpent(admin, identity.keyId, since);
-    if (spent + credits > limits.dailyCreditCap) {
-      return {
-        status: 403,
-        code: "budget_exceeded",
-        message: "This call would exceed the key's 24-hour credit cap",
-        extra: { spent, required: credits, limit: limits.dailyCreditCap, window: "24h" },
-      };
-    }
-  }
-
-  if (limits.totalCreditCap !== null) {
-    const spent = await keyCreditsSpent(admin, identity.keyId, new Date(0).toISOString());
-    if (spent + credits > limits.totalCreditCap) {
-      return {
-        status: 403,
-        code: "budget_exceeded",
-        message: "This call would exceed the key's lifetime credit cap",
-        extra: { spent, required: credits, limit: limits.totalCreditCap, window: "lifetime" },
-      };
-    }
-  }
-
   return null;
+}
+
+const BUDGET_MESSAGE: Record<string, string> = {
+  call: "This call costs more than the key's per-call credit limit",
+  "24h": "This call would exceed the key's 24-hour credit cap",
+  lifetime: "This call would exceed the key's lifetime credit cap",
+};
+
+/** Maps a `budget_exceeded` reservation result to the API error shape. */
+export function budgetViolation(result: {
+  window: string;
+  spent: number;
+  required: number;
+  limit: number;
+}): GuardrailViolation {
+  return {
+    status: 403,
+    code: "budget_exceeded",
+    message: BUDGET_MESSAGE[result.window] ?? "This call would exceed the key's credit cap",
+    extra: { spent: result.spent, required: result.required, limit: result.limit, window: result.window },
+  };
 }
 
 export async function keyCreditsSpent(admin: SupabaseClient, keyId: string, since: string): Promise<number> {
