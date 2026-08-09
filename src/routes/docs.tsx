@@ -132,8 +132,11 @@ GET /.well-known/agent-manifest.json`}</Code>
       </Section>
 
     </main>
+    <LegalFooter />
+    </>
   );
 }
+
 
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
