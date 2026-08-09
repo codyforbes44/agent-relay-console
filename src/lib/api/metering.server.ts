@@ -39,7 +39,7 @@ export class BalanceUnavailableError extends Error {
 
 export type ReserveInput = {
   orgId: string;
-  keyId: string;
+  keyId: string | null;
   toolName: string;
   credits: number;
   requestId: string;
