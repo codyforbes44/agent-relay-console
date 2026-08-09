@@ -6,8 +6,9 @@ One correction to your open question: the payment crediting path is already safe
 
 ## 1. Atomic credit reservation (fixes findings 1 and 2)
 
-New Postgres function `reserve_credits(_org_id, _key_id, _tool_name, _credits, _request_id, _latency_ms)`:
+New Postgres function `reserve_credits(_org_id, _key_id, _tool_name, _credits, _request_id, _latency_ms, _max_per_call, _daily_cap, _total_cap)`:
 - Takes a per-org advisory lock, re-reads the ledger balance inside the same transaction, and returns `insufficient` with the current balance when it's short.
+- Evaluates the key's owner-set spend guardrails in the same transaction: per-call, rolling-24h and lifetime caps are computed from `usage_events` under the lock and return a `budget_exceeded` variant with `{ spent, required, limit, window }`. This removes the same TOCTOU shape the balance check had — `checkKeyGuardrails` keeps only the non-monetary checks (expiry, allowed tools), which are not racy.
 - Otherwise inserts the `usage_events` row and the matching `credit_ledger` debit in one transaction, returning the usage event id and the post-debit balance.
 - Unlimited workspaces skip the debit but still get the usage event.
 
@@ -21,7 +22,7 @@ Route changes in `src/routes/api/public/v1/tools.$toolName.ts`:
 
 ## 2. Confirmed side-effect double-execution (finding 3)
 
-`redeemConfirmation`: a row that is `redeemed` with a null stored response now returns a `409 request_in_progress` failure instead of `ok: true, replay: null`. The agent requests a fresh preview rather than risking a second send. Documented in the API error table.
+`redeemConfirmation`: a row that is `redeemed` with a null stored response now returns a `409 request_in_progress` failure instead of `ok: true, replay: null`. The message tells the agent explicitly what to do — "the approved call is already running or was interrupted; call the tool again with no token to get a fresh preview and token" — so a token bricked by a genuine crash reads as guidance, not a bug. Documented in the API error table.
 
 ## 3. Atomic signup quota (finding 4)
 
@@ -29,9 +30,11 @@ New `consume_signup_quota(_ip_hash, _max, _window_hours)` RPC doing `INSERT ... 
 
 On the header question: the app is served through Cloudflare, so `cf-connecting-ip` is present and authoritative. I'll reorder `clientIp` to prefer `cf-connecting-ip` and only fall back to the spoofable headers when a `TRUST_FORWARDED_IP` flag is set, so an unfronted deploy fails closed to a single shared bucket rather than free-for-all.
 
-## 4. Idempotency TTL (finding 5)
+## 4. Idempotency retention — no reclaim (finding 5)
 
-Add `expires_at` to `api_idempotency` plus an index. A claim whose `response` is still null and is older than 5 minutes is reclaimable — the insert-conflict branch deletes and re-claims it instead of returning a permanent 409. Completed rows carry a 24h expiry and are purged opportunistically.
+No time-based reclaim of in-flight claims. Nothing bounds tool execution today (`tools.server.ts` has only a per-fetch timeout, and `crawl_site` fetches sequentially), so deleting a "stale" claim could delete a live one and re-execute — reintroducing exactly the duplicate-execution class this plan exists to remove. Instead: a null-response claim keeps returning `409 request_in_progress`, with the message extended to "if the original request is known to have failed, retry with a new idempotency-key."
+
+Retention only: add `expires_at` to `api_idempotency` (24h from completion) plus an index, and purge expired completed rows opportunistically so the JSONB responses don't grow unbounded. A hard end-to-end deadline on `runTool` is a sensible follow-up, and a reclaim threshold strictly above it can be revisited then — not in this change.
 
 ## 5. Nits (finding 6)
 
@@ -44,4 +47,10 @@ Add `expires_at` to `api_idempotency` plus an index. A claim whose `response` is
 
 - Two migrations: one for the three RPCs (`reserve_credits`, `refund_reserved_credits`, `consume_signup_quota`), one for the `api_idempotency.expires_at` column and index. All functions are `security definer` with `set search_path = public`, granted to `service_role` only.
 - Touched files: `src/lib/api/metering.server.ts`, `src/lib/api/confirmations.server.ts`, `src/lib/api/signup.server.ts`, `src/lib/api/keys.server.ts`, `src/lib/api/x402.server.ts`, `src/routes/api/public/v1/tools.$toolName.ts`, `src/lib/mcp/runtime.ts` (same reservation path), plus docs.
-- Verification: a concurrency test firing N parallel invocations against a 1-credit workspace, asserting exactly one success and a non-negative ending balance; plus a token-reuse test asserting the second in-flight redeem returns 409.
+- Verification:
+  - Concurrency: N parallel invocations against a 1-credit workspace → exactly one success, ending balance never negative.
+  - Rate limit: because `usage_events` is now written at reservation time, in-flight calls are counted — assert that N parallel calls yield at most `RATE_LIMIT_PER_MINUTE` counted in the window, so a future refactor moving the insert back after execution fails the test.
+  - Guardrails: parallel calls against a key with a daily cap of one call → exactly one success, the rest `budget_exceeded`.
+  - Refund: tool throws after reservation → compensating ledger entry present, usage event marked `error`, balance restored to its pre-call value.
+  - x402: settle-then-reserve-retry — an insufficient reservation followed by a settled payment succeeds on the retried reservation and charges exactly once.
+  - Confirmations: second redeem of an in-flight token returns 409 with the fresh-preview guidance.
