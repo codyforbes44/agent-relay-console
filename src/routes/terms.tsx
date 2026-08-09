@@ -7,7 +7,7 @@ export const Route = createFileRoute("/terms")({
   head: () =>
     publicHead({
       path: '/terms',
-      title: 'Terms & Conditions — Agent Relay Console',
+      title: 'Terms & Conditions — RELAY',
       description:
         'The terms governing use of the Agent Relay Console metered agent tool API, including acceptable use, IP ownership, billing and termination.',
     }),

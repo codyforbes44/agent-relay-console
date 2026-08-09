@@ -3,6 +3,11 @@ export const SITE_URL = "https://agent-relay-console.lovable.app";
 export const SITE_NAME = "Agent Relay Console";
 export const SITE_TAGLINE = "A metered tool API for autonomous agents";
 
+/** Site-wide default title and meta description. */
+export const SITE_TITLE = "RELAY — pay-per-call tool API for AI agents";
+export const SITE_DESCRIPTION =
+  "A metered HTTP and MCP tool API built for autonomous agents: bearer-key auth, OpenAPI discovery, credit billing per call, and explicit confirmation before side effects.";
+
 export function canonical(path: string) {
   return `${SITE_URL}${path === "/" ? "" : path}`;
 }

@@ -7,7 +7,7 @@ export const Route = createFileRoute("/privacy")({
   head: () =>
     publicHead({
       path: '/privacy',
-      title: 'Privacy Notice — Agent Relay Console',
+      title: 'Privacy Notice — RELAY',
       description:
         'How Agent Relay Console collects, uses, shares and retains personal data for its metered agent tool API, and the rights you have over that data.',
     }),
