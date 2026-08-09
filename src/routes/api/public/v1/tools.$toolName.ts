@@ -185,7 +185,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         if (idemClaimed && idemKey) {
           await supabaseAdmin
             .from("api_idempotency")
-            .update({ response: payload })
+            .update({ response: payload as unknown as Record<string, never> })
             .eq("key_id", identity.keyId)
             .eq("idem_key", idemKey);
         }
