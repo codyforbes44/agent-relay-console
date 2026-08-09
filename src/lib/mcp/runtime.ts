@@ -3,7 +3,14 @@ import type { z } from "zod";
 
 import { TOOLS_BY_NAME, type ToolContract } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
+import {
+  issueConfirmation,
+  redeemConfirmation,
+  releaseConfirmation,
+  storeConfirmationResponse,
+} from "@/lib/api/confirmations.server";
 import { isToolEnabled } from "@/lib/api/org-tools.server";
+import { getOrgSettings, requiresConfirmation } from "@/lib/api/settings.server";
 import { supabaseForUser } from "./supabase";
 
 type Result = {
@@ -41,6 +48,58 @@ async function runMetered(
 
   if (!(await isToolEnabled(supabaseAdmin, orgId, contract.name))) {
     return fail(`Tool ${contract.name} is disabled for this workspace`);
+  }
+
+  // Confirmation parity with REST: the token is bound to these exact
+  // arguments, single-use, and can only come from a preview we issued.
+  const { confirmation_token: rawToken, ...toolArgs } = args as Record<string, unknown>;
+  const settings = await getOrgSettings(supabaseAdmin, orgId);
+  const gated = requiresConfirmation(settings.confirmationDefault, contract.sideEffecting);
+  let confirmationId: string | null = null;
+
+  if (gated) {
+    const token = typeof rawToken === "string" && rawToken.trim() ? rawToken.trim() : null;
+    if (!token) {
+      const issued = await issueConfirmation(supabaseAdmin, {
+        orgId,
+        keyId: null,
+        tool: contract,
+        args: toolArgs,
+      });
+      const payload = {
+        ok: false,
+        error: {
+          code: "confirmation_required",
+          message:
+            "This tool has side effects. Show this preview to the human, then call again with confirmation_token set to the value below.",
+          tool: contract.name,
+          credits: contract.credits,
+          preview: issued.preview,
+          confirmationToken: issued.token,
+          expiresAt: issued.expiresAt,
+        },
+      };
+      return {
+        content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+        structuredContent: payload,
+        isError: true,
+      };
+    }
+
+    const redeemed = await redeemConfirmation(supabaseAdmin, {
+      token,
+      orgId,
+      toolName: contract.name,
+      args: toolArgs,
+    });
+    if (!redeemed.ok) return fail(`${redeemed.failure.code}: ${redeemed.failure.message}`);
+    if (redeemed.replay) {
+      return {
+        content: [{ type: "text", text: JSON.stringify(redeemed.replay, null, 2) }],
+        structuredContent: redeemed.replay,
+      };
+    }
+    confirmationId = redeemed.id;
   }
 
   const started = Date.now();
