@@ -1,3 +1,3 @@
 import { mcpToolFor } from "../runtime";
 
-export default mcpToolFor("send_email");
+export default mcpToolFor("crawl_site");
