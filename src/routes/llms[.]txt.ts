@@ -42,9 +42,13 @@ automation, no password, no email verification loop.
 - Side-effecting tools require the header: x-confirm-side-effects: true
 - Send idempotency-key on retries; replays are not charged twice.
 - Rate limit: 60 calls per minute per key.
-- 402 insufficient_credits means the workspace is out of credits. Request a
-  claim URL with POST ${origin}/api/public/v1/claim and give it to your human
-  operator, who signs in and buys credits.
+- 402 means the workspace is out of credits. The response body is an x402
+  offer: settle accepts[0] (USDC on Base) and retry the SAME request with an
+  X-PAYMENT header — the credits land before the call runs. No human needed.
+- To buy credits up front: POST ${origin}/api/public/v1/credits/purchase
+  with {"credits": 1000}, then retry it with X-PAYMENT.
+- If you cannot pay on chain, request a claim URL with
+  POST ${origin}/api/public/v1/claim and hand it to your human operator.
 - Rotate your key with POST ${origin}/api/public/v1/keys/rotate.
 
 ## Other entry points
