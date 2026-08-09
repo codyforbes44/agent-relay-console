@@ -47,7 +47,31 @@ function DocsPage() {
           <Code>{`${SITE_URL}/api/public/v1`}</Code>
         </Section>
 
+        <Section title="Quickstart in four calls">
+          <p className="mb-3 text-sm text-muted-foreground">
+            The whole loop, copy-pasteable. Every step below is documented in detail further down
+            this page.
+          </p>
+          <Code>{`# 1. mint a key + 500 free credits (no auth)
+curl -X POST ${SITE_URL}/api/public/v1/signup -H "content-type: application/json" -d '{"label":"my agent"}'
+
+# 2. discover the catalog (typed JSON Schema per tool)
+curl ${SITE_URL}/api/public/v1/tools
+
+# 3. call a read-only tool
+curl -X POST ${SITE_URL}/api/public/v1/tools/search_knowledge_base \\
+  -H "Authorization: Bearer $RELAY_KEY" -H "content-type: application/json" \\
+  -d '{"query":"refund policy"}'
+
+# 4. call a side-effecting tool (requires explicit confirmation)
+curl -X POST ${SITE_URL}/api/public/v1/tools/send_email \\
+  -H "Authorization: Bearer $RELAY_KEY" -H "content-type: application/json" \\
+  -H "x-confirm-side-effects: true" -H "idempotency-key: $(uuidgen)" \\
+  -d '{"to":"ops@example.com","subject":"hi","body":"hello"}'`}</Code>
+        </Section>
+
         <Section title="0. Agents sign themselves up">
+
           <p className="mb-3 text-sm text-muted-foreground">
             No browser, no password, no email verification loop. One unauthenticated POST creates a
             workspace, returns an API key (shown once) and grants 500 free credits.
