@@ -95,6 +95,13 @@ export function ThreadSidebar({
           Usage &amp; credits
         </Link>
         <Link
+          to="/billing"
+          className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent"
+        >
+          <CreditCard className="size-4" />
+          Buy credits
+        </Link>
+        <Link
           to="/docs"
           className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent"
         >
