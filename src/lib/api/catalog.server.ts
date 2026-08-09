@@ -111,7 +111,7 @@ export function toolDescriptor(tool: ToolContract, origin: string) {
 }
 
 
-export function catalog(origin: string) {
+export function catalog(origin: string, tools: ToolContract[] = PUBLIC_TOOLS) {
   return {
     ok: true,
     version: "2026-08-09",
@@ -125,8 +125,14 @@ export function catalog(origin: string) {
       humanSignup: `${origin}/auth`,
     },
     pricing: { unit: "credit", freeGrant: 500 },
-    tools: PUBLIC_TOOLS.map((t) => toolDescriptor(t, origin)),
+    tools: tools.map((t) => toolDescriptor(t, origin)),
   };
+}
+
+/** Filtered catalog scoped to a workspace's enabled tools. */
+export async function catalogForOrg(admin: SupabaseClient, origin: string, orgId: string) {
+  const tools = await visibleToolsForOrg(admin, orgId);
+  return { ...catalog(origin, tools), filteredForOrg: true };
 }
 
 export function openApiDocument(origin: string) {
