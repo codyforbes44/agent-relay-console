@@ -20,11 +20,116 @@ function ok<T>(data: T) {
   return { ok: true as const, ...data };
 }
 
+const FETCH_TIMEOUT_MS = 15_000;
+const FETCH_MAX_BYTES = 2_000_000;
+
+/** Strips scripts/styles/tags and collapses whitespace into readable text. */
+function htmlToText(html: string): { title: string | null; text: string } {
+  const title = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1]?.trim() ?? null;
+  const text = html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  return { title, text };
+}
+
+/**
+ * Real outbound fetch. Blocks non-https schemes and obvious internal hosts so
+ * this metered tool can never be used to probe our own network.
+ */
+async function fetchUrl(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const raw = String(args['url'] ?? "").trim();
+  let target: URL;
+  try {
+    target = new URL(raw);
+  } catch {
+    return { ok: false, error: "url must be an absolute URL, e.g. https://example.com" };
+  }
+  if (target.protocol !== "https:") {
+    return { ok: false, error: "Only https:// URLs are supported" };
+  }
+  const host = target.hostname.toLowerCase();
+  const blocked =
+    host === "localhost" ||
+    host.endsWith(".localhost") ||
+    host.endsWith(".internal") ||
+    host === "metadata.google.internal" ||
+    /^(127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+    host === "[::1]";
+  if (blocked) return { ok: false, error: "That host is not reachable from this API" };
+
+  const maxChars = Math.min(Math.max(Number(args['maxChars'] ?? 8000) || 8000, 200), 50_000);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(target.toString(), {
+      redirect: "follow",
+      signal: controller.signal,
+      headers: {
+        accept: "text/html,application/xhtml+xml,application/json;q=0.9,text/plain;q=0.8,*/*;q=0.5",
+        "user-agent": "RelayFetchBot/1.0 (+https://3bi.ai/docs)",
+      },
+    });
+    const contentType = res.headers.get("content-type") ?? "";
+    const buffer = await res.arrayBuffer();
+    if (buffer.byteLength > FETCH_MAX_BYTES) {
+      return { ok: false, error: "Response is larger than the 2 MB fetch limit" };
+    }
+    const body = new TextDecoder().decode(buffer);
+
+    let title: string | null = null;
+    let text = body;
+    if (contentType.includes("html")) {
+      const parsed = htmlToText(body);
+      title = parsed.title;
+      text = parsed.text;
+    }
+    const truncated = text.length > maxChars;
+
+    return ok({
+      url: res.url || target.toString(),
+      status: res.status,
+      contentType: contentType || null,
+      title,
+      text: truncated ? text.slice(0, maxChars) : text,
+      chars: truncated ? maxChars : text.length,
+      truncated,
+      fetchedAt: new Date().toISOString(),
+    });
+  } catch (e) {
+    const aborted = e instanceof Error && e.name === "AbortError";
+    return {
+      ok: false,
+      error: aborted
+        ? `The target did not respond within ${FETCH_TIMEOUT_MS / 1000}s`
+        : e instanceof Error
+          ? e.message
+          : "Fetch failed",
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function runTool(
   name: string,
   args: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   switch (name) {
+    case "fetch_url":
+      return fetchUrl(args);
     case "search_knowledge_base": {
       const q = String(args['query'] ?? "").toLowerCase();
       const hits = KB.filter(
