@@ -3,6 +3,8 @@ import { useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
+import { AlertTriangle } from "lucide-react";
 
 type OAuthApi = {
   getAuthorizationDetails: (id: string) => Promise<{ data: AuthorizationDetails | null; error: Error | null }>;
