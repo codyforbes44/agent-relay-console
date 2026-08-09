@@ -391,7 +391,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           ...(deprecatedAlias
             ? { deprecated: { calledAs: deprecatedAlias, use: toolName } }
             : {}),
-          credits: { charged: tool.credits, balance: balance - tool.credits },
+          credits: { charged: tool.credits, balance: reserved.balance },
           ...(paymentReceipt ? { payment: paymentReceipt } : {}),
           result,
         };
