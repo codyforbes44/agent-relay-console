@@ -103,7 +103,7 @@ function AuthPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <Link to="/" className="font-mono text-xs tracking-[0.3em] text-primary">
           RELAY
@@ -169,6 +169,26 @@ function AuthPage() {
         >
           {mode === "signin" ? "Need an account? Sign up" : "Already have an account? Sign in"}
         </button>
+
+        <p className="mt-6 text-center text-xs leading-relaxed text-muted-foreground">
+          By continuing you agree to our{" "}
+          <Link to="/terms" className="underline underline-offset-4 hover:text-foreground">
+            terms
+          </Link>{" "}
+          and{" "}
+          <Link to="/privacy" className="underline underline-offset-4 hover:text-foreground">
+            privacy notice
+          </Link>
+          .
+        </p>
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Building an agent?{" "}
+          <Link to="/docs" className="underline underline-offset-4 hover:text-foreground">
+            Skip the browser and sign up over HTTP
+          </Link>
+          .
+        </p>
+
       </div>
     </main>
   );

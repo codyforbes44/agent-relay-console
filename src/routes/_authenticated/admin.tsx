@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,6 +8,17 @@ import { toast } from "sonner";
 import { ConsoleShell } from "@/components/workspace/ConsoleShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -17,6 +28,7 @@ import {
   adminRevokeKey,
   adminSetRole,
 } from "@/lib/admin/admin.functions";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -59,7 +71,13 @@ function AdminPanel() {
   });
   const roles = useQuery({ queryKey: ["admin", "roles"], queryFn: () => rolesFn() });
 
+  const [orgQuery, setOrgQuery] = useState("");
+  const [userQuery, setUserQuery] = useState("");
+  const [keyQuery, setKeyQuery] = useState("");
+  const [errorsOnly, setErrorsOnly] = useState(false);
+
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["admin"] });
+
 
   const adjust = useMutation({
     mutationFn: useServerFn(adminAdjustCredits),
@@ -106,6 +124,24 @@ function AdminPanel() {
   const superAdmins = new Set(
     (roles.data ?? []).filter((r) => r.role === "super_admin").map((r) => r.user_id),
   );
+  const orgName = new Map(d.orgs.map((o) => [o.id, o.name] as const));
+
+  const oq = orgQuery.trim().toLowerCase();
+  const uq = userQuery.trim().toLowerCase();
+  const kq = keyQuery.trim().toLowerCase();
+  const filteredOrgs = oq
+    ? d.orgs.filter((o) => `${o.name} ${o.slug}`.toLowerCase().includes(oq))
+    : d.orgs;
+  const filteredUsers = uq
+    ? d.users.filter((u) => `${u.display_name ?? ""} ${u.email ?? ""}`.toLowerCase().includes(uq))
+    : d.users;
+  const filteredKeys = kq
+    ? d.keys.filter((k) =>
+        `${k.label} ${k.key_prefix} ${orgName.get(k.org_id) ?? ""}`.toLowerCase().includes(kq),
+      )
+    : d.keys;
+  const filteredUsage = errorsOnly ? d.usage.filter((e) => e.status !== "success") : d.usage;
+
 
   return (
     <div className="space-y-6">
@@ -132,6 +168,7 @@ function AdminPanel() {
           <TabsTrigger value="keys">API keys</TabsTrigger>
           <TabsTrigger value="usage">Usage</TabsTrigger>
           <TabsTrigger value="revenue">Revenue</TabsTrigger>
+          <TabsTrigger value="audit">Audit log</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orgs" className="mt-4">
@@ -141,7 +178,13 @@ function AdminPanel() {
               <CardDescription>Balances, key counts and manual credit adjustments.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {d.orgs.map((o) => (
+              <Input
+                value={orgQuery}
+                onChange={(e) => setOrgQuery(e.target.value)}
+                placeholder="Search workspaces by name or slug"
+                aria-label="Search workspaces"
+              />
+              {filteredOrgs.slice(0, 50).map((o) => (
                 <OrgRow
                   key={o.id}
                   org={o}
@@ -149,7 +192,14 @@ function AdminPanel() {
                   onAdjust={(delta, reason) => adjust.mutate({ data: { orgId: o.id, delta, reason } })}
                 />
               ))}
-              {!d.orgs.length && <p className="text-sm text-muted-foreground">No workspaces yet.</p>}
+              {!filteredOrgs.length && (
+                <p className="text-sm text-muted-foreground">No workspaces match.</p>
+              )}
+              {filteredOrgs.length > 50 && (
+                <p className="text-xs text-muted-foreground">
+                  Showing 50 of {filteredOrgs.length}. Narrow the search to see more.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -160,9 +210,15 @@ function AdminPanel() {
               <CardTitle className="text-base">Users</CardTitle>
               <CardDescription>Grant or remove the platform super admin role.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <Input
+                value={userQuery}
+                onChange={(e) => setUserQuery(e.target.value)}
+                placeholder="Search users by name or email"
+                aria-label="Search users"
+              />
               <ul className="divide-y divide-border">
-                {d.users.map((u) => {
+                {filteredUsers.slice(0, 100).map((u) => {
                   const isSuper = superAdmins.has(u.id);
                   return (
                     <li key={u.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -178,30 +234,40 @@ function AdminPanel() {
                             super admin
                           </span>
                         )}
-                        <Button
-                          size="sm"
-                          variant={isSuper ? "outline" : "default"}
-                          disabled={setRole.isPending}
-                          onClick={() =>
+                        <Confirm
+                          title={isSuper ? "Revoke super admin?" : "Grant super admin?"}
+                          description={
+                            isSuper
+                              ? `${u.email} will lose platform-wide access immediately.`
+                              : `${u.email} will gain full platform-wide access to every workspace, key and credit balance.`
+                          }
+                          confirmLabel={isSuper ? "Revoke role" : "Grant role"}
+                          onConfirm={() =>
                             setRole.mutate({
                               data: { userId: u.id, role: "super_admin", grant: !isSuper },
                             })
                           }
-                        >
-                          {isSuper ? (
-                            <>
-                              <ShieldOff className="size-3.5" /> Revoke
-                            </>
-                          ) : (
-                            <>
-                              <ShieldCheck className="size-3.5" /> Make super admin
-                            </>
-                          )}
-                        </Button>
+                          trigger={
+                            <Button size="sm" variant={isSuper ? "outline" : "default"} disabled={setRole.isPending}>
+                              {isSuper ? (
+                                <>
+                                  <ShieldOff className="size-3.5" /> Revoke
+                                </>
+                              ) : (
+                                <>
+                                  <ShieldCheck className="size-3.5" /> Make super admin
+                                </>
+                              )}
+                            </Button>
+                          }
+                        />
                       </div>
                     </li>
                   );
                 })}
+                {!filteredUsers.length && (
+                  <p className="text-sm text-muted-foreground">No users match.</p>
+                )}
               </ul>
             </CardContent>
           </Card>
@@ -213,30 +279,47 @@ function AdminPanel() {
               <CardTitle className="text-base">API keys</CardTitle>
               <CardDescription>Every agent key issued across the platform.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <Input
+                value={keyQuery}
+                onChange={(e) => setKeyQuery(e.target.value)}
+                placeholder="Search keys by label, prefix or workspace"
+                aria-label="Search API keys"
+              />
               <ul className="divide-y divide-border">
-                {d.keys.map((k) => (
+                {filteredKeys.slice(0, 100).map((k) => (
                   <li key={k.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                     <div>
-                      <p className="text-sm text-foreground">{k.label}</p>
+                      <p className="text-sm text-foreground">
+                        {k.label}{" "}
+                        <span className="text-xs text-muted-foreground">
+                          · {orgName.get(k.org_id) ?? "unknown workspace"}
+                        </span>
+                      </p>
                       <p className="font-mono text-xs text-muted-foreground">
                         {k.key_prefix}··· · {k.revoked_at ? "revoked" : "active"} ·{" "}
                         {k.last_used_at ? `used ${new Date(k.last_used_at).toLocaleString()}` : "never used"}
                       </p>
                     </div>
                     {!k.revoked_at && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={revoke.isPending}
-                        onClick={() => revoke.mutate({ data: { keyId: k.id } })}
-                      >
-                        Revoke
-                      </Button>
+                      <Confirm
+                        title="Revoke this API key?"
+                        description={`${k.label} (${k.key_prefix}···) in ${orgName.get(k.org_id) ?? "this workspace"} will stop working immediately. This cannot be undone.`}
+                        confirmLabel="Revoke key"
+                        destructive
+                        onConfirm={() => revoke.mutate({ data: { keyId: k.id } })}
+                        trigger={
+                          <Button size="sm" variant="outline" disabled={revoke.isPending}>
+                            Revoke
+                          </Button>
+                        }
+                      />
                     )}
                   </li>
                 ))}
-                {!d.keys.length && <p className="text-sm text-muted-foreground">No keys issued yet.</p>}
+                {!filteredKeys.length && (
+                  <p className="text-sm text-muted-foreground">No keys match.</p>
+                )}
               </ul>
             </CardContent>
           </Card>
@@ -249,8 +332,18 @@ function AdminPanel() {
               <CardDescription>Last 200 metered events platform-wide.</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-3">
+                <Button
+                  size="sm"
+                  variant={errorsOnly ? "default" : "outline"}
+                  onClick={() => setErrorsOnly((v) => !v)}
+                >
+                  {errorsOnly ? "Showing failures only" : "Show failures only"}
+                </Button>
+              </div>
               <ul className="divide-y divide-border">
-                {d.usage.map((e) => (
+                {filteredUsage.map((e) => (
+
                   <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
                     <div>
                       <p className="font-mono text-sm text-foreground">{e.tool_name}</p>
@@ -273,7 +366,10 @@ function AdminPanel() {
                     </div>
                   </li>
                 ))}
-                {!d.usage.length && <p className="text-sm text-muted-foreground">No calls yet.</p>}
+                {!filteredUsage.length && (
+                  <p className="text-sm text-muted-foreground">No calls to show.</p>
+                )}
+
               </ul>
             </CardContent>
           </Card>
@@ -311,12 +407,80 @@ function AdminPanel() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="audit" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Audit log</CardTitle>
+              <CardDescription>Last 100 recorded platform actions.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="divide-y divide-border">
+                {d.audit.map((a) => (
+                  <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                    <div>
+                      <p className="font-mono text-sm text-foreground">{a.action}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {orgName.get(a.org_id) ?? a.org_id}
+                        {a.tool_name ? ` · ${a.tool_name}` : ""}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(a.created_at).toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+                {!d.audit.length && (
+                  <p className="text-sm text-muted-foreground">No audit entries yet.</p>
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
 
+function Confirm({
+  title,
+  description,
+  confirmLabel,
+  destructive,
+  onConfirm,
+  trigger,
+}: {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  destructive?: boolean;
+  onConfirm: () => void;
+  trigger: ReactNode;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className={destructive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : undefined}
+          >
+            {confirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 function OrgRow({
+
   org,
   pending,
   onAdjust,
@@ -360,11 +524,11 @@ function OrgRow({
           value={reason}
           onChange={(e) => setReason(e.target.value)}
         />
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={pending}
-          onClick={() => {
+        <Confirm
+          title="Adjust credit balance?"
+          description={`This writes ${delta || "0"} credits to ${org.name} and is recorded in the ledger.`}
+          confirmLabel="Apply adjustment"
+          onConfirm={() => {
             const n = Number(delta);
             if (!Number.isInteger(n) || n === 0) {
               toast.error("Enter a non-zero whole number");
@@ -378,9 +542,13 @@ function OrgRow({
             setDelta("");
             setReason("");
           }}
-        >
-          Adjust credits
-        </Button>
+          trigger={
+            <Button size="sm" variant="outline" disabled={pending}>
+              Adjust credits
+            </Button>
+          }
+        />
+
       </div>
     </div>
   );

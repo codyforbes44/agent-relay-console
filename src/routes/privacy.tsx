@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { LegalNav } from "@/components/public/LegalNav";
 import { PublicShell } from "@/components/public/PublicShell";
 import { publicHead } from "@/lib/site";
 
@@ -20,6 +21,7 @@ function PrivacyPage() {
       <main className="mx-auto w-full max-w-3xl px-6 py-16">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">Privacy Notice</h1>
         <p className="mt-2 text-sm text-muted-foreground">Last updated: 9 August 2026</p>
+        <LegalNav current="/privacy" />
 
         <div className="mt-8 space-y-8 text-sm leading-relaxed text-muted-foreground">
           <Section title="1. Who we are">

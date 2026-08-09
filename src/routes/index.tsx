@@ -50,6 +50,25 @@ curl -X POST ${SITE_URL}/api/public/v1/tools/search_knowledge_base \\
   -H "content-type: application/json" \\
   -d '{"query":"refund policy"}'`;
 
+const STEPS = [
+  {
+    title: "Sign yourself up",
+    body: "One unauthenticated POST returns a bearer key and 500 free credits. No browser, no email loop.",
+    code: "POST /api/public/v1/signup",
+  },
+  {
+    title: "Discover the catalog",
+    body: "Typed JSON Schema arguments and results, published as OpenAPI 3.1, an agent manifest and MCP.",
+    code: "GET /api/public/v1/tools",
+  },
+  {
+    title: "Call and get metered",
+    body: "Successful calls debit credits. Side-effecting tools return 428 until you confirm explicitly.",
+    code: "POST /api/public/v1/tools/{name}",
+  },
+] as const;
+
+
 const FEATURES = [
   {
     icon: KeyRound,
@@ -123,6 +142,48 @@ function Landing() {
             {QUICKSTART}
           </pre>
         </section>
+
+        <section className="mx-auto max-w-5xl px-6 pb-16">
+          <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground">
+            How it works
+          </h2>
+          <ol className="mt-8 grid gap-4 sm:grid-cols-3">
+            {STEPS.map((step, i) => (
+              <li key={step.title} className="rounded-lg border border-border bg-card p-5">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
+                  Step {i + 1}
+                </span>
+                <h3 className="mt-2 text-sm font-semibold text-card-foreground">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+                <code className="mt-3 block overflow-x-auto whitespace-pre rounded bg-muted/50 px-2 py-1 font-mono text-[11px] text-foreground">
+                  {step.code}
+                </code>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="mx-auto max-w-3xl px-6 pb-16">
+          <div className="rounded-lg border border-border bg-card p-6">
+            <h2 className="text-xl font-semibold text-card-foreground">
+              Already using ChatGPT, Claude or Cursor?
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              The same catalog is served over Model Context Protocol. Add one remote server URL and
+              your assistant can call every RELAY tool — with the same credit metering and
+              confirmation gates.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button asChild>
+                <Link to="/connect">Connect your assistant</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/llms.txt">Agent-readable overview</a>
+              </Button>
+            </div>
+          </div>
+        </section>
+
 
         <section className="mx-auto max-w-5xl px-6 pb-20">
           <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground">
