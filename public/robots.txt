@@ -21,4 +21,4 @@ Disallow: /admin
 Disallow: /mcp
 Disallow: /.lovable/
 
-Sitemap: https://agent-relay-console.lovable.app/sitemap.xml
+Sitemap: https://3bi.ai/sitemap.xml

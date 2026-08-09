@@ -1,5 +1,5 @@
 /** Canonical public identity of the product. Used for SEO tags and docs samples. */
-export const SITE_URL = "https://agent-relay-console.lovable.app";
+export const SITE_URL = "https://3bi.ai";
 export const SITE_NAME = "Agent Relay Console";
 export const SITE_TAGLINE = "A metered tool API for autonomous agents";
 
