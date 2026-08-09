@@ -565,6 +565,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -572,9 +593,18 @@ export type Database = {
     Functions: {
       consume_rate_limit: { Args: { _max?: number }; Returns: boolean }
       has_org_access: { Args: { _org_id: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_super_admin: { Args: never; Returns: boolean }
       org_credit_balance: { Args: { _org_id: string }; Returns: number }
     }
     Enums: {
+      app_role: "super_admin" | "admin" | "member"
       org_role: "owner" | "admin" | "member"
     }
     CompositeTypes: {
@@ -703,6 +733,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["super_admin", "admin", "member"],
       org_role: ["owner", "admin", "member"],
     },
   },
