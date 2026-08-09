@@ -124,6 +124,24 @@ function AdminPanel() {
   const superAdmins = new Set(
     (roles.data ?? []).filter((r) => r.role === "super_admin").map((r) => r.user_id),
   );
+  const orgName = new Map(d.orgs.map((o) => [o.id, o.name] as const));
+
+  const oq = orgQuery.trim().toLowerCase();
+  const uq = userQuery.trim().toLowerCase();
+  const kq = keyQuery.trim().toLowerCase();
+  const filteredOrgs = oq
+    ? d.orgs.filter((o) => `${o.name} ${o.slug}`.toLowerCase().includes(oq))
+    : d.orgs;
+  const filteredUsers = uq
+    ? d.users.filter((u) => `${u.display_name ?? ""} ${u.email ?? ""}`.toLowerCase().includes(uq))
+    : d.users;
+  const filteredKeys = kq
+    ? d.keys.filter((k) =>
+        `${k.label} ${k.key_prefix} ${orgName.get(k.org_id) ?? ""}`.toLowerCase().includes(kq),
+      )
+    : d.keys;
+  const filteredUsage = errorsOnly ? d.usage.filter((e) => e.status !== "success") : d.usage;
+
 
   return (
     <div className="space-y-6">
