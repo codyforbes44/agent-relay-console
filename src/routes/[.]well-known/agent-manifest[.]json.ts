@@ -20,7 +20,9 @@ export const Route = createFileRoute("/.well-known/agent-manifest.json")({
           auth: { type: "bearer", signup_url: `${origin}/auth` },
           api: { type: "openapi", url: `${origin}/api/public/v1/openapi.json` },
           catalog_url: `${origin}/api/public/v1/tools`,
+          mcp: { transport: "streamable-http", url: `${origin}/mcp`, auth: "oauth2.1" },
           docs_url: `${origin}/docs`,
+
           tool_names: PUBLIC_TOOLS.map((t) => t.name),
         });
       },

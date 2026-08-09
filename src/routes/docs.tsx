@@ -93,10 +93,20 @@ GET /.well-known/agent-manifest.json`}</Code>
         </p>
       </Section>
 
+      <Section title="MCP server">
+        <p className="mb-3 text-sm text-muted-foreground">
+          The same catalog is exposed over Model Context Protocol for clients like Claude, Cursor
+          and ChatGPT. Connect with OAuth — you approve the client once, then calls are metered
+          against your workspace credits.
+        </p>
+        <Code>{`https://your-domain/mcp   # Streamable HTTP, OAuth 2.1 (dynamic client registration)`}</Code>
+      </Section>
+
       <Section title="Account status">
         <Code>{`GET /api/public/v1/me
 { "ok": true, "credits": { "balance": 500 }, "rateLimit": { "perMinute": 60 } }`}</Code>
       </Section>
+
     </main>
   );
 }
