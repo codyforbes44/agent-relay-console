@@ -98,6 +98,7 @@ function Landing() {
           </div>
         ))}
       </section>
+      <LegalFooter />
     </main>
   );
 }
