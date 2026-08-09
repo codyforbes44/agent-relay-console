@@ -80,7 +80,12 @@ export async function issueConfirmation(
 
 export type RedeemFailure = {
   status: number;
-  code: "confirmation_invalid" | "confirmation_mismatch" | "confirmation_expired" | "confirmation_used";
+  code:
+    | "confirmation_invalid"
+    | "confirmation_mismatch"
+    | "confirmation_expired"
+    | "confirmation_used"
+    | "request_in_progress";
   message: string;
   extra?: Record<string, unknown>;
 };
@@ -146,7 +151,19 @@ export async function redeemConfirmation(
   }
 
   if (row.status === "redeemed") {
-    return { ok: true, id: row.id, replay: (row.response as Record<string, unknown> | null) ?? null };
+    const stored = (row.response as Record<string, unknown> | null) ?? null;
+    if (stored) return { ok: true, id: row.id, replay: stored };
+    // Redeemed with no stored response: the approved call is still running (or
+    // was interrupted). Executing again here would repeat the side effect.
+    return {
+      ok: false,
+      failure: {
+        status: 409,
+        code: "request_in_progress",
+        message:
+          "The approved call is already running or was interrupted before it completed. Call the tool again with no token to get a fresh preview and token.",
+      },
+    };
   }
 
   if (new Date(row.expires_at).getTime() < Date.now()) {

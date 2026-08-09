@@ -7,10 +7,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
+/** Uniform random string — rejection sampling avoids modulo bias. */
 function randomString(len: number) {
-  const bytes = crypto.getRandomValues(new Uint8Array(len));
+  const max = Math.floor(256 / ALPHABET.length) * ALPHABET.length;
   let out = "";
-  for (const b of bytes) out += ALPHABET[b % ALPHABET.length];
+  while (out.length < len) {
+    const bytes = crypto.getRandomValues(new Uint8Array(len));
+    for (const b of bytes) {
+      if (b >= max) continue;
+      out += ALPHABET[b % ALPHABET.length];
+      if (out.length === len) break;
+    }
+  }
   return out;
 }
 
@@ -36,6 +44,11 @@ export function parseAgentKey(raw: string): { prefix: string; secret: string } |
   return { prefix, secret };
 }
 
+/**
+ * Reads the API key from `Authorization: Bearer sk_agent_...`.
+ * `x-api-key` is accepted as a documented fallback for clients that cannot
+ * set an Authorization header.
+ */
 export function readBearer(request: Request): string {
   const header = request.headers.get("authorization") ?? "";
   if (header.toLowerCase().startsWith("bearer ")) return header.slice(7).trim();
