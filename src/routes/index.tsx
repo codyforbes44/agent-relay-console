@@ -44,11 +44,11 @@ export const Route = createFileRoute("/")({
 const QUICKSTART = `# 1. discover
 curl ${SITE_URL}/api/public/v1/tools
 
-# 2. call (read-only tools need no confirmation)
-curl -X POST ${SITE_URL}/api/public/v1/tools/search_knowledge_base \\
+# 2. call a live tool (read-only tools need no confirmation)
+curl -X POST ${SITE_URL}/api/public/v1/tools/fetch_url \\
   -H "Authorization: Bearer $RELAY_KEY" \\
   -H "content-type: application/json" \\
-  -d '{"query":"refund policy"}'`;
+  -d '{"url":"https://example.com"}'`;
 
 const STEPS = [
   {
@@ -203,10 +203,10 @@ function Landing() {
         <section className="mx-auto max-w-3xl px-6 pb-20">
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">Starter tool catalog</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Prices are per successful call. Side-effecting tools are marked and gated. These are
-            simulated integrations for testing — every response includes{" "}
-            <span className="font-mono">&quot;demo&quot;: true</span> until the live providers are
-            wired in.
+            Prices are per successful call. Side-effecting tools are marked and gated. Live tools
+            do real work and cost credits; every{" "}
+            <span className="font-mono">sandbox_*</span> tool is free and returns fixture data, so
+            agents can rehearse the full flow before spending anything.
           </p>
           <ul className="mt-5 divide-y divide-border rounded-lg border border-border">
             {PUBLIC_TOOLS.map((t) => (

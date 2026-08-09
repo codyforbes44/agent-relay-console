@@ -68,13 +68,80 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     summarize: (a) => str(a['url']),
   },
   {
-    name: "search_knowledge_base",
-    label: "Search knowledge base",
+    // Real crawl: same-origin pages only, sequential, hard page cap.
+    name: "crawl_site",
+    label: "Crawl site",
     description:
-      "Search the workspace knowledge base for internal documentation, policies and notes. Read-only.",
+      "Crawl a public site starting from one https:// URL and return readable text for that page plus up to nine same-origin pages it links to. Real network calls. Read-only.",
+    sideEffecting: false,
+    icon: "globe",
+    credits: 6,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      url: z.string().describe("Absolute https:// seed URL"),
+      maxPages: z.number().optional().describe("Total pages to fetch, 1-10. Defaults to 3"),
+      maxCharsPerPage: z
+        .number()
+        .optional()
+        .describe("Truncate each page's text to this many characters (default 4000, max 20000)"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: { url: "https://example.com", maxPages: 3 },
+    exampleResult: {
+      ok: true,
+      seed: "https://example.com",
+      pageCount: 2,
+      pages: [
+        {
+          url: "https://example.com/",
+          status: 200,
+          title: "Example Domain",
+          text: "Example Domain. This domain is for use in illustrative examples...",
+          chars: 208,
+        },
+      ],
+      crawledAt: "2026-08-09T20:15:18.358Z",
+    },
+    summarize: (a) => `${str(a['url'])} · ${Number(a['maxPages'] ?? 3)} pages`,
+  },
+  {
+    // Real model-backed extraction. The provider key stays server-side.
+    name: "extract_structured",
+    label: "Extract structured data",
+    description:
+      "Extract named fields as JSON from a public URL or supplied text, using a server-side model. Returns one value per requested field, or null when absent. Read-only.",
+    sideEffecting: false,
+    icon: "list",
+    credits: 8,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      fields: z
+        .array(z.string())
+        .describe("Field names to extract, e.g. [\"companyName\", \"pricingModel\"]"),
+      url: z.string().optional().describe("Absolute https:// URL to read. Required unless text is given"),
+      text: z.string().optional().describe("Raw text to extract from instead of fetching a URL"),
+      instruction: z.string().optional().describe("Optional extra guidance for the extraction"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: { url: "https://example.com", fields: ["title", "purpose"] },
+    exampleResult: {
+      ok: true,
+      sourceUrl: "https://example.com/",
+      fields: { title: "Example Domain", purpose: "Illustrative examples in documents" },
+      missing: [],
+      extractedAt: "2026-08-09T20:15:18.358Z",
+    },
+    summarize: (a) =>
+      `${Array.isArray(a['fields']) ? (a['fields'] as unknown[]).length : 0} fields${a['url'] ? ` · ${str(a['url'])}` : ""}`,
+  },
+  {
+    name: "sandbox_search_knowledge_base",
+    label: "Search knowledge base (sandbox)",
+    description:
+      "Sandbox: searches a fixed set of fixture documents and returns simulated matches. Free — use it to exercise the API, not for real knowledge.",
     sideEffecting: false,
     icon: "search",
-    credits: 1,
+    credits: 0,
     publicApi: true,
     demo: true,
     schema: z.object({
@@ -93,12 +160,13 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     summarize: (a) => `"${str(a['query'])}"`,
   },
   {
-    name: "lookup_crm_contact",
-    label: "Look up CRM contact",
-    description: "Fetch a single CRM contact by email address. Read-only.",
+    name: "sandbox_lookup_crm_contact",
+    label: "Look up CRM contact (sandbox)",
+    description:
+      "Sandbox: returns a fixture CRM contact by email. Free — no real CRM is queried.",
     sideEffecting: false,
     icon: "user",
-    credits: 1,
+    credits: 0,
     publicApi: true,
     demo: true,
     schema: z.object({
@@ -119,13 +187,13 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     summarize: (a) => str(a['email']),
   },
   {
-    name: "list_records",
-    label: "List records",
+    name: "sandbox_list_records",
+    label: "List records (sandbox)",
     description:
-      "List records of a given type (contacts, invoices, tickets) with an optional status filter. Read-only.",
+      "Sandbox: lists fixture records (contacts, invoices, tickets) with paging and filtering. Free — no real data.",
     sideEffecting: false,
     icon: "list",
-    credits: 1,
+    credits: 0,
     publicApi: true,
     demo: true,
     schema: z.object({
@@ -148,13 +216,13 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     summarize: (a) => `${str(a['type'])}${a['status'] ? ` · ${str(a['status'])}` : ""}`,
   },
   {
-    name: "send_email",
-    label: "Send email",
+    name: "sandbox_send_email",
+    label: "Send email (sandbox)",
     description:
-      "Send an email to a recipient. Side-effecting: requires explicit user confirmation.",
+      "Sandbox: simulates sending an email and returns a fake message id. Nothing is delivered. Free, and still side-effecting so you can exercise the confirmation flow.",
     sideEffecting: true,
     icon: "mail",
-    credits: 5,
+    credits: 0,
     publicApi: true,
     demo: true,
     schema: z.object({
@@ -178,13 +246,13 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     summarize: (a) => `${str(a['to'])} — ${str(a['subject'])}`,
   },
   {
-    name: "update_crm_record",
-    label: "Update CRM record",
+    name: "sandbox_update_crm_record",
+    label: "Update CRM record (sandbox)",
     description:
-      "Update fields on a CRM record. Side-effecting: requires explicit user confirmation.",
+      "Sandbox: simulates updating a CRM record. Nothing is written. Free, and still side-effecting so you can exercise the confirmation flow.",
     sideEffecting: true,
     icon: "database",
-    credits: 3,
+    credits: 0,
     publicApi: true,
     demo: true,
     schema: z.object({
@@ -204,13 +272,13 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     summarize: (a) => str(a['recordId']),
   },
   {
-    name: "create_payment",
-    label: "Create payment",
+    name: "sandbox_create_payment",
+    label: "Create payment (sandbox)",
     description:
-      "Create a payment charge for a customer. Side-effecting: requires explicit user confirmation.",
+      "Sandbox: simulates creating a payment charge. No money moves. Free, and still side-effecting so you can exercise the confirmation flow.",
     sideEffecting: true,
     icon: "credit-card",
-    credits: 10,
+    credits: 0,
     publicApi: true,
     demo: true,
     schema: z.object({
@@ -232,13 +300,13 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       `${(Number(a['amountCents'] ?? 0) / 100).toFixed(2)} ${str(a['currency']).toUpperCase()} · ${str(a['customerId'])}`,
   },
   {
-    name: "delete_record",
-    label: "Delete record",
+    name: "sandbox_delete_record",
+    label: "Delete record (sandbox)",
     description:
-      "Permanently delete a record. Side-effecting: requires explicit user confirmation.",
+      "Sandbox: simulates deleting a record. Nothing is deleted. Free, and still side-effecting so you can exercise the confirmation flow.",
     sideEffecting: true,
     icon: "trash",
-    credits: 3,
+    credits: 0,
     publicApi: true,
     demo: true,
     schema: z.object({
@@ -260,7 +328,36 @@ export const TOOLS_BY_NAME: Record<string, ToolContract> = Object.fromEntries(
   TOOL_CONTRACTS.map((t) => [t.name, t]),
 );
 
+/**
+ * The simulated fixtures moved to a free `sandbox_` namespace. The pre-rename
+ * names keep working for one release so integrations mid-flight do not break;
+ * responses carry a `deprecated` pointer to the new name.
+ */
+export const DEPRECATED_TOOL_ALIASES: Record<string, string> = {
+  search_knowledge_base: "sandbox_search_knowledge_base",
+  lookup_crm_contact: "sandbox_lookup_crm_contact",
+  list_records: "sandbox_list_records",
+  send_email: "sandbox_send_email",
+  update_crm_record: "sandbox_update_crm_record",
+  create_payment: "sandbox_create_payment",
+  delete_record: "sandbox_delete_record",
+};
+
+/** Resolves a requested tool name, following deprecated aliases. */
+export function resolveTool(name: string): {
+  tool: ToolContract | undefined;
+  canonicalName: string;
+  deprecatedAlias: string | null;
+} {
+  const target = DEPRECATED_TOOL_ALIASES[name];
+  if (target) {
+    return { tool: TOOLS_BY_NAME[target], canonicalName: target, deprecatedAlias: name };
+  }
+  return { tool: TOOLS_BY_NAME[name], canonicalName: name, deprecatedAlias: null };
+}
+
 export const PUBLIC_TOOLS = TOOL_CONTRACTS.filter((t) => t.publicApi);
+
 
 /** Full example success envelope returned by POST /api/public/v1/tools/{name}. */
 export function exampleSuccessEnvelope(tool: ToolContract, balanceBefore = 500) {

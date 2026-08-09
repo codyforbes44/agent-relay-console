@@ -14,6 +14,26 @@ export type OrgToolRow = {
 
 const DEFAULT_TOOL_NAMES = TOOL_CONTRACTS.filter((t) => t.publicApi).map((t) => t.name);
 
+/**
+ * Ensures a visibility row exists for every tool in the code registry.
+ * The registry in `contracts.ts` is the single source of truth — the database
+ * no longer carries a hardcoded tool list, so rows are created on demand.
+ */
+export async function ensureOrgToolRows(
+  admin: SupabaseClient,
+  orgId: string,
+): Promise<void> {
+  const rows = TOOL_CONTRACTS.filter((t) => t.publicApi).map((t) => ({
+    org_id: orgId,
+    tool_name: t.name,
+    requires_confirmation: t.sideEffecting,
+  }));
+  const { error } = await admin
+    .from("org_tools")
+    .upsert(rows, { onConflict: "org_id,tool_name", ignoreDuplicates: true });
+  if (error) throw error;
+}
+
 /** Returns the workspace's visibility rows for the current public tool set. */
 export async function getOrgTools(
   admin: SupabaseClient,
@@ -33,6 +53,7 @@ export async function getOrgToolEnabledMap(
   admin: SupabaseClient,
   orgId: string,
 ): Promise<Record<string, boolean>> {
+  await ensureOrgToolRows(admin, orgId);
   const rows = await getOrgTools(admin, orgId);
   const map: Record<string, boolean> = {};
   for (const row of rows) map[row.tool_name] = row.enabled;
@@ -74,10 +95,20 @@ export async function setToolEnabled(
   toolName: string,
   enabled: boolean,
 ): Promise<void> {
-  const { error } = await admin
-    .from("org_tools")
-    .update({ enabled, updated_at: new Date().toISOString() })
-    .eq("org_id", orgId)
-    .eq("tool_name", toolName);
+  const contract = TOOL_CONTRACTS.find((t) => t.name === toolName && t.publicApi);
+  if (!contract) throw new Error(`Unknown tool: ${toolName}`);
+
+  // Upsert, not update: workspaces created before a tool existed have no row,
+  // and an UPDATE against a missing row silently succeeds while changing nothing.
+  const { error } = await admin.from("org_tools").upsert(
+    {
+      org_id: orgId,
+      tool_name: toolName,
+      enabled,
+      requires_confirmation: contract.sideEffecting,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "org_id,tool_name" },
+  );
   if (error) throw error;
 }
