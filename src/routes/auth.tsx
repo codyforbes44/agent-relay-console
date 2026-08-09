@@ -14,7 +14,16 @@ const credentials = z.object({
   password: z.string().min(8, "Password must be at least 8 characters").max(72),
 });
 
+function safeNext(next: unknown): string | null {
+  if (typeof next !== "string" || !next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
+
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>): { next?: string } => {
+    const next = safeNext(s['next']);
+    return next ? { next } : {};
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Relay Agent Workspace" },
@@ -28,6 +37,11 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const goNext = () => {
+    if (next) window.location.href = next;
+    else navigate({ to: "/chat", replace: true });
+  };
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,13 +50,14 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/chat", replace: true });
+      if (data.session) goNext();
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) navigate({ to: "/chat", replace: true });
+      if (session) goNext();
     });
     return () => data.subscription.unsubscribe();
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, next]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,7 +72,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
-          options: { emailRedirectTo: window.location.origin },
+          options: { emailRedirectTo: next ? window.location.origin + next : window.location.origin },
         });
         if (error) throw error;
         if (!data.session) setCheckEmail(true);
@@ -75,7 +90,7 @@ function AuthPage() {
   async function onGoogle() {
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: next ? window.location.origin + next : window.location.origin,
     });
     if (result.error) {
       setBusy(false);
@@ -83,7 +98,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/chat", replace: true });
+    goNext();
   }
 
   return (
