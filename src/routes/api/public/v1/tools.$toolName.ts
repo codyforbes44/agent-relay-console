@@ -220,7 +220,13 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
                 "idempotency-replayed": "true",
               });
             }
-            return apiError(409, "request_in_progress", "A call with this idempotency-key is still running");
+            // No time-based reclaim: nothing bounds tool execution, so deleting
+            // a claim could re-run a live call. The agent must use a new key.
+            return apiError(
+              409,
+              "request_in_progress",
+              "A call with this idempotency-key is still running. Poll or wait for the original response; if the original request is known to have failed, retry with a new idempotency-key.",
+            );
           }
           idemClaimed = true;
         }
