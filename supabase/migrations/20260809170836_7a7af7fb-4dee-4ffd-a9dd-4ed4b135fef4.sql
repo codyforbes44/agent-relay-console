@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.org_credit_balance(UUID) FROM authenticated;

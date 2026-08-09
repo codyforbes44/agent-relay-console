@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          label: string
+          last_used_at: string | null
+          org_id: string
+          revoked_at: string | null
+          scopes: string[]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          label?: string
+          last_used_at?: string | null
+          org_id: string
+          revoked_at?: string | null
+          scopes?: string[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          label?: string
+          last_used_at?: string | null
+          org_id?: string
+          revoked_at?: string | null
+          scopes?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_keys_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -83,6 +130,51 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_ledger: {
+        Row: {
+          created_at: string
+          delta: number
+          description: string | null
+          id: string
+          kind: string
+          org_id: string
+          usage_event_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          description?: string | null
+          id?: string
+          kind: string
+          org_id: string
+          usage_event_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          description?: string | null
+          id?: string
+          kind?: string
+          org_id?: string
+          usage_event_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_ledger_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_ledger_usage_event_id_fkey"
+            columns: ["usage_event_id"]
+            isOneToOne: false
+            referencedRelation: "usage_events"
             referencedColumns: ["id"]
           },
         ]
@@ -369,6 +461,60 @@ export type Database = {
           },
         ]
       }
+      usage_events: {
+        Row: {
+          created_at: string
+          credits: number
+          error_code: string | null
+          id: string
+          key_id: string | null
+          latency_ms: number
+          org_id: string
+          request_id: string | null
+          status: string
+          tool_name: string
+        }
+        Insert: {
+          created_at?: string
+          credits?: number
+          error_code?: string | null
+          id?: string
+          key_id?: string | null
+          latency_ms?: number
+          org_id: string
+          request_id?: string | null
+          status?: string
+          tool_name: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          error_code?: string | null
+          id?: string
+          key_id?: string | null
+          latency_ms?: number
+          org_id?: string
+          request_id?: string | null
+          status?: string
+          tool_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_events_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "agent_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usage_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -376,6 +522,7 @@ export type Database = {
     Functions: {
       consume_rate_limit: { Args: { _max?: number }; Returns: boolean }
       has_org_access: { Args: { _org_id: string }; Returns: boolean }
+      org_credit_balance: { Args: { _org_id: string }; Returns: number }
     }
     Enums: {
       org_role: "owner" | "admin" | "member"

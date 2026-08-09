@@ -12,9 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DocsRouteImport } from './routes/docs'
+import { Route as DotwellKnownAgentManifestDotjsonRouteImport } from './routes/[.]well-known/agent-manifest[.]json'
+import { Route as AuthenticatedKeysRouteImport } from './routes/_authenticated/keys'
+import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage'
 import { Route as ApiAgentRouteImport } from './routes/api/agent'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedChatThreadIdRouteImport } from './routes/_authenticated/chat.$threadId'
+import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
+import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
+import { Route as ApiPublicV1ToolsRouteImport } from './routes/api/public/v1/tools'
+import { Route as ApiPublicV1ToolsToolNameRouteImport } from './routes/api/public/v1/tools.$toolName'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,6 +37,27 @@ const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
   getParentRoute: () => rootRouteImport,
+} as any)
+const DocsRoute = DocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotwellKnownAgentManifestDotjsonRoute =
+  DotwellKnownAgentManifestDotjsonRouteImport.update({
+    id: '/.well-known/agent-manifest.json',
+    path: '/.well-known/agent-manifest.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedKeysRoute = AuthenticatedKeysRouteImport.update({
+  id: '/keys',
+  path: '/keys',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedUsageRoute = AuthenticatedUsageRouteImport.update({
+  id: '/usage',
+  path: '/usage',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiAgentRoute = ApiAgentRouteImport.update({
   id: '/api/agent',
@@ -46,50 +75,135 @@ const AuthenticatedChatThreadIdRoute =
     path: '/chat/$threadId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicV1MeRoute = ApiPublicV1MeRouteImport.update({
+  id: '/api/public/v1/me',
+  path: '/api/public/v1/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1OpenapiDotjsonRoute =
+  ApiPublicV1OpenapiDotjsonRouteImport.update({
+    id: '/api/public/v1/openapi.json',
+    path: '/api/public/v1/openapi.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV1ToolsRoute = ApiPublicV1ToolsRouteImport.update({
+  id: '/api/public/v1/tools',
+  path: '/api/public/v1/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1ToolsToolNameRoute =
+  ApiPublicV1ToolsToolNameRouteImport.update({
+    id: '/$toolName',
+    path: '/$toolName',
+    getParentRoute: () => ApiPublicV1ToolsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/docs': typeof DocsRoute
+  '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/keys': typeof AuthenticatedKeysRoute
+  '/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
+  '/api/public/v1/me': typeof ApiPublicV1MeRoute
+  '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/docs': typeof DocsRoute
+  '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/keys': typeof AuthenticatedKeysRoute
+  '/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/chat': typeof AuthenticatedChatIndexRoute
+  '/api/public/v1/me': typeof ApiPublicV1MeRoute
+  '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/docs': typeof DocsRoute
+  '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/_authenticated/keys': typeof AuthenticatedKeysRoute
+  '/_authenticated/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
   '/_authenticated/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
+  '/api/public/v1/me': typeof ApiPublicV1MeRoute
+  '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/api/agent' | '/chat/$threadId' | '/chat/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/docs'
+    | '/.well-known/agent-manifest.json'
+    | '/keys'
+    | '/usage'
+    | '/api/agent'
+    | '/chat/$threadId'
+    | '/chat/'
+    | '/api/public/v1/me'
+    | '/api/public/v1/openapi.json'
+    | '/api/public/v1/tools'
+    | '/api/public/v1/tools/$toolName'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/api/agent' | '/chat/$threadId' | '/chat'
+  to:
+    | '/'
+    | '/auth'
+    | '/docs'
+    | '/.well-known/agent-manifest.json'
+    | '/keys'
+    | '/usage'
+    | '/api/agent'
+    | '/chat/$threadId'
+    | '/chat'
+    | '/api/public/v1/me'
+    | '/api/public/v1/openapi.json'
+    | '/api/public/v1/tools'
+    | '/api/public/v1/tools/$toolName'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/docs'
+    | '/.well-known/agent-manifest.json'
+    | '/_authenticated/keys'
+    | '/_authenticated/usage'
     | '/api/agent'
     | '/_authenticated/chat/$threadId'
     | '/_authenticated/chat/'
+    | '/api/public/v1/me'
+    | '/api/public/v1/openapi.json'
+    | '/api/public/v1/tools'
+    | '/api/public/v1/tools/$toolName'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  DocsRoute: typeof DocsRoute
+  DotwellKnownAgentManifestDotjsonRoute: typeof DotwellKnownAgentManifestDotjsonRoute
   ApiAgentRoute: typeof ApiAgentRoute
+  ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
+  ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
+  ApiPublicV1ToolsRoute: typeof ApiPublicV1ToolsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -115,6 +229,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs': {
+      id: '/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/agent-manifest.json': {
+      id: '/.well-known/agent-manifest.json'
+      path: '/.well-known/agent-manifest.json'
+      fullPath: '/.well-known/agent-manifest.json'
+      preLoaderRoute: typeof DotwellKnownAgentManifestDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/keys': {
+      id: '/_authenticated/keys'
+      path: '/keys'
+      fullPath: '/keys'
+      preLoaderRoute: typeof AuthenticatedKeysRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/usage': {
+      id: '/_authenticated/usage'
+      path: '/usage'
+      fullPath: '/usage'
+      preLoaderRoute: typeof AuthenticatedUsageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/agent': {
       id: '/api/agent'
       path: '/api/agent'
@@ -136,15 +278,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatThreadIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/v1/me': {
+      id: '/api/public/v1/me'
+      path: '/api/public/v1/me'
+      fullPath: '/api/public/v1/me'
+      preLoaderRoute: typeof ApiPublicV1MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/openapi.json': {
+      id: '/api/public/v1/openapi.json'
+      path: '/api/public/v1/openapi.json'
+      fullPath: '/api/public/v1/openapi.json'
+      preLoaderRoute: typeof ApiPublicV1OpenapiDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/tools': {
+      id: '/api/public/v1/tools'
+      path: '/api/public/v1/tools'
+      fullPath: '/api/public/v1/tools'
+      preLoaderRoute: typeof ApiPublicV1ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/tools/$toolName': {
+      id: '/api/public/v1/tools/$toolName'
+      path: '/$toolName'
+      fullPath: '/api/public/v1/tools/$toolName'
+      preLoaderRoute: typeof ApiPublicV1ToolsToolNameRouteImport
+      parentRoute: typeof ApiPublicV1ToolsRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedKeysRoute: typeof AuthenticatedKeysRoute
+  AuthenticatedUsageRoute: typeof AuthenticatedUsageRoute
   AuthenticatedChatThreadIdRoute: typeof AuthenticatedChatThreadIdRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedKeysRoute: AuthenticatedKeysRoute,
+  AuthenticatedUsageRoute: AuthenticatedUsageRoute,
   AuthenticatedChatThreadIdRoute: AuthenticatedChatThreadIdRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
 }
@@ -152,22 +326,28 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApiPublicV1ToolsRouteChildren {
+  ApiPublicV1ToolsToolNameRoute: typeof ApiPublicV1ToolsToolNameRoute
+}
+
+const ApiPublicV1ToolsRouteChildren: ApiPublicV1ToolsRouteChildren = {
+  ApiPublicV1ToolsToolNameRoute: ApiPublicV1ToolsToolNameRoute,
+}
+
+const ApiPublicV1ToolsRouteWithChildren =
+  ApiPublicV1ToolsRoute._addFileChildren(ApiPublicV1ToolsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  DocsRoute: DocsRoute,
+  DotwellKnownAgentManifestDotjsonRoute: DotwellKnownAgentManifestDotjsonRoute,
   ApiAgentRoute: ApiAgentRoute,
+  ApiPublicV1MeRoute: ApiPublicV1MeRoute,
+  ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
+  ApiPublicV1ToolsRoute: ApiPublicV1ToolsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

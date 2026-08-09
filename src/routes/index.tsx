@@ -56,13 +56,17 @@ function Landing() {
           Streaming responses, a live tool-call timeline, and a hard stop before anything sends an
           email, edits your CRM, moves money, or deletes a record.
         </p>
-        <div className="mt-8 flex justify-center gap-3">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button size="lg" asChild>
             <Link to={signedIn ? "/chat" : "/auth"}>
               {signedIn ? "Open workspace" : "Get started"}
             </Link>
           </Button>
+          <Button size="lg" variant="outline" asChild>
+            <Link to="/docs">Agent API docs</Link>
+          </Button>
         </div>
+
       </section>
 
       <section className="mx-auto grid max-w-4xl gap-4 px-6 pb-24 sm:grid-cols-3">
