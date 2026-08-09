@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ConsoleShell } from "@/components/workspace/ConsoleShell";
+import { KeyLimitsEditor } from "@/components/workspace/KeyLimitsEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
