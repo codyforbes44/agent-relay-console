@@ -12,7 +12,7 @@ import { visibleToolsForOrg } from "@/lib/api/org-tools.server";
 
 export const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
-  "access-control-allow-headers": "authorization, content-type, x-api-key, x-confirm-side-effects, idempotency-key",
+  "access-control-allow-headers": "authorization, content-type, x-api-key, x-confirmation-token, idempotency-key, x-payment",
   "access-control-allow-methods": "GET, POST, OPTIONS",
 };
 
@@ -42,7 +42,7 @@ export function inputSchemaOf(tool: ToolContract) {
 
 /** OpenAPI responses for every error the tool endpoint can return. */
 function errorResponses(sideEffecting: boolean) {
-  const relevant = TOOL_ERRORS.filter((e) => sideEffecting || e.code !== "confirmation_required");
+  const relevant = TOOL_ERRORS.filter((e) => sideEffecting || !e.code.startsWith("confirmation_"));
   const byStatus: Record<string, { description: string; content: unknown }> = {};
   for (const err of relevant) {
     const key = String(err.status);
@@ -84,16 +84,67 @@ export function toolDescriptor(tool: ToolContract, origin: string) {
     "content-type": "application/json",
     "idempotency-key": "<unique-per-attempt>",
   };
-  if (tool.sideEffecting) headers["x-confirm-side-effects"] = "true";
+
+  const invokeUrl = `${origin}/api/public/v1/tools/${tool.name}`;
+
+  // Side-effecting tools are a deliberate two-step flow: the first call is
+  // unconfirmed and returns a preview plus a single-use token bound to these
+  // exact arguments. Never publish a pre-confirmed example.
+  const confirmationFlow = tool.sideEffecting
+    ? {
+        required: true,
+        header: "x-confirmation-token",
+        steps: [
+          {
+            step: 1,
+            description:
+              "Call with no confirmation header. The response is 428 confirmation_required and carries error.preview plus error.confirmationToken.",
+            request: { method: "POST", url: invokeUrl, headers, body: tool.example },
+            response: {
+              status: 428,
+              body: {
+                ok: false,
+                error: {
+                  code: "confirmation_required",
+                  message:
+                    "This tool has side effects. Show the preview to your operator, then retry the identical request with header 'x-confirmation-token: <confirmationToken>'.",
+                  tool: tool.name,
+                  credits: tool.credits,
+                  preview: { summary: tool.summarize(tool.example), args: tool.example },
+                  confirmationToken: "cnf_2f6c1a94b7d34e0f9a1c5e7d8b2f4a60",
+                  expiresAt: "2026-08-09T20:25:18.358Z",
+                },
+              },
+            },
+          },
+          {
+            step: 2,
+            description:
+              "After a human approves the preview, repeat the identical body with the token. The token is single-use and bound to these arguments — changing the body returns 409 confirmation_mismatch.",
+            request: {
+              method: "POST",
+              url: invokeUrl,
+              headers: {
+                ...headers,
+                "x-confirmation-token": "cnf_2f6c1a94b7d34e0f9a1c5e7d8b2f4a60",
+              },
+              body: tool.example,
+            },
+            response: { status: 200, body: exampleSuccessEnvelope(tool) },
+          },
+        ],
+      }
+    : { required: false };
 
   return {
+    confirmation: confirmationFlow,
     name: tool.name,
     label: tool.label,
     description: tool.description,
     sideEffecting: tool.sideEffecting,
     demo: tool.demo,
     credits: tool.credits,
-    invokeUrl: `${origin}/api/public/v1/tools/${tool.name}`,
+    invokeUrl,
     inputSchema: inputSchemaOf(tool),
     example: {
       request: {
@@ -103,7 +154,7 @@ export function toolDescriptor(tool: ToolContract, origin: string) {
         body: tool.example,
       },
       response: exampleSuccessEnvelope(tool),
-      errors: TOOL_ERRORS.filter((e) => tool.sideEffecting || e.code !== "confirmation_required").map(
+      errors: TOOL_ERRORS.filter((e) => tool.sideEffecting || !e.code.startsWith("confirmation_")).map(
         (e) => ({ status: e.status, code: e.code, cause: e.cause, action: e.action }),
       ),
     },
@@ -115,6 +166,10 @@ export function catalog(origin: string, tools: ToolContract[] = PUBLIC_TOOLS) {
   return {
     ok: true,
     version: "2026-08-09",
+    confirmation: {
+      header: "x-confirmation-token",
+      flow: "Side-effecting tools: call unconfirmed -> 428 with error.preview + error.confirmationToken -> resend the identical body with the token. Tokens are single-use, expire in 10 minutes and are bound to the exact arguments previewed.",
+    },
     docs: `${origin}/docs`,
     openapi: `${origin}/api/public/v1/openapi.json`,
     auth: {
@@ -144,7 +199,7 @@ export function openApiDocument(origin: string) {
         summary: tool.label,
         description: `${tool.description} Costs ${tool.credits} credit(s).${
           tool.sideEffecting
-            ? " Side-effecting: send header x-confirm-side-effects: true to authorize execution."
+            ? " Side-effecting: the first call returns 428 confirmation_required with a preview and a single-use confirmationToken; resend the identical body with header x-confirmation-token to execute."
             : ""
         }`,
         security: [{ agentKey: [] }],
@@ -160,11 +215,12 @@ export function openApiDocument(origin: string) {
           ...(tool.sideEffecting
             ? [
                 {
-                  name: "x-confirm-side-effects",
+                  name: "x-confirmation-token",
                   in: "header",
-                  required: true,
-                  schema: { type: "string", enum: ["true"] },
-                  description: "Must be 'true' to authorize this side-effecting call.",
+                  required: false,
+                  schema: { type: "string" },
+                  description:
+                    "Single-use token from a prior 428 confirmation_required response, bound to this exact request body. Omit it on the first call to receive the preview and token.",
                 },
               ]
             : []),

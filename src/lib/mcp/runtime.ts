@@ -1,9 +1,16 @@
 import { defineMcp, defineTool, type ToolContext } from "@lovable.dev/mcp-js";
-import type { z } from "zod";
+import { z } from "zod";
 
 import { TOOLS_BY_NAME, type ToolContract } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
+import {
+  issueConfirmation,
+  redeemConfirmation,
+  releaseConfirmation,
+  storeConfirmationResponse,
+} from "@/lib/api/confirmations.server";
 import { isToolEnabled } from "@/lib/api/org-tools.server";
+import { getOrgSettings, requiresConfirmation } from "@/lib/api/settings.server";
 import { supabaseForUser } from "./supabase";
 
 type Result = {
@@ -43,6 +50,58 @@ async function runMetered(
     return fail(`Tool ${contract.name} is disabled for this workspace`);
   }
 
+  // Confirmation parity with REST: the token is bound to these exact
+  // arguments, single-use, and can only come from a preview we issued.
+  const { confirmation_token: rawToken, ...toolArgs } = args as Record<string, unknown>;
+  const settings = await getOrgSettings(supabaseAdmin, orgId);
+  const gated = requiresConfirmation(settings.confirmationDefault, contract.sideEffecting);
+  let confirmationId: string | null = null;
+
+  if (gated) {
+    const token = typeof rawToken === "string" && rawToken.trim() ? rawToken.trim() : null;
+    if (!token) {
+      const issued = await issueConfirmation(supabaseAdmin, {
+        orgId,
+        keyId: null,
+        tool: contract,
+        args: toolArgs,
+      });
+      const payload = {
+        ok: false,
+        error: {
+          code: "confirmation_required",
+          message:
+            "This tool has side effects. Show this preview to the human, then call again with confirmation_token set to the value below.",
+          tool: contract.name,
+          credits: contract.credits,
+          preview: issued.preview,
+          confirmationToken: issued.token,
+          expiresAt: issued.expiresAt,
+        },
+      };
+      return {
+        content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+        structuredContent: payload,
+        isError: true,
+      };
+    }
+
+    const redeemed = await redeemConfirmation(supabaseAdmin, {
+      token,
+      orgId,
+      toolName: contract.name,
+      args: toolArgs,
+    });
+    if (!redeemed.ok) return fail(`${redeemed.failure.code}: ${redeemed.failure.message}`);
+    if (redeemed.replay) {
+      return {
+        content: [{ type: "text", text: JSON.stringify(redeemed.replay, null, 2) }],
+        structuredContent: redeemed.replay,
+      };
+    }
+    confirmationId = redeemed.id;
+  }
+
   const started = Date.now();
   const { getBalance, recordUsage } = await import("@/lib/api/metering.server");
 
@@ -55,7 +114,7 @@ async function runMetered(
 
   let result: Record<string, unknown>;
   try {
-    result = await runTool(contract.name, args);
+    result = await runTool(contract.name, toolArgs);
   } catch (e) {
     await recordUsage(supabaseAdmin, {
       orgId,
@@ -67,6 +126,7 @@ async function runMetered(
       latencyMs: Date.now() - started,
       requestId: crypto.randomUUID(),
     });
+    if (confirmationId) await releaseConfirmation(supabaseAdmin, confirmationId);
     return fail(e instanceof Error ? e.message : "Tool execution failed");
   }
 
@@ -98,6 +158,8 @@ async function runMetered(
     demo: contract.demo,
     credits: { charged: contract.credits, balance: balance - contract.credits },
   };
+  if (confirmationId) await storeConfirmationResponse(supabaseAdmin, confirmationId, payload);
+
   return {
     content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
     structuredContent: payload,
@@ -122,10 +184,20 @@ export function mcpToolFor(name: string): McpTool {
       `Example arguments: ${JSON.stringify(contract.example)}.`,
       `Example result: ${JSON.stringify(contract.exampleResult)}.`,
       contract.sideEffecting
-        ? "Side-effecting: your client should ask the human to approve before calling."
+        ? "Side-effecting, two-step: call it first WITHOUT confirmation_token — it returns a preview plus a single-use confirmationToken. Show that preview to the human, and only after they approve, call again with the identical arguments plus confirmation_token. The token is bound to those exact arguments and expires in 10 minutes."
         : "Read-only and safe to retry.",
     ].join(" "),
-    inputSchema: shape,
+    inputSchema: contract.sideEffecting
+      ? {
+          ...shape,
+          confirmation_token: z
+            .string()
+            .optional()
+            .describe(
+              "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview.",
+            ),
+        }
+      : shape,
 
     annotations: {
       readOnlyHint: !contract.sideEffecting,

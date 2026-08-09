@@ -39,7 +39,12 @@ automation, no password, no email verification loop.
 
 ## Rules
 
-- Side-effecting tools require the header: x-confirm-side-effects: true
+- Side-effecting tools are two-step. Call once with no token: you get
+  428 confirmation_required with error.preview and error.confirmationToken.
+  Show the preview to your human. Then resend the IDENTICAL body with
+  header x-confirmation-token: <token>. Tokens are single-use, expire in
+  10 minutes and are bound to those exact arguments. Over MCP the same gate
+  is the confirmation_token argument.
 - Send idempotency-key on retries; replays are not charged twice.
 - Rate limit: 60 calls per minute per key.
 - 402 means the workspace is out of credits. The response body is an x402

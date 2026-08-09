@@ -71,7 +71,7 @@
       {
         "name": "list_records",
         "title": "List records",
-        "description": "List records of a given type (contacts, invoices, tickets) with an optional status filter. Read-only. Costs 1 credit(s) per call. Example arguments: {\"type\":\"invoices\",\"status\":null}. Example result: {\"ok\":true,\"type\":\"invoices\",\"count\":2,\"rows\":[{\"id\":\"in_881\",\"contact\":\"dana@northwind.io\",\"amountCents\":420000,\"status\":\"paid\"},{\"id\":\"in_882\",\"contact\":\"priya@fernbrook.co\",\"amountCents\":89000,\"status\":\"open\"}]}. Read-only and safe to retry.",
+        "description": "List records of a given type (contacts, invoices, tickets) with an optional status filter. Read-only. Costs 1 credit(s) per call. Example arguments: {\"type\":\"invoices\",\"limit\":25}. Example result: {\"ok\":true,\"type\":\"invoices\",\"count\":2,\"rows\":[{\"id\":\"in_881\",\"contact\":\"dana@northwind.io\",\"amountCents\":420000,\"status\":\"paid\"},{\"id\":\"in_882\",\"contact\":\"priya@fernbrook.co\",\"amountCents\":89000,\"status\":\"open\"}],\"nextCursor\":null}. Read-only and safe to retry.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -86,16 +86,20 @@
               "description": "Record type: contacts, invoices or tickets"
             },
             "status": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "description": "Optional status filter, or null"
+              "type": "string",
+              "description": "Optional status filter; omit for all records"
+            },
+            "limit": {
+              "type": "number",
+              "description": "Page size, 1-100. Defaults to 25"
+            },
+            "cursor": {
+              "type": "string",
+              "description": "Opaque cursor from a previous nextCursor"
             }
           },
           "required": [
-            "type",
-            "status"
+            "type"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -105,7 +109,7 @@
       {
         "name": "send_email",
         "title": "Send email",
-        "description": "Send an email to a recipient. Side-effecting: requires explicit user confirmation. Costs 5 credit(s) per call. Example arguments: {\"to\":\"dana@northwind.io\",\"subject\":\"Your invoice is ready\",\"body\":\"Hi Dana — invoice in_881 is attached. Thanks!\"}. Example result: {\"ok\":true,\"simulated\":true,\"messageId\":\"sim_4f2a91cd\",\"to\":\"dana@northwind.io\",\"subject\":\"Your invoice is ready\",\"deliveredAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting: your client should ask the human to approve before calling.",
+        "description": "Send an email to a recipient. Side-effecting: requires explicit user confirmation. Costs 5 credit(s) per call. Example arguments: {\"to\":\"dana@northwind.io\",\"subject\":\"Your invoice is ready\",\"body\":\"Hi Dana — invoice in_881 is attached. Thanks!\"}. Example result: {\"ok\":true,\"simulated\":true,\"messageId\":\"sim_4f2a91cd\",\"to\":\"dana@northwind.io\",\"subject\":\"Your invoice is ready\",\"deliveredAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting, two-step: call it first WITHOUT confirmation_token — it returns a preview plus a single-use confirmationToken. Show that preview to the human, and only after they approve, call again with the identical arguments plus confirmation_token. The token is bound to those exact arguments and expires in 10 minutes.",
         "annotations": {
           "readOnlyHint": false,
           "idempotentHint": false,
@@ -126,6 +130,10 @@
             "body": {
               "type": "string",
               "description": "Plain text email body"
+            },
+            "confirmation_token": {
+              "type": "string",
+              "description": "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview."
             }
           },
           "required": [
@@ -141,7 +149,7 @@
       {
         "name": "update_crm_record",
         "title": "Update CRM record",
-        "description": "Update fields on a CRM record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call. Example arguments: {\"recordId\":\"c_1024\",\"fields\":\"{\\\"stage\\\":\\\"churn_risk\\\",\\\"owner\\\":\\\"ae_12\\\"}\"}. Example result: {\"ok\":true,\"simulated\":true,\"recordId\":\"c_1024\",\"updatedFields\":\"{\\\"stage\\\":\\\"churn_risk\\\",\\\"owner\\\":\\\"ae_12\\\"}\",\"updatedAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting: your client should ask the human to approve before calling.",
+        "description": "Update fields on a CRM record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call. Example arguments: {\"recordId\":\"c_1024\",\"fields\":{\"stage\":\"churn_risk\",\"owner\":\"ae_12\"}}. Example result: {\"ok\":true,\"simulated\":true,\"recordId\":\"c_1024\",\"updatedFields\":{\"stage\":\"churn_risk\",\"owner\":\"ae_12\"},\"updatedAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting, two-step: call it first WITHOUT confirmation_token — it returns a preview plus a single-use confirmationToken. Show that preview to the human, and only after they approve, call again with the identical arguments plus confirmation_token. The token is bound to those exact arguments and expires in 10 minutes.",
         "annotations": {
           "readOnlyHint": false,
           "idempotentHint": false,
@@ -156,8 +164,13 @@
               "description": "CRM record id"
             },
             "fields": {
+              "type": "object",
+              "additionalProperties": {},
+              "description": "Object of field names to new values, e.g. { stage: \"churn_risk\" }"
+            },
+            "confirmation_token": {
               "type": "string",
-              "description": "JSON object of fields to update, as a string"
+              "description": "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview."
             }
           },
           "required": [
@@ -172,7 +185,7 @@
       {
         "name": "create_payment",
         "title": "Create payment",
-        "description": "Create a payment charge for a customer. Side-effecting: requires explicit user confirmation. Costs 10 credit(s) per call. Example arguments: {\"customerId\":\"c_1024\",\"amountCents\":4200,\"currency\":\"usd\"}. Example result: {\"ok\":true,\"simulated\":true,\"paymentId\":\"pay_9c31be40\",\"customerId\":\"c_1024\",\"amountCents\":4200,\"currency\":\"usd\",\"status\":\"succeeded\"}. Side-effecting: your client should ask the human to approve before calling.",
+        "description": "Create a payment charge for a customer. Side-effecting: requires explicit user confirmation. Costs 10 credit(s) per call. Example arguments: {\"customerId\":\"c_1024\",\"amountCents\":4200,\"currency\":\"usd\"}. Example result: {\"ok\":true,\"simulated\":true,\"paymentId\":\"pay_9c31be40\",\"customerId\":\"c_1024\",\"amountCents\":4200,\"currency\":\"usd\",\"status\":\"succeeded\"}. Side-effecting, two-step: call it first WITHOUT confirmation_token — it returns a preview plus a single-use confirmationToken. Show that preview to the human, and only after they approve, call again with the identical arguments plus confirmation_token. The token is bound to those exact arguments and expires in 10 minutes.",
         "annotations": {
           "readOnlyHint": false,
           "idempotentHint": false,
@@ -193,6 +206,10 @@
             "currency": {
               "type": "string",
               "description": "ISO currency code, e.g. usd"
+            },
+            "confirmation_token": {
+              "type": "string",
+              "description": "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview."
             }
           },
           "required": [
@@ -208,7 +225,7 @@
       {
         "name": "delete_record",
         "title": "Delete record",
-        "description": "Permanently delete a record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call. Example arguments: {\"type\":\"tickets\",\"recordId\":\"t_51\"}. Example result: {\"ok\":true,\"simulated\":true,\"deleted\":{\"type\":\"tickets\",\"recordId\":\"t_51\"},\"deletedAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting: your client should ask the human to approve before calling.",
+        "description": "Permanently delete a record. Side-effecting: requires explicit user confirmation. Costs 3 credit(s) per call. Example arguments: {\"type\":\"tickets\",\"recordId\":\"t_51\"}. Example result: {\"ok\":true,\"simulated\":true,\"deleted\":{\"type\":\"tickets\",\"recordId\":\"t_51\"},\"deletedAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting, two-step: call it first WITHOUT confirmation_token — it returns a preview plus a single-use confirmationToken. Show that preview to the human, and only after they approve, call again with the identical arguments plus confirmation_token. The token is bound to those exact arguments and expires in 10 minutes.",
         "annotations": {
           "readOnlyHint": false,
           "idempotentHint": false,
@@ -225,6 +242,10 @@
             "recordId": {
               "type": "string",
               "description": "Record id"
+            },
+            "confirmation_token": {
+              "type": "string",
+              "description": "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview."
             }
           },
           "required": [

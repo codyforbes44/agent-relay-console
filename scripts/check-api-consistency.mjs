@@ -79,8 +79,32 @@ for (const tool of catalog.tools) {
   if (!Array.isArray(tool.example?.errors) || tool.example.errors.length === 0) {
     fail(`catalog ${tool.name}: missing example.errors`);
   }
-  if (tool.sideEffecting !== Boolean(tool.example?.request?.headers?.["x-confirm-side-effects"])) {
-    fail(`catalog ${tool.name}: example headers disagree with sideEffecting`);
+  // Examples must never teach agents to pre-confirm: no example may carry a
+  // confirmation header up front, and side-effecting tools must publish the
+  // two-step 428 -> token flow.
+  if (JSON.stringify(tool.example ?? {}).includes("x-confirm-side-effects")) {
+    fail(`catalog ${tool.name}: example still uses the removed x-confirm-side-effects header`);
+  }
+  if (tool.example?.request?.headers?.["x-confirmation-token"]) {
+    fail(`catalog ${tool.name}: canonical example must not be pre-confirmed`);
+  }
+  if (tool.sideEffecting) {
+    const steps = tool.confirmation?.steps;
+    if (tool.confirmation?.header !== "x-confirmation-token" || !Array.isArray(steps) || steps.length !== 2) {
+      fail(`catalog ${tool.name}: missing two-step confirmation flow`);
+    } else {
+      if (steps[0]?.response?.status !== 428 || !steps[0]?.response?.body?.error?.confirmationToken) {
+        fail(`catalog ${tool.name}: step 1 must return 428 with a confirmationToken`);
+      }
+      if (!steps[1]?.request?.headers?.["x-confirmation-token"]) {
+        fail(`catalog ${tool.name}: step 2 must send x-confirmation-token`);
+      }
+      if (JSON.stringify(steps[0]?.request?.body) !== JSON.stringify(steps[1]?.request?.body)) {
+        fail(`catalog ${tool.name}: confirmation steps must use identical bodies`);
+      }
+    }
+  } else if (tool.confirmation?.required !== false) {
+    fail(`catalog ${tool.name}: read-only tool should not require confirmation`);
   }
 }
 
@@ -97,7 +121,7 @@ for (const t of publicTools) {
   if (!op.responses?.["200"]?.content?.["application/json"]?.examples) {
     fail(`openapi ${t.name}: missing 200 example`);
   }
-  const relevant = errors.filter((e) => t.sideEffecting || e.code !== "confirmation_required");
+  const relevant = errors.filter((e) => t.sideEffecting || !e.code.startsWith("confirmation_"));
   for (const e of relevant) {
     if (e.code === "signup_rate_limited") continue;
     const res = op.responses?.[String(e.status)];
@@ -106,9 +130,12 @@ for (const t of publicTools) {
       fail(`openapi ${t.name}: ${e.status} response does not mention ${e.code}`);
     }
   }
-  const confirmParam = (op.parameters || []).some((p) => p.name === "x-confirm-side-effects");
-  if (confirmParam !== t.sideEffecting) {
+  const confirmParam = (op.parameters || []).find((p) => p.name === "x-confirmation-token");
+  if (Boolean(confirmParam) !== t.sideEffecting) {
     fail(`openapi ${t.name}: confirmation parameter disagrees with sideEffecting`);
+  }
+  if (confirmParam?.required) {
+    fail(`openapi ${t.name}: confirmation header must be optional (first call has no token)`);
   }
   if (!String(op.description || "").includes(`${t.credits} credit`)) {
     fail(`openapi ${t.name}: description does not state ${t.credits} credits`);

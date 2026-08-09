@@ -63,7 +63,7 @@ const STEPS = [
   },
   {
     title: "Call and get metered",
-    body: "Successful calls debit credits. Side-effecting tools return 428 until you confirm explicitly.",
+    body: "Successful calls debit credits. Side-effecting tools return 428 with a preview until a human-approved token is presented.",
     code: "POST /api/public/v1/tools/{name}",
   },
 ] as const;
@@ -83,7 +83,7 @@ const FEATURES = [
   {
     icon: ShieldCheck,
     title: "Side effects are opt-in",
-    body: "Email, CRM writes, payments and deletes return 428 until the caller passes x-confirm-side-effects: true.",
+    body: "Email, CRM writes, payments and deletes return 428 with a preview and a single-use token bound to those exact arguments. No token, no execution.",
   },
   {
     icon: Plug,
