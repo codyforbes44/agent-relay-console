@@ -17,6 +17,7 @@ import { Route as McpRouteImport } from './routes/mcp'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as DotwellKnownAgentManifestDotjsonRouteImport } from './routes/[.]well-known/agent-manifest[.]json'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedKeysRouteImport } from './routes/_authenticated/keys'
 import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage'
 import { Route as ApiAgentRouteImport } from './routes/api/agent'
@@ -72,6 +73,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedKeysRoute = AuthenticatedKeysRouteImport.update({
   id: '/keys',
   path: '/keys',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/keys': typeof AuthenticatedKeysRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/keys': typeof AuthenticatedKeysRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/keys': typeof AuthenticatedKeysRoute
   '/_authenticated/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
     | '/.well-known/oauth-protected-resource'
+    | '/billing'
     | '/keys'
     | '/usage'
     | '/api/agent'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
     | '/.well-known/oauth-protected-resource'
+    | '/billing'
     | '/keys'
     | '/usage'
     | '/api/agent'
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
     | '/.well-known/oauth-protected-resource'
+    | '/_authenticated/billing'
     | '/_authenticated/keys'
     | '/_authenticated/usage'
     | '/api/agent'
@@ -346,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/billing': {
+      id: '/_authenticated/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AuthenticatedBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/keys': {
       id: '/_authenticated/keys'
       path: '/keys'
@@ -434,6 +453,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedKeysRoute: typeof AuthenticatedKeysRoute
   AuthenticatedUsageRoute: typeof AuthenticatedUsageRoute
   AuthenticatedChatThreadIdRoute: typeof AuthenticatedChatThreadIdRoute
@@ -441,6 +461,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedKeysRoute: AuthenticatedKeysRoute,
   AuthenticatedUsageRoute: AuthenticatedUsageRoute,
   AuthenticatedChatThreadIdRoute: AuthenticatedChatThreadIdRoute,
