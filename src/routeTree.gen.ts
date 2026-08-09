@@ -39,6 +39,7 @@ import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
 import { Route as ApiPublicV1SignupRouteImport } from './routes/api/public/v1/signup'
 import { Route as ApiPublicV1ToolsRouteImport } from './routes/api/public/v1/tools'
+import { Route as ApiPublicV1CreditsPurchaseRouteImport } from './routes/api/public/v1/credits.purchase'
 import { Route as ApiPublicV1KeysRotateRouteImport } from './routes/api/public/v1/keys.rotate'
 import { Route as ApiPublicV1ToolsToolNameRouteImport } from './routes/api/public/v1/tools.$toolName'
 
@@ -198,6 +199,12 @@ const ApiPublicV1ToolsRoute = ApiPublicV1ToolsRouteImport.update({
   path: '/api/public/v1/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1CreditsPurchaseRoute =
+  ApiPublicV1CreditsPurchaseRouteImport.update({
+    id: '/api/public/v1/credits/purchase',
+    path: '/api/public/v1/credits/purchase',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1KeysRotateRoute = ApiPublicV1KeysRotateRouteImport.update({
   id: '/api/public/v1/keys/rotate',
   path: '/api/public/v1/keys/rotate',
@@ -240,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
   '/api/public/v1/keys/rotate': typeof ApiPublicV1KeysRotateRoute
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
@@ -273,6 +281,7 @@ export interface FileRoutesByTo {
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
   '/api/public/v1/keys/rotate': typeof ApiPublicV1KeysRotateRoute
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
@@ -308,6 +317,7 @@ export interface FileRoutesById {
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
   '/api/public/v1/keys/rotate': typeof ApiPublicV1KeysRotateRoute
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
 }
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/openapi.json'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
+    | '/api/public/v1/credits/purchase'
     | '/api/public/v1/keys/rotate'
     | '/api/public/v1/tools/$toolName'
   fileRoutesByTo: FileRoutesByTo
@@ -376,6 +387,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/openapi.json'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
+    | '/api/public/v1/credits/purchase'
     | '/api/public/v1/keys/rotate'
     | '/api/public/v1/tools/$toolName'
   id:
@@ -410,6 +422,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/openapi.json'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
+    | '/api/public/v1/credits/purchase'
     | '/api/public/v1/keys/rotate'
     | '/api/public/v1/tools/$toolName'
   fileRoutesById: FileRoutesById
@@ -439,6 +452,7 @@ export interface RootRouteChildren {
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
   ApiPublicV1SignupRoute: typeof ApiPublicV1SignupRoute
   ApiPublicV1ToolsRoute: typeof ApiPublicV1ToolsRouteWithChildren
+  ApiPublicV1CreditsPurchaseRoute: typeof ApiPublicV1CreditsPurchaseRoute
   ApiPublicV1KeysRotateRoute: typeof ApiPublicV1KeysRotateRoute
 }
 
@@ -654,6 +668,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/credits/purchase': {
+      id: '/api/public/v1/credits/purchase'
+      path: '/api/public/v1/credits/purchase'
+      fullPath: '/api/public/v1/credits/purchase'
+      preLoaderRoute: typeof ApiPublicV1CreditsPurchaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/keys/rotate': {
       id: '/api/public/v1/keys/rotate'
       path: '/api/public/v1/keys/rotate'
@@ -729,6 +750,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
   ApiPublicV1SignupRoute: ApiPublicV1SignupRoute,
   ApiPublicV1ToolsRoute: ApiPublicV1ToolsRouteWithChildren,
+  ApiPublicV1CreditsPurchaseRoute: ApiPublicV1CreditsPurchaseRoute,
   ApiPublicV1KeysRotateRoute: ApiPublicV1KeysRotateRoute,
 }
 export const routeTree = rootRouteImport
