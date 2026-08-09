@@ -10,6 +10,7 @@ import {
   BookOpen,
   CreditCard,
   ShieldCheck,
+  Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
 
