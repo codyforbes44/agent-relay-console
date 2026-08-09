@@ -24,6 +24,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as DotwellKnownAgentManifestDotjsonRouteImport } from './routes/[.]well-known/agent-manifest[.]json'
+import { Route as DotwellKnownAgentsDotjsonRouteImport } from './routes/[.]well-known/agents[.]json'
 import { Route as DotwellKnownAiPluginDotjsonRouteImport } from './routes/[.]well-known/ai-plugin[.]json'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -121,6 +122,12 @@ const DotwellKnownAgentManifestDotjsonRoute =
   DotwellKnownAgentManifestDotjsonRouteImport.update({
     id: '/.well-known/agent-manifest.json',
     path: '/.well-known/agent-manifest.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotwellKnownAgentsDotjsonRoute =
+  DotwellKnownAgentsDotjsonRouteImport.update({
+    id: '/.well-known/agents.json',
+    path: '/.well-known/agents.json',
     getParentRoute: () => rootRouteImport,
   } as any)
 const DotwellKnownAiPluginDotjsonRoute =
@@ -257,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/.well-known/agents.json': typeof DotwellKnownAgentsDotjsonRoute
   '/.well-known/ai-plugin.json': typeof DotwellKnownAiPluginDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -295,6 +303,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/.well-known/agents.json': typeof DotwellKnownAgentsDotjsonRoute
   '/.well-known/ai-plugin.json': typeof DotwellKnownAiPluginDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -335,6 +344,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
+  '/.well-known/agents.json': typeof DotwellKnownAgentsDotjsonRoute
   '/.well-known/ai-plugin.json': typeof DotwellKnownAiPluginDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -375,6 +385,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
+    | '/.well-known/agents.json'
     | '/.well-known/ai-plugin.json'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -413,6 +424,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
+    | '/.well-known/agents.json'
     | '/.well-known/ai-plugin.json'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -452,6 +464,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
+    | '/.well-known/agents.json'
     | '/.well-known/ai-plugin.json'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
@@ -492,6 +505,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   DotwellKnownAgentManifestDotjsonRoute: typeof DotwellKnownAgentManifestDotjsonRoute
+  DotwellKnownAgentsDotjsonRoute: typeof DotwellKnownAgentsDotjsonRoute
   DotwellKnownAiPluginDotjsonRoute: typeof DotwellKnownAiPluginDotjsonRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiAgentRoute: typeof ApiAgentRoute
@@ -612,6 +626,13 @@ declare module '@tanstack/react-router' {
       path: '/.well-known/agent-manifest.json'
       fullPath: '/.well-known/agent-manifest.json'
       preLoaderRoute: typeof DotwellKnownAgentManifestDotjsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/agents.json': {
+      id: '/.well-known/agents.json'
+      path: '/.well-known/agents.json'
+      fullPath: '/.well-known/agents.json'
+      preLoaderRoute: typeof DotwellKnownAgentsDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.well-known/ai-plugin.json': {
@@ -823,6 +844,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   DotwellKnownAgentManifestDotjsonRoute: DotwellKnownAgentManifestDotjsonRoute,
+  DotwellKnownAgentsDotjsonRoute: DotwellKnownAgentsDotjsonRoute,
   DotwellKnownAiPluginDotjsonRoute: DotwellKnownAiPluginDotjsonRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
