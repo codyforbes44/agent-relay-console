@@ -10,7 +10,7 @@ export const Route = createFileRoute("/docs")({
   head: () =>
     publicHead({
       path: "/docs",
-      title: "API docs — Agent Relay Console tool API for agents",
+      title: "API docs — RELAY tool API for agents",
       description:
         "Machine-first REST and MCP API for autonomous agents: bearer key auth, credit metering, OpenAPI discovery, idempotency keys and explicit side-effect confirmation.",
     }),

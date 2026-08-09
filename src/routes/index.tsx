@@ -5,11 +5,10 @@ import { PublicShell } from "@/components/public/PublicShell";
 import { Button } from "@/components/ui/button";
 import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
 import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
-import { SITE_NAME, SITE_URL, canonical, publicHead } from "@/lib/site";
+import { SITE_NAME, SITE_URL, SITE_TITLE, SITE_DESCRIPTION, canonical, publicHead } from "@/lib/site";
 
-const TITLE = "Agent Relay Console — pay-per-call tool API for AI agents";
-const DESCRIPTION =
-  "A metered HTTP and MCP tool API built for autonomous agents: bearer-key auth, OpenAPI discovery, credit billing per call, and explicit confirmation before side effects.";
+const TITLE = SITE_TITLE;
+const DESCRIPTION = SITE_DESCRIPTION;
 
 export const Route = createFileRoute("/")({
   head: () => {

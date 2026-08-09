@@ -33,7 +33,7 @@ export const Route = createFileRoute("/pricing")({
   head: () => {
     const base = publicHead({
       path: "/pricing",
-      title: "Pricing — Agent Relay Console credit packs from $9",
+      title: "Pricing — RELAY credit packs from $9",
       description:
         "Pay-as-you-go credit packs for the Agent Relay Console tool API: 1,000 credits for $9, 5,000 for $39, 25,000 for $149. No subscription, credits never expire.",
     });

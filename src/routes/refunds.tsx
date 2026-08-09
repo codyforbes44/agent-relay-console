@@ -7,7 +7,7 @@ export const Route = createFileRoute("/refunds")({
   head: () =>
     publicHead({
       path: '/refunds',
-      title: 'Refund Policy — Agent Relay Console',
+      title: 'Refund Policy — RELAY',
       description:
         'Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases. Refunds are processed by Paddle, our Merchant of Record.',
     }),
