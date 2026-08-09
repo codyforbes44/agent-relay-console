@@ -174,8 +174,15 @@ export const API_ERRORS: ApiErrorSpec[] = [
   {
     status: 502,
     code: "tool_failed",
-    cause: "The upstream tool threw while executing. Credits are not deducted.",
+    cause: "The upstream tool threw while executing. Reserved credits are refunded automatically.",
     action: "Retry with backoff; if it persists the integration is down — check status and report.",
+    retryable: true,
+  },
+  {
+    status: 503,
+    code: "metering_unavailable",
+    cause: "Credit metering could not be reached, so the call was not authorized or charged.",
+    action: "Retry with backoff; the same idempotency-key is safe to reuse.",
     retryable: true,
   },
 ];
