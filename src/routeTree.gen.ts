@@ -42,6 +42,7 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as ApiPublicV1ClaimRouteImport } from './routes/api/public/v1/claim'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
+import { Route as ApiPublicV1PricingRouteImport } from './routes/api/public/v1/pricing'
 import { Route as ApiPublicV1SignupRouteImport } from './routes/api/public/v1/signup'
 import { Route as ApiPublicV1ToolsRouteImport } from './routes/api/public/v1/tools'
 import { Route as ApiPublicV1CreditsPurchaseRouteImport } from './routes/api/public/v1/credits.purchase'
@@ -221,6 +222,11 @@ const ApiPublicV1OpenapiDotjsonRoute =
     path: '/api/public/v1/openapi.json',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV1PricingRoute = ApiPublicV1PricingRouteImport.update({
+  id: '/api/public/v1/pricing',
+  path: '/api/public/v1/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1SignupRoute = ApiPublicV1SignupRouteImport.update({
   id: '/api/public/v1/signup',
   path: '/api/public/v1/signup',
@@ -282,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/pricing': typeof ApiPublicV1PricingRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
   '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/pricing': typeof ApiPublicV1PricingRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
   '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
+  '/api/public/v1/pricing': typeof ApiPublicV1PricingRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
   '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
@@ -403,6 +412,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/pricing'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
     | '/api/public/v1/credits/purchase'
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/pricing'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
     | '/api/public/v1/credits/purchase'
@@ -482,6 +493,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
+    | '/api/public/v1/pricing'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
     | '/api/public/v1/credits/purchase'
@@ -515,6 +527,7 @@ export interface RootRouteChildren {
   ApiPublicV1ClaimRoute: typeof ApiPublicV1ClaimRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
+  ApiPublicV1PricingRoute: typeof ApiPublicV1PricingRoute
   ApiPublicV1SignupRoute: typeof ApiPublicV1SignupRoute
   ApiPublicV1ToolsRoute: typeof ApiPublicV1ToolsRouteWithChildren
   ApiPublicV1CreditsPurchaseRoute: typeof ApiPublicV1CreditsPurchaseRoute
@@ -754,6 +767,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1OpenapiDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/pricing': {
+      id: '/api/public/v1/pricing'
+      path: '/api/public/v1/pricing'
+      fullPath: '/api/public/v1/pricing'
+      preLoaderRoute: typeof ApiPublicV1PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/signup': {
       id: '/api/public/v1/signup'
       path: '/api/public/v1/signup'
@@ -855,6 +875,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1ClaimRoute: ApiPublicV1ClaimRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
+  ApiPublicV1PricingRoute: ApiPublicV1PricingRoute,
   ApiPublicV1SignupRoute: ApiPublicV1SignupRoute,
   ApiPublicV1ToolsRoute: ApiPublicV1ToolsRouteWithChildren,
   ApiPublicV1CreditsPurchaseRoute: ApiPublicV1CreditsPurchaseRoute,
