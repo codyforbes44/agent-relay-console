@@ -1,31 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { LegalFooter } from "@/components/LegalFooter";
+import { PublicShell } from "@/components/public/PublicShell";
+import { publicHead } from "@/lib/site";
 
 export const Route = createFileRoute("/terms")({
-  head: () => ({
-    meta: [
-      { title: "Terms & Conditions — Agent Relay Console" },
-      {
-        name: "description",
-        content:
-          "The terms governing use of the Agent Relay Console metered agent tool API, including acceptable use, IP ownership, billing and termination.",
-      },
-      { property: "og:title", content: "Terms & Conditions — Agent Relay Console" },
-      {
-        property: "og:description",
-        content: "Terms of service for the Agent Relay Console agent tool API.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () =>
+    publicHead({
+      path: '/terms',
+      title: 'Terms & Conditions — Agent Relay Console',
+      description:
+        'The terms governing use of the Agent Relay Console metered agent tool API, including acceptable use, IP ownership, billing and termination.',
+    }),
   component: TermsPage,
 });
 
 function TermsPage() {
   return (
-    <>
+    <PublicShell>
       <main className="mx-auto w-full max-w-3xl px-6 py-16">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">
           Terms &amp; Conditions
@@ -171,8 +162,7 @@ function TermsPage() {
           </Section>
         </div>
       </main>
-      <LegalFooter />
-    </>
+    </PublicShell>
   );
 }
 

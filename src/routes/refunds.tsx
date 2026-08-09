@@ -1,31 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { LegalFooter } from "@/components/LegalFooter";
+import { PublicShell } from "@/components/public/PublicShell";
+import { publicHead } from "@/lib/site";
 
 export const Route = createFileRoute("/refunds")({
-  head: () => ({
-    meta: [
-      { title: "Refund Policy — Agent Relay Console" },
-      {
-        name: "description",
-        content:
-          "Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases. Refunds are processed by Paddle, our Merchant of Record.",
-      },
-      { property: "og:title", content: "Refund Policy — Agent Relay Console" },
-      {
-        property: "og:description",
-        content: "30-day money-back guarantee on credit packs, processed by Paddle.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () =>
+    publicHead({
+      path: '/refunds',
+      title: 'Refund Policy — Agent Relay Console',
+      description:
+        'Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases. Refunds are processed by Paddle, our Merchant of Record.',
+    }),
   component: RefundsPage,
 });
 
 function RefundsPage() {
   return (
-    <>
+    <PublicShell>
       <main className="mx-auto w-full max-w-3xl px-6 py-16">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">Refund Policy</h1>
         <p className="mt-2 text-sm text-muted-foreground">Last updated: 9 August 2026</p>
@@ -75,7 +66,6 @@ function RefundsPage() {
           </div>
         </div>
       </main>
-      <LegalFooter />
-    </>
+    </PublicShell>
   );
 }
