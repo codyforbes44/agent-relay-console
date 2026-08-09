@@ -134,30 +134,33 @@ function KeysPanel({ orgId }: { orgId: string }) {
           ) : (
             <ul className="divide-y divide-border">
               {keys.data.map((k) => (
-                <li key={k.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{k.label}</p>
-                    <p className="font-mono text-xs text-muted-foreground">
-                      sk_agent_{k.key_prefix}_••••
-                      {k.last_used_at
-                        ? ` · last used ${new Date(k.last_used_at).toLocaleString()}`
-                        : " · never used"}
-                    </p>
+                <li key={k.id} className="py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{k.label}</p>
+                      <p className="font-mono text-xs text-muted-foreground">
+                        sk_agent_{k.key_prefix}_••••
+                        {k.last_used_at
+                          ? ` · last used ${new Date(k.last_used_at).toLocaleString()}`
+                          : " · never used"}
+                      </p>
+                    </div>
+                    {k.revoked_at ? (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                        revoked
+                      </span>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={revokeMutation.isPending}
+                        onClick={() => revokeMutation.mutate(k.id)}
+                      >
+                        Revoke
+                      </Button>
+                    )}
                   </div>
-                  {k.revoked_at ? (
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                      revoked
-                    </span>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={revokeMutation.isPending}
-                      onClick={() => revokeMutation.mutate(k.id)}
-                    >
-                      Revoke
-                    </Button>
-                  )}
+                  {!k.revoked_at && <KeyLimitsEditor keyRow={k} orgId={orgId} />}
                 </li>
               ))}
             </ul>
