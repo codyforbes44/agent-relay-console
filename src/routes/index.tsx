@@ -5,7 +5,7 @@ import { PublicShell } from "@/components/public/PublicShell";
 import { Button } from "@/components/ui/button";
 import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
 import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
-import { SITE_NAME, SITE_URL, SITE_TITLE, SITE_DESCRIPTION, canonical, publicHead } from "@/lib/site";
+import { SITE_NAME, SITE_URL, SITE_TITLE, SITE_DESCRIPTION, SITE_PRODUCT_NAME, canonical, publicHead } from "@/lib/site";
 
 const TITLE = SITE_TITLE;
 const DESCRIPTION = SITE_DESCRIPTION;
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({
           children: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            name: SITE_NAME,
+            name: SITE_PRODUCT_NAME,
             url: SITE_URL,
             applicationCategory: "DeveloperApplication",
             operatingSystem: "Any",

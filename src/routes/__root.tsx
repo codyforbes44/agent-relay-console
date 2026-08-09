@@ -13,7 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
-import { SITE_TITLE, SITE_DESCRIPTION } from "@/lib/site";
+import { SITE_TITLE, SITE_DESCRIPTION, SITE_KEYWORDS, SITE_PRODUCT_NAME } from "@/lib/site";
 
 
 function NotFoundComponent() {
@@ -81,13 +81,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { name: "author", content: "Relay" },
+      { name: "author", content: SITE_PRODUCT_NAME },
+      { name: "keywords", content: SITE_KEYWORDS.join(", ") },
       { title: SITE_TITLE },
       { name: "description", content: SITE_DESCRIPTION },
       { property: "og:title", content: SITE_TITLE },
       { property: "og:description", content: SITE_DESCRIPTION },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: SITE_PRODUCT_NAME },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "twitter:title", content: SITE_TITLE },
+      { name: "twitter:description", content: SITE_DESCRIPTION },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
