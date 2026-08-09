@@ -17,6 +17,7 @@ import { Route as McpRouteImport } from './routes/mcp'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as DotwellKnownAgentManifestDotjsonRouteImport } from './routes/[.]well-known/agent-manifest[.]json'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedKeysRouteImport } from './routes/_authenticated/keys'
 import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage'
 import { Route as ApiAgentRouteImport } from './routes/api/agent'
@@ -24,6 +25,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedChatThreadIdRouteImport } from './routes/_authenticated/chat.$threadId'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
 import { Route as ApiPublicV1ToolsRouteImport } from './routes/api/public/v1/tools'
@@ -71,6 +73,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedKeysRoute = AuthenticatedKeysRouteImport.update({
   id: '/keys',
   path: '/keys',
@@ -108,6 +115,12 @@ const AuthenticatedChatThreadIdRoute =
     path: '/chat/$threadId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1MeRoute = ApiPublicV1MeRouteImport.update({
   id: '/api/public/v1/me',
   path: '/api/public/v1/me',
@@ -139,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/keys': typeof AuthenticatedKeysRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
@@ -146,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
@@ -159,6 +174,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/keys': typeof AuthenticatedKeysRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
@@ -166,6 +182,7 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/chat': typeof AuthenticatedChatIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
@@ -181,6 +198,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/agent-manifest.json': typeof DotwellKnownAgentManifestDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/keys': typeof AuthenticatedKeysRoute
   '/_authenticated/usage': typeof AuthenticatedUsageRoute
   '/api/agent': typeof ApiAgentRoute
@@ -188,6 +206,7 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
@@ -203,6 +222,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
     | '/.well-known/oauth-protected-resource'
+    | '/billing'
     | '/keys'
     | '/usage'
     | '/api/agent'
@@ -210,6 +230,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/chat/$threadId'
     | '/chat/'
+    | '/api/public/payments/webhook'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
     | '/api/public/v1/tools'
@@ -223,6 +244,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
     | '/.well-known/oauth-protected-resource'
+    | '/billing'
     | '/keys'
     | '/usage'
     | '/api/agent'
@@ -230,6 +252,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/chat/$threadId'
     | '/chat'
+    | '/api/public/payments/webhook'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
     | '/api/public/v1/tools'
@@ -244,6 +267,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/agent-manifest.json'
     | '/.well-known/oauth-protected-resource'
+    | '/_authenticated/billing'
     | '/_authenticated/keys'
     | '/_authenticated/usage'
     | '/api/agent'
@@ -251,6 +275,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/chat/$threadId'
     | '/_authenticated/chat/'
+    | '/api/public/payments/webhook'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
     | '/api/public/v1/tools'
@@ -269,6 +294,7 @@ export interface RootRouteChildren {
   ApiAgentRoute: typeof ApiAgentRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
   ApiPublicV1ToolsRoute: typeof ApiPublicV1ToolsRouteWithChildren
@@ -332,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/billing': {
+      id: '/_authenticated/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AuthenticatedBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/keys': {
       id: '/_authenticated/keys'
       path: '/keys'
@@ -381,6 +414,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatThreadIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/me': {
       id: '/api/public/v1/me'
       path: '/api/public/v1/me'
@@ -413,6 +453,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedKeysRoute: typeof AuthenticatedKeysRoute
   AuthenticatedUsageRoute: typeof AuthenticatedUsageRoute
   AuthenticatedChatThreadIdRoute: typeof AuthenticatedChatThreadIdRoute
@@ -420,6 +461,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedKeysRoute: AuthenticatedKeysRoute,
   AuthenticatedUsageRoute: AuthenticatedUsageRoute,
   AuthenticatedChatThreadIdRoute: AuthenticatedChatThreadIdRoute,
@@ -453,6 +495,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAgentRoute: ApiAgentRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
   ApiPublicV1ToolsRoute: ApiPublicV1ToolsRouteWithChildren,

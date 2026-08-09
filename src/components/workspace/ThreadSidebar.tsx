@@ -1,6 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquarePlus, LogOut, Loader2, KeyRound, BarChart3, BookOpen } from "lucide-react";
+import {
+  MessageSquarePlus,
+  LogOut,
+  Loader2,
+  KeyRound,
+  BarChart3,
+  BookOpen,
+  CreditCard,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -93,6 +101,13 @@ export function ThreadSidebar({
         >
           <BarChart3 className="size-4" />
           Usage &amp; credits
+        </Link>
+        <Link
+          to="/billing"
+          className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent"
+        >
+          <CreditCard className="size-4" />
+          Buy credits
         </Link>
         <Link
           to="/docs"

@@ -179,6 +179,56 @@ export type Database = {
           },
         ]
       }
+      credit_purchases: {
+        Row: {
+          amount_cents: number | null
+          created_at: string
+          credits: number
+          currency: string | null
+          environment: string
+          id: string
+          org_id: string
+          price_id: string
+          quantity: number
+          transaction_id: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          created_at?: string
+          credits: number
+          currency?: string | null
+          environment?: string
+          id?: string
+          org_id: string
+          price_id: string
+          quantity?: number
+          transaction_id: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          created_at?: string
+          credits?: number
+          currency?: string | null
+          environment?: string
+          id?: string
+          org_id?: string
+          price_id?: string
+          quantity?: number
+          transaction_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_purchases_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       idempotency_keys: {
         Row: {
           created_at: string
