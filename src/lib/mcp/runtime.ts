@@ -3,6 +3,7 @@ import type { z } from "zod";
 
 import { TOOLS_BY_NAME, type ToolContract } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
+import { isToolEnabled } from "@/lib/api/org-tools.server";
 import { supabaseForUser } from "./supabase";
 
 type Result = {
