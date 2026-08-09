@@ -82,11 +82,11 @@ async function runMetered(
 
   await supabaseAdmin.from("audit_logs").insert({
     org_id: orgId,
-    user_id: ctx.getUserId(),
+    user_id: ctx.getUserId() ?? null,
     action: "mcp_tool_invoked",
     tool_name: contract.name,
     payload: {
-      client_id: ctx.getClientId(),
+      client_id: ctx.getClientId() ?? null,
       credits: contract.credits,
       side_effecting: contract.sideEffecting,
       demo: contract.demo,
