@@ -266,6 +266,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       finishedAt: "2026-08-09T20:15:18.358Z",
     },
     summarize: (a) => str(a['url']),
+  },
   {
     name: "sandbox_search_knowledge_base",
     label: "Search knowledge base (sandbox)",
