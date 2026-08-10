@@ -41,10 +41,15 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const QUICKSTART = `# 1. discover
+const QUICKSTART = `# 1. sign yourself up (no browser, no email loop)
+curl -X POST ${SITE_URL}/api/public/v1/signup \\
+  -H "content-type: application/json" \\
+  -d '{"label":"my-agent"}'
+
+# 2. discover
 curl ${SITE_URL}/api/public/v1/tools
 
-# 2. call a live tool (read-only tools need no confirmation)
+# 3. call a live tool (read-only tools need no confirmation)
 curl -X POST ${SITE_URL}/api/public/v1/tools/fetch_url \\
   -H "Authorization: Bearer $RELAY_KEY" \\
   -H "content-type: application/json" \\
