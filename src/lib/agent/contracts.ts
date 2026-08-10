@@ -227,46 +227,32 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     summarize: (a) => `${str(a['language'] ?? "python")} snippet`,
   },
   {
-    // Real browser automation: open a page, interact, and return a snapshot.
+    // Real browser automation: render a page in Browserbase's cloud browser and return the page text.
     name: "browse_page",
     label: "Browse page",
     description:
-      "Open a URL in a remote browser (Browserbase), run optional actions (click, type, wait), and return the final page text, URL, and a screenshot URL. Useful for interactive sites and post-login flows.",
+      "Open a URL in a remote Browserbase browser and return the rendered page as markdown text, including title, status code, and content type. Runs in Browserbase's cloud so it works from serverless runtimes.",
     sideEffecting: false,
     icon: "globe",
     credits: 10,
     publicApi: true,
     demo: false,
     schema: z.object({
-      url: z.string().describe("URL to open"),
-      actions: z
-        .array(
-          z.object({
-            type: z.enum(["click", "type", "wait", "navigate"]),
-            selector: z.string().optional(),
-            value: z.string().optional(),
-            delay: z.number().optional().describe("Milliseconds to wait for wait actions"),
-          }),
-        )
-        .optional()
-        .describe("Optional interaction steps to perform after load"),
-      screenshot: z.boolean().optional().describe("Return a screenshot URL. Defaults to true"),
+      url: z.string().describe("URL to open and render"),
     }) as unknown as z.ZodType<Record<string, unknown>>,
-    example: {
-      url: "https://example.com",
-      actions: [{ type: "wait", delay: 1000 }],
-      screenshot: true,
-    },
+    example: { url: "https://example.com" },
     exampleResult: {
       ok: true,
       url: "https://example.com/",
+      statusCode: 200,
+      contentType: "text/markdown",
       title: "Example Domain",
-      text: "Example Domain. This domain is for use in illustrative examples...",
-      screenshotUrl: "https://browserbase.com/screenshots/...",
+      text: "Example Domain\n\nThis domain is for use in illustrative examples...",
       finishedAt: "2026-08-09T20:15:18.358Z",
     },
     summarize: (a) => str(a['url']),
   },
+
   {
     name: "sandbox_search_knowledge_base",
     label: "Search knowledge base (sandbox)",
