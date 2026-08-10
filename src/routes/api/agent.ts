@@ -452,7 +452,7 @@ export const Route = createFileRoute("/api/agent")({
 
             try {
               const result = streamText({
-                model: gateway(MODEL),
+                model: gateway(resolvedModel),
                 system: SYSTEM_PROMPT,
                 messages: modelMessages,
                 tools,
