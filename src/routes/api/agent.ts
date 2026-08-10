@@ -6,9 +6,16 @@ import { z } from "zod";
 import { createLovableAiGatewayProvider, getLovableAiGatewayRunId } from "@/lib/ai-gateway.server";
 import { TOOL_CONTRACTS, TOOLS_BY_NAME, type AgentResponse, type ToolCallView } from "@/lib/agent/contracts";
 import { runTool } from "@/lib/agent/tools.server";
+import { getOrgSettings } from "@/lib/api/settings.server";
 
-const MODEL = "google/gemini-3.5-flash";
+const DEFAULT_MODEL = "google/gemini-3.5-flash";
 const RATE_LIMIT_PER_MINUTE = 20;
+
+const TIER_MODELS: Record<string, string> = {
+  economy: "google/gemini-3.1-flash-lite",
+  balanced: "google/gemini-3.5-flash",
+  quality: "google/gemini-3.1-pro-preview",
+};
 
 const RequestSchema = z.object({
   orgId: z.string().uuid(),
