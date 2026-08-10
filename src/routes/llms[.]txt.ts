@@ -72,7 +72,9 @@ automation, no password, no email verification loop.
 Live tools (demo=false) do real work and cost credits: fetch_url (outbound HTTPS fetch + text extraction),
 crawl_site (same-origin multi-page fetch), extract_structured (model-backed field extraction from a URL or text),
 search_web (Tavily-powered web search with optional AI answer), and search_knowledge_base (semantic vector search
-over documents uploaded to the workspace knowledge base). Every sandbox_* tool is free (0 credits), returns fixture
+over documents uploaded to the workspace knowledge base), execute_code (Python or JavaScript in an isolated E2B sandbox),
+and browse_page (render a URL in a Browserbase cloud browser and return the page as markdown). Every sandbox_* tool is free (0 credits), returns fixture
+
 data (demo=true) and changes nothing; they exist so agents can rehearse auth, schemas, idempotency and the two-step
 confirmation gate. The pre-rename names (search_knowledge_base, lookup_crm_contact, list_records, send_email,
 update_crm_record, create_payment, delete_record) still resolve to their sandbox_* equivalents and return a "deprecated"
