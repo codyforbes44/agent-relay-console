@@ -108,6 +108,36 @@ for (const tool of catalog.tools) {
   }
 }
 
+// 1b. Product invariants: the catalog must always sell something, and every
+// billable tool must be serialized with its price. This is what a cold agent
+// reads before deciding whether the API is worth paying for.
+const billableContracts = publicTools.filter((t) => t.credits > 0);
+if (billableContracts.length === 0) {
+  fail("catalog: no billable public tool exists — the marketplace has nothing to sell");
+}
+for (const c of billableContracts) {
+  const tool = catalog.tools.find((t) => t.name === c.name);
+  if (!tool) continue;
+  if (!(tool.credits > 0)) fail(`catalog ${c.name}: billable tool serialized with credits ${tool.credits}`);
+  if (!(Number(tool.usdPerCall) > 0)) {
+    fail(`catalog ${c.name}: billable tool missing a positive usdPerCall (got ${tool.usdPerCall})`);
+  }
+}
+
+// 1c. Pricing block shape — each field fails individually.
+const pricing = catalog.pricing;
+if (!pricing) {
+  fail("catalog: missing top-level pricing block");
+} else {
+  if (pricing.unit !== "credit") fail(`catalog pricing: unit should be "credit" (got ${pricing.unit})`);
+  if (pricing.currency !== "USD") fail(`catalog pricing: currency should be "USD" (got ${pricing.currency})`);
+  if (!(Number(pricing.usdPerCredit) > 0)) fail("catalog pricing: usdPerCredit missing or not positive");
+  if (typeof pricing.freeGrant !== "number") fail("catalog pricing: freeGrant missing");
+  if (!Array.isArray(pricing.packs) || pricing.packs.length === 0) fail("catalog pricing: packs[] is empty");
+  if (!pricing.purchase) fail("catalog pricing: purchase block missing");
+  if (!pricing.pricingUrl) fail("catalog pricing: pricingUrl missing");
+}
+
 // 2. OpenAPI document
 const openapi = await get("/api/public/v1/openapi.json");
 for (const t of publicTools) {

@@ -170,7 +170,9 @@ GET /.well-known/agent-manifest.json # legacy alias of agents.json`}</Code>
             and stored hashed; revoke them any time from the console. Invoking tools requires the{" "}
             <Mono>tools:invoke</Mono> scope. New workspaces start with 500 free credits.
           </p>
-          <Code>{`Authorization: Bearer sk_agent_xxxxxxxx_...`}</Code>
+          <Code>{`Authorization: Bearer sk_agent_xxxxxxxx_...
+# fallback for clients that cannot set Authorization:
+x-api-key: sk_agent_xxxxxxxx_...`}</Code>
         </Section>
 
         <Section title="3. Invoke a tool">

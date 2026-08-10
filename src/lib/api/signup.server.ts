@@ -13,58 +13,57 @@ import {
   SIGNUP_WINDOW_HOURS,
 } from "./onboarding";
 
+/**
+ * Client IP. The app sits behind Cloudflare, so `cf-connecting-ip` is
+ * authoritative. The spoofable forwarded headers are only consulted when
+ * TRUST_FORWARDED_IP is set, so an unfronted deploy fails closed to a single
+ * shared bucket instead of letting a caller mint a fresh identity per request.
+ */
 export function clientIp(request: Request): string {
-  return (
-    request.headers.get("cf-connecting-ip") ??
-    request.headers.get("x-real-ip") ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
+  const cf = request.headers.get("cf-connecting-ip")?.trim();
+  if (cf) return cf;
+  if (process.env["TRUST_FORWARDED_IP"] === "true") {
+    return (
+      request.headers.get("x-real-ip")?.trim() ??
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      "unknown"
+    );
+  }
+  return "unknown";
 }
 
+/** Uniform random token — rejection sampling avoids modulo bias. */
 function randomToken(len = 48) {
-  const bytes = crypto.getRandomValues(new Uint8Array(len));
   const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const max = Math.floor(256 / alphabet.length) * alphabet.length;
   let out = "";
-  for (const b of bytes) out += alphabet[b % alphabet.length];
+  while (out.length < len) {
+    const bytes = crypto.getRandomValues(new Uint8Array(len));
+    for (const b of bytes) {
+      if (b >= max) continue;
+      out += alphabet[b % alphabet.length];
+      if (out.length === len) break;
+    }
+  }
   return out;
 }
 
 /**
- * Counts (and records) a signup attempt for this IP.
+ * Counts (and records) a signup attempt for this IP in one atomic statement.
  * Returns false when the caller has exceeded the rolling window quota.
  */
 export async function consumeSignupQuota(admin: SupabaseClient, ip: string): Promise<boolean> {
   const ipHash = await sha256Hex(ip);
-  const windowStart = new Date();
-  windowStart.setUTCMinutes(0, 0, 0);
-
-  const since = new Date(Date.now() - SIGNUP_WINDOW_HOURS * 3600_000).toISOString();
-  const { data: rows } = await admin
-    .from("signup_attempts")
-    .select("count")
-    .eq("ip_hash", ipHash)
-    .gte("window_start", since);
-
-  const used = (rows ?? []).reduce((sum, r) => sum + Number(r.count ?? 0), 0);
-
-  const { data: current } = await admin
-    .from("signup_attempts")
-    .select("count")
-    .eq("ip_hash", ipHash)
-    .eq("window_start", windowStart.toISOString())
-    .maybeSingle();
-
-  await admin.from("signup_attempts").upsert(
-    {
-      ip_hash: ipHash,
-      window_start: windowStart.toISOString(),
-      count: Number(current?.count ?? 0) + 1,
-    },
-    { onConflict: "ip_hash,window_start" },
-  );
-
-  return used < SIGNUP_MAX_PER_IP;
+  const { data, error } = await admin.rpc("consume_signup_quota", {
+    _ip_hash: ipHash,
+    _max: SIGNUP_MAX_PER_IP,
+    _window_hours: SIGNUP_WINDOW_HOURS,
+  });
+  if (error) {
+    console.error(JSON.stringify({ event: "signup_quota_failed", message: error.message }));
+    return false;
+  }
+  return data === true;
 }
 
 export type AgentWorkspace = {

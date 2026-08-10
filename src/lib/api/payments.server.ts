@@ -134,27 +134,31 @@ export async function creditSettledPayment(
   // A unique violation means this payment was already credited: still a success.
   const credited = !error;
 
-  await admin.from("payment_intents").upsert(
-    {
-      org_id: input.orgId,
-      key_id: input.keyId,
-      nonce: input.offer.nonce,
-      purpose: input.purpose,
-      tool_name: input.toolName ?? null,
-      credits: input.offer.credits,
-      amount_atomic: input.offer.requirements.maxAmountRequired,
-      amount_usd: input.offer.usd,
-      asset: input.offer.config.assetName,
-      network: input.offer.config.network,
-      pay_to: input.offer.config.payTo,
-      request_id: input.requestId,
-      status: "settled",
-      payer: input.payer,
-      tx_hash: input.txHash,
-      settled_at: new Date().toISOString(),
-    },
-    { onConflict: "nonce" },
-  );
+  // Only stamp the intent on the run that actually credited; a duplicate
+  // settlement must not re-write settled_at / payer on the original row.
+  if (credited) {
+    await admin.from("payment_intents").upsert(
+      {
+        org_id: input.orgId,
+        key_id: input.keyId,
+        nonce: input.offer.nonce,
+        purpose: input.purpose,
+        tool_name: input.toolName ?? null,
+        credits: input.offer.credits,
+        amount_atomic: input.offer.requirements.maxAmountRequired,
+        amount_usd: input.offer.usd,
+        asset: input.offer.config.assetName,
+        network: input.offer.config.network,
+        pay_to: input.offer.config.payTo,
+        request_id: input.requestId,
+        status: "settled",
+        payer: input.payer,
+        tx_hash: input.txHash,
+        settled_at: new Date().toISOString(),
+      },
+      { onConflict: "nonce" },
+    );
+  }
 
   return { credited };
 }

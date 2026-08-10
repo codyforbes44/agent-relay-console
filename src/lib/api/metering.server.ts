@@ -21,19 +21,121 @@ export async function hasUnlimitedCredits(admin: SupabaseClient, orgId: string):
 export async function getBalance(admin: SupabaseClient, orgId: string): Promise<number> {
   if (await hasUnlimitedCredits(admin, orgId)) return UNLIMITED_BALANCE;
   const { data, error } = await admin.rpc("org_credit_balance", { _org_id: orgId });
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error(JSON.stringify({ event: "balance_read_failed", orgId, message: error.message }));
+    throw new BalanceUnavailableError(error.message);
+  }
   return Number(data ?? 0);
 }
 
+/** Thrown when the ledger cannot be read; callers map this to a 503. */
+export class BalanceUnavailableError extends Error {
+  readonly code = "balance_unavailable";
+  constructor(message: string) {
+    super(message);
+    this.name = "BalanceUnavailableError";
+  }
+}
+
+export type ReserveInput = {
+  orgId: string;
+  keyId: string | null;
+  toolName: string;
+  credits: number;
+  requestId: string;
+  maxPerCall?: number | null;
+  dailyCap?: number | null;
+  totalCap?: number | null;
+};
+
+export type ReserveResult =
+  | { status: "ok"; usageEventId: string; balance: number; unlimited: boolean }
+  | { status: "insufficient"; balance: number; required: number }
+  | { status: "budget_exceeded"; window: string; spent: number; required: number; limit: number }
+  | { status: "error"; message: string };
+
+/**
+ * Atomically authorizes and charges a call *before* the tool runs.
+ * Balance and owner-set spend caps are evaluated inside one transaction under
+ * a per-org lock, so concurrent calls cannot double-spend.
+ */
+export async function reserveCredits(admin: SupabaseClient, input: ReserveInput): Promise<ReserveResult> {
+  const { data, error } = await admin.rpc("reserve_credits", {
+    _org_id: input.orgId,
+    _key_id: input.keyId,
+    _tool_name: input.toolName,
+    _credits: input.credits,
+    _request_id: input.requestId,
+    _latency_ms: 0,
+    _max_per_call: input.maxPerCall ?? null,
+    _daily_cap: input.dailyCap ?? null,
+    _total_cap: input.totalCap ?? null,
+  });
+  if (error) {
+    console.error(JSON.stringify({ event: "reserve_credits_failed", orgId: input.orgId, message: error.message }));
+    return { status: "error", message: error.message };
+  }
+  const row = (data ?? {}) as Record<string, unknown>;
+  const status = String(row["status"] ?? "error");
+  if (status === "ok") {
+    const unlimited = row["unlimited"] === true;
+    return {
+      status: "ok",
+      usageEventId: String(row["usageEventId"]),
+      unlimited,
+      balance: unlimited ? UNLIMITED_BALANCE : Number(row["balance"] ?? 0),
+    };
+  }
+  if (status === "insufficient") {
+    return {
+      status: "insufficient",
+      balance: Number(row["balance"] ?? 0),
+      required: Number(row["required"] ?? input.credits),
+    };
+  }
+  if (status === "budget_exceeded") {
+    return {
+      status: "budget_exceeded",
+      window: String(row["window"] ?? "call"),
+      spent: Number(row["spent"] ?? 0),
+      required: Number(row["required"] ?? input.credits),
+      limit: Number(row["limit"] ?? 0),
+    };
+  }
+  return { status: "error", message: "Unexpected reservation result" };
+}
+
+/** Compensating entry when a tool throws after its credits were reserved. */
+export async function refundReservedCredits(admin: SupabaseClient, usageEventId: string, reason: string) {
+  const { error } = await admin.rpc("refund_reserved_credits", {
+    _usage_event_id: usageEventId,
+    _reason: reason,
+  });
+  if (error) {
+    console.error(JSON.stringify({ event: "refund_failed", usageEventId, message: error.message }));
+  }
+}
+
+/** Post-execution patch of the reserved usage row (latency only). */
+export async function finalizeUsage(admin: SupabaseClient, usageEventId: string, latencyMs: number) {
+  const { error } = await admin.from("usage_events").update({ latency_ms: latencyMs }).eq("id", usageEventId);
+  if (error) {
+    console.error(JSON.stringify({ event: "metering_write_failed", usageEventId, message: error.message }));
+  }
+}
+
+/**
+ * Per-key rate limit. Atomic: the counter is incremented and compared inside a
+ * single statement, so a simultaneous burst cannot slip past the limit the way
+ * a count-then-decide check could.
+ */
 export async function checkRateLimit(admin: SupabaseClient, keyId: string): Promise<boolean> {
-  const since = new Date(Date.now() - 60_000).toISOString();
-  const { count, error } = await admin
-    .from("usage_events")
-    .select("id", { count: "exact", head: true })
-    .eq("key_id", keyId)
-    .gte("created_at", since);
-  if (error) return true;
-  return (count ?? 0) < RATE_LIMIT_PER_MINUTE;
+  const { data, error } = await admin.rpc("consume_rate_limit", {
+    _key_id: keyId,
+    _limit: RATE_LIMIT_PER_MINUTE,
+  });
+  if (error) return true; // never lock out callers on a metering hiccup
+  return data !== false;
 }
 
 export type MeterInput = {
@@ -83,14 +185,14 @@ export async function touchKey(admin: SupabaseClient, keyId: string) {
 export type GuardrailViolation = { status: number; code: string; message: string; extra?: Record<string, unknown> };
 
 /**
- * Owner-set spend guardrails, enforced before a tool runs. Keys with no
- * limits configured pass straight through.
+ * Non-monetary key checks (expiry, allowed tools). These are not racy.
+ * Spend caps are enforced atomically inside `reserve_credits`.
  */
 export async function checkKeyGuardrails(
-  admin: SupabaseClient,
+  _admin: SupabaseClient,
   identity: KeyIdentity,
   toolName: string,
-  credits: number,
+  _credits: number,
 ): Promise<GuardrailViolation | null> {
   const { limits } = identity;
 
@@ -107,41 +209,28 @@ export async function checkKeyGuardrails(
     };
   }
 
-  if (limits.maxCreditsPerCall !== null && credits > limits.maxCreditsPerCall) {
-    return {
-      status: 403,
-      code: "budget_exceeded",
-      message: "This call costs more than the key's per-call credit limit",
-      extra: { required: credits, limit: limits.maxCreditsPerCall, window: "call" },
-    };
-  }
-
-  if (limits.dailyCreditCap !== null) {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const spent = await keyCreditsSpent(admin, identity.keyId, since);
-    if (spent + credits > limits.dailyCreditCap) {
-      return {
-        status: 403,
-        code: "budget_exceeded",
-        message: "This call would exceed the key's 24-hour credit cap",
-        extra: { spent, required: credits, limit: limits.dailyCreditCap, window: "24h" },
-      };
-    }
-  }
-
-  if (limits.totalCreditCap !== null) {
-    const spent = await keyCreditsSpent(admin, identity.keyId, new Date(0).toISOString());
-    if (spent + credits > limits.totalCreditCap) {
-      return {
-        status: 403,
-        code: "budget_exceeded",
-        message: "This call would exceed the key's lifetime credit cap",
-        extra: { spent, required: credits, limit: limits.totalCreditCap, window: "lifetime" },
-      };
-    }
-  }
-
   return null;
+}
+
+const BUDGET_MESSAGE: Record<string, string> = {
+  call: "This call costs more than the key's per-call credit limit",
+  "24h": "This call would exceed the key's 24-hour credit cap",
+  lifetime: "This call would exceed the key's lifetime credit cap",
+};
+
+/** Maps a `budget_exceeded` reservation result to the API error shape. */
+export function budgetViolation(result: {
+  window: string;
+  spent: number;
+  required: number;
+  limit: number;
+}): GuardrailViolation {
+  return {
+    status: 403,
+    code: "budget_exceeded",
+    message: BUDGET_MESSAGE[result.window] ?? "This call would exceed the key's credit cap",
+    extra: { spent: result.spent, required: result.required, limit: result.limit, window: result.window },
+  };
 }
 
 export async function keyCreditsSpent(admin: SupabaseClient, keyId: string, since: string): Promise<number> {

@@ -97,8 +97,10 @@ export const API_ERRORS: ApiErrorSpec[] = [
   {
     status: 409,
     code: "request_in_progress",
-    cause: "Another call with the same idempotency-key is still executing.",
-    action: "Wait and retry the same key to receive the stored response; do not change the body.",
+    cause:
+      "Another call with the same idempotency-key is still executing, or an approved confirmation token is already running.",
+    action:
+      "Wait and retry the same idempotency-key to receive the stored response; do not change the body. If the original request is known to have failed, retry with a new idempotency-key. For a confirmation token, call the tool again with no token to get a fresh preview.",
     retryable: true,
   },
   {
@@ -172,8 +174,15 @@ export const API_ERRORS: ApiErrorSpec[] = [
   {
     status: 502,
     code: "tool_failed",
-    cause: "The upstream tool threw while executing. Credits are not deducted.",
+    cause: "The upstream tool threw while executing. Reserved credits are refunded automatically.",
     action: "Retry with backoff; if it persists the integration is down — check status and report.",
+    retryable: true,
+  },
+  {
+    status: 503,
+    code: "metering_unavailable",
+    cause: "Credit metering could not be reached, so the call was not authorized or charged.",
+    action: "Retry with backoff; the same idempotency-key is safe to reuse.",
     retryable: true,
   },
 ];

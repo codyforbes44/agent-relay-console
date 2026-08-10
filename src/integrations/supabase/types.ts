@@ -79,6 +79,7 @@ export type Database = {
       api_idempotency: {
         Row: {
           created_at: string
+          expires_at: string | null
           idem_key: string
           key_id: string
           org_id: string
@@ -87,6 +88,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
           idem_key: string
           key_id: string
           org_id: string
@@ -95,11 +97,30 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           idem_key?: string
           key_id?: string
           org_id?: string
           response?: Json | null
           tool_name?: string
+        }
+        Relationships: []
+      }
+      api_rate_limits: {
+        Row: {
+          count: number
+          key_id: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key_id: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key_id?: string
+          window_start?: string
         }
         Relationships: []
       }
@@ -931,7 +952,13 @@ export type Database = {
     }
     Functions: {
       claim_organization: { Args: { _token_hash: string }; Returns: string }
-      consume_rate_limit: { Args: { _max?: number }; Returns: boolean }
+      consume_rate_limit:
+        | { Args: { _key_id: string; _limit: number }; Returns: boolean }
+        | { Args: { _max?: number }; Returns: boolean }
+      consume_signup_quota: {
+        Args: { _ip_hash: string; _max: number; _window_hours: number }
+        Returns: boolean
+      }
       has_org_access: { Args: { _org_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -947,6 +974,24 @@ export type Database = {
       }
       org_credit_balance: { Args: { _org_id: string }; Returns: number }
       org_unlimited_credits: { Args: { _org_id: string }; Returns: boolean }
+      refund_reserved_credits: {
+        Args: { _reason: string; _usage_event_id: string }
+        Returns: boolean
+      }
+      reserve_credits: {
+        Args: {
+          _credits: number
+          _daily_cap?: number
+          _key_id: string
+          _latency_ms?: number
+          _max_per_call?: number
+          _org_id: string
+          _request_id: string
+          _tool_name: string
+          _total_cap?: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "member"

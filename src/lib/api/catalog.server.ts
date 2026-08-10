@@ -178,6 +178,7 @@ export function catalog(origin: string, tools: ToolContract[] = PUBLIC_TOOLS) {
     auth: {
       type: "bearer",
       header: "Authorization: Bearer sk_agent_...",
+      alternateHeader: "x-api-key: sk_agent_... (fallback when Authorization cannot be set)",
       signup: `${origin}/api/public/v1/signup`,
       signupMethod: "POST",
       humanSignup: `${origin}/auth`,
@@ -194,7 +195,11 @@ export function catalog(origin: string, tools: ToolContract[] = PUBLIC_TOOLS) {
         purchase: p.purchase,
       };
     })(),
-    tools: tools.map((t) => toolDescriptor(t, origin)),
+    // Billable tools first: a cold agent should read the value story before
+    // the zero-credit sandbox fixtures.
+    tools: [...tools]
+      .sort((a, b) => (b.credits > 0 ? 1 : 0) - (a.credits > 0 ? 1 : 0))
+      .map((t) => toolDescriptor(t, origin)),
   };
 }
 
