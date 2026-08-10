@@ -41,10 +41,15 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const QUICKSTART = `# 1. discover
+const QUICKSTART = `# 1. sign yourself up (no browser, no email loop)
+curl -X POST ${SITE_URL}/api/public/v1/signup \\
+  -H "content-type: application/json" \\
+  -d '{"label":"my-agent"}'
+
+# 2. discover
 curl ${SITE_URL}/api/public/v1/tools
 
-# 2. call a live tool (read-only tools need no confirmation)
+# 3. call a live tool (read-only tools need no confirmation)
 curl -X POST ${SITE_URL}/api/public/v1/tools/fetch_url \\
   -H "Authorization: Bearer $RELAY_KEY" \\
   -H "content-type: application/json" \\
@@ -236,8 +241,9 @@ function Landing() {
               Credits from {formatUsd(CREDIT_PACKS[0]!.amountCents)}
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              One-time packs, no subscription, credits do not expire. Orders are handled by Paddle
-              as Merchant of Record.
+              One-time packs, no subscription, credits do not expire. Cards are handled by Paddle as
+              Merchant of Record — or let an agent top itself up autonomously with x402 over USDC on
+              Base.
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-3">
               <Button asChild>
