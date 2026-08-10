@@ -373,12 +373,18 @@ async function searchKnowledgeBase(args: Record<string, unknown>): Promise<Recor
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin.rpc("match_document_chunks", {
+    const params: {
+      _org_id: string;
+      _query_embedding: string;
+      _match_count: number;
+      _document_ids?: string[];
+    } = {
       _org_id: orgId,
       _query_embedding: `[${embedding.join(",")}]`,
       _match_count: maxResults,
-      _document_ids: documentIds?.length ? documentIds : undefined,
-    });
+    };
+    if (documentIds?.length) params._document_ids = documentIds;
+    const { data, error } = await supabaseAdmin.rpc("match_document_chunks", params);
     if (error) {
       return { ok: false, error: `Search failed: ${error.message}` };
     }
