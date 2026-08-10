@@ -445,6 +445,16 @@ export const Route = createFileRoute("/api/agent")({
                       status,
                       ms: Date.now() - toolStarted,
                     });
+                    void recordToolTrace({
+                      orgId: input.orgId,
+                      requestId,
+                      toolName: contract.name,
+                      args,
+                      result,
+                      error,
+                      durationMs: Date.now() - toolStartedAt.getTime(),
+                      startedAt: toolStartedAt,
+                    });
                     return result;
                   },
                 }),
