@@ -143,17 +143,12 @@ function TermsPage() {
 
           <Section title="11. Contact">
             <p>
-              Questions about these terms: contact Agent Relay Console through the support channel
-              listed in your console. Billing and refund enquiries are handled by Paddle at{" "}
-              <a
-                className="underline"
-                href="https://paddle.net"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                paddle.net
-              </a>
-              .
+              Questions about these terms, billing or refunds: contact Agent Relay Console at{" "}
+              <a className="underline" href="mailto:support@3bi.ai">
+                support@3bi.ai
+              </a>{" "}
+              or through the support channel listed in your console. We handle all customer service
+              enquiries ourselves.
             </p>
           </Section>
         </div>
