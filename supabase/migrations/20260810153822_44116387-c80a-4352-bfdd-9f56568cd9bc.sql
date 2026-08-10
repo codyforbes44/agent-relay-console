@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.match_document_chunks(uuid, vector, integer, uuid[]) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.match_document_chunks(uuid, vector, integer, uuid[]) TO service_role;
