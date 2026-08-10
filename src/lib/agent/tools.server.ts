@@ -375,9 +375,9 @@ async function searchKnowledgeBase(args: Record<string, unknown>): Promise<Recor
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin.rpc("match_document_chunks", {
       _org_id: orgId,
-      _query_embedding: embedding,
+      _query_embedding: `[${embedding.join(",")}]`,
       _match_count: maxResults,
-      _document_ids: documentIds?.length ? documentIds : null,
+      _document_ids: documentIds?.length ? documentIds : undefined,
     });
     if (error) {
       return { ok: false, error: `Search failed: ${error.message}` };
