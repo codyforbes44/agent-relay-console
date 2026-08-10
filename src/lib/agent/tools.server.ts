@@ -4,6 +4,10 @@
  * or the UI: the typed contracts in `contracts.ts` stay the same.
  */
 
+import { tavily } from "@tavily/core";
+
+import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+
 const CONTACTS = [
   { id: "c_1024", name: "Dana Whitfield", email: "dana@northwind.io", company: "Northwind", stage: "customer", mrr: 4200 },
   { id: "c_1088", name: "Marcus Lee", email: "marcus@lumenlabs.dev", company: "Lumen Labs", stage: "trial", mrr: 0 },
