@@ -106,6 +106,24 @@ export type Database = {
         }
         Relationships: []
       }
+      api_rate_limits: {
+        Row: {
+          count: number
+          key_id: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          key_id: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          key_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -934,7 +952,9 @@ export type Database = {
     }
     Functions: {
       claim_organization: { Args: { _token_hash: string }; Returns: string }
-      consume_rate_limit: { Args: { _max?: number }; Returns: boolean }
+      consume_rate_limit:
+        | { Args: { _key_id: string; _limit: number }; Returns: boolean }
+        | { Args: { _max?: number }; Returns: boolean }
       consume_signup_quota: {
         Args: { _ip_hash: string; _max: number; _window_hours: number }
         Returns: boolean
