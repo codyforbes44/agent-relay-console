@@ -39,6 +39,7 @@ import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedChatThreadIdRouteImport } from './routes/_authenticated/chat.$threadId'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
 import { Route as ApiPublicV1ClaimRouteImport } from './routes/api/public/v1/claim'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
@@ -205,6 +206,11 @@ const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   path: '/api/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe/webhook',
+  path: '/api/public/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1ClaimRoute = ApiPublicV1ClaimRouteImport.update({
   id: '/api/public/v1/claim',
   path: '/api/public/v1/claim',
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/chat': typeof AuthenticatedChatIndexRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/_authenticated/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
   '/api/public/v1/openapi.json': typeof ApiPublicV1OpenapiDotjsonRoute
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/api/stripe/webhook'
     | '/chat/'
+    | '/api/public/stripe/webhook'
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
@@ -448,6 +458,7 @@ export interface FileRouteTypes {
     | '/chat/$threadId'
     | '/api/stripe/webhook'
     | '/chat'
+    | '/api/public/stripe/webhook'
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat/$threadId'
     | '/api/stripe/webhook'
     | '/_authenticated/chat/'
+    | '/api/public/stripe/webhook'
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
     | '/api/public/v1/openapi.json'
@@ -523,6 +535,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicV1ClaimRoute: typeof ApiPublicV1ClaimRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
@@ -745,6 +758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe/webhook': {
+      id: '/api/public/stripe/webhook'
+      path: '/api/public/stripe/webhook'
+      fullPath: '/api/public/stripe/webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/claim': {
       id: '/api/public/v1/claim'
       path: '/api/public/v1/claim'
@@ -871,6 +891,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicV1ClaimRoute: ApiPublicV1ClaimRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
