@@ -516,8 +516,10 @@ async function browsePage(args: Record<string, unknown>): Promise<Record<string,
       allowRedirects: true,
     });
 
-    const text = String(res.content);
-    const title = text.startsWith("# ") ? text.split("\n")[0].replace(/^#\s*/, "") : null;
+    const text = String(res.content ?? "");
+    const firstLine = text.split("\n")[0];
+    const title = firstLine && firstLine.startsWith("# ") ? firstLine.replace(/^#\s*/, "") : null;
+
 
     return ok({
       url,
