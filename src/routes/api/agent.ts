@@ -395,6 +395,15 @@ export const Route = createFileRoute("/api/agent")({
                         conversationId,
                         tool: contract.name,
                       });
+                      void recordToolTrace({
+                        orgId: input.orgId,
+                        requestId,
+                        toolName: contract.name,
+                        args,
+                        error: null,
+                        durationMs: Date.now() - toolStartedAt.getTime(),
+                        startedAt: toolStartedAt,
+                      });
                       return {
                         status: "awaiting_confirmation",
                         note: "Queued for human approval. Do not retry.",
