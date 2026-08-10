@@ -200,6 +200,73 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     summarize: (a) => `"${str(a['query'])}"`,
   },
   {
+    // Real code execution in a sandboxed environment.
+    name: "execute_code",
+    label: "Execute code",
+    description:
+      "Run Python or JavaScript code in a sandboxed E2B environment and return stdout, stderr, and the exit code. The environment is ephemeral and isolated. Side-effecting: file writes are scoped to the sandbox only.",
+    sideEffecting: false,
+    icon: "database",
+    credits: 8,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      code: z.string().describe("Python or JavaScript code to execute"),
+      language: z.enum(["python", "javascript"]).optional().describe("Language. Defaults to python"),
+      timeout: z.number().optional().describe("Timeout in seconds, 1-300. Defaults to 60"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: { code: "print('hello')", language: "python" },
+    exampleResult: {
+      ok: true,
+      language: "python",
+      stdout: "hello\n",
+      stderr: "",
+      exitCode: 0,
+      executedAt: "2026-08-09T20:15:18.358Z",
+    },
+    summarize: (a) => `${str(a['language'] ?? "python")} snippet`,
+  },
+  {
+    // Real browser automation: open a page, interact, and return a snapshot.
+    name: "browse_page",
+    label: "Browse page",
+    description:
+      "Open a URL in a remote browser (Browserbase), run optional actions (click, type, wait), and return the final page text, URL, and a screenshot URL. Useful for interactive sites and post-login flows.",
+    sideEffecting: false,
+    icon: "globe",
+    credits: 10,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      url: z.string().describe("URL to open"),
+      actions: z
+        .array(
+          z.object({
+            type: z.enum(["click", "type", "wait", "navigate"]),
+            selector: z.string().optional(),
+            value: z.string().optional(),
+            delay: z.number().optional().describe("Milliseconds to wait for wait actions"),
+          }),
+        )
+        .optional()
+        .describe("Optional interaction steps to perform after load"),
+      screenshot: z.boolean().optional().describe("Return a screenshot URL. Defaults to true"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: {
+      url: "https://example.com",
+      actions: [{ type: "wait", delay: 1000 }],
+      screenshot: true,
+    },
+    exampleResult: {
+      ok: true,
+      url: "https://example.com/",
+      title: "Example Domain",
+      text: "Example Domain. This domain is for use in illustrative examples...",
+      screenshotUrl: "https://browserbase.com/screenshots/...",
+      finishedAt: "2026-08-09T20:15:18.358Z",
+    },
+    summarize: (a) => str(a['url']),
+  {
     name: "sandbox_search_knowledge_base",
     label: "Search knowledge base (sandbox)",
     description:
