@@ -5,7 +5,9 @@
   "auth": {
     "type": "oauth",
     "issuer": "https://svwbtoiscivvuhwnrmza.supabase.co/auth/v1",
-    "accepted_audiences": ["authenticated"]
+    "accepted_audiences": [
+      "authenticated"
+    ]
   },
   "mcp": {
     "server": {
@@ -36,7 +38,9 @@
               "description": "Truncate the extracted text to this many characters (default 8000, max 50000)"
             }
           },
-          "required": ["url"],
+          "required": [
+            "url"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -68,7 +72,9 @@
               "description": "Truncate each page's text to this many characters (default 4000, max 20000)"
             }
           },
-          "required": ["url"],
+          "required": [
+            "url"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -107,7 +113,9 @@
               "description": "Optional extra guidance for the extraction"
             }
           },
-          "required": ["fields"],
+          "required": [
+            "fields"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -131,7 +139,9 @@
               "description": "Natural language search query"
             }
           },
-          "required": ["query"],
+          "required": [
+            "query"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -155,7 +165,9 @@
               "description": "Contact email address"
             }
           },
-          "required": ["email"],
+          "required": [
+            "email"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -191,7 +203,9 @@
               "description": "Opaque cursor from a previous nextCursor"
             }
           },
-          "required": ["type"],
+          "required": [
+            "type"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -227,7 +241,11 @@
               "description": "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview."
             }
           },
-          "required": ["to", "subject", "body"],
+          "required": [
+            "to",
+            "subject",
+            "body"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -260,7 +278,10 @@
               "description": "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview."
             }
           },
-          "required": ["recordId", "fields"],
+          "required": [
+            "recordId",
+            "fields"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -296,7 +317,11 @@
               "description": "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview."
             }
           },
-          "required": ["customerId", "amountCents", "currency"],
+          "required": [
+            "customerId",
+            "amountCents",
+            "currency"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -328,7 +353,10 @@
               "description": "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview."
             }
           },
-          "required": ["type", "recordId"],
+          "required": [
+            "type",
+            "recordId"
+          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
