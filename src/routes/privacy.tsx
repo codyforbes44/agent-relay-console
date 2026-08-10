@@ -76,8 +76,10 @@ function PrivacyPage() {
                 Service on our instructions.
               </li>
               <li>
-                <strong className="text-foreground">Paddle.com</strong>, our Merchant of Record, for
-                the sale of credit packs, payments, invoicing, tax compliance and billing support.
+                <strong className="text-foreground">Payment and settlement records</strong> — we
+                sell credits directly and record our own billing data. Payments settled in USDC on
+                the Base network are recorded on a public blockchain, including the paying wallet
+                address, amount and transaction hash; we cannot alter or delete that public record.
               </li>
               <li>
                 <strong className="text-foreground">Professional advisers</strong> such as legal and
