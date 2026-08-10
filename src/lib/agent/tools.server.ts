@@ -1,5 +1,5 @@
 /**
- * Simulated tool handlers. Each returns a compact, serializable result.
+ * Tool handlers. Each returns a compact, serializable result.
  * Swap these bodies for real integrations without touching the agent loop
  * or the UI: the typed contracts in `contracts.ts` stay the same.
  */
@@ -7,6 +7,36 @@
 import { tavily } from "@tavily/core";
 
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+
+export async function recordToolTrace(input: {
+  orgId: string;
+  requestId?: string;
+  toolName: string;
+  args?: Record<string, unknown>;
+  result?: Record<string, unknown>;
+  error?: string | null;
+  creditsCharged?: number;
+  model?: string;
+  provider?: string;
+  durationMs: number;
+  startedAt: Date;
+}) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("tool_traces").insert({
+    org_id: input.orgId,
+    request_id: input.requestId ?? null,
+    tool_name: input.toolName,
+    args: (input.args ?? {}) as Record<string, never>,
+    result: input.result ? (input.result as Record<string, never>) : null,
+    error: input.error ?? null,
+    credits_charged: input.creditsCharged ?? 0,
+    model: input.model ?? null,
+    provider: input.provider ?? "lovable-ai-gateway",
+    duration_ms: input.durationMs,
+    started_at: input.startedAt.toISOString(),
+    finished_at: new Date().toISOString(),
+  });
+}
 
 const CONTACTS = [
   { id: "c_1024", name: "Dana Whitfield", email: "dana@northwind.io", company: "Northwind", stage: "customer", mrr: 4200 },
