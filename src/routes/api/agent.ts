@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { createLovableAiGatewayProvider, getLovableAiGatewayRunId } from "@/lib/ai-gateway.server";
 import { TOOL_CONTRACTS, TOOLS_BY_NAME, type AgentResponse, type ToolCallView } from "@/lib/agent/contracts";
-import { runTool } from "@/lib/agent/tools.server";
+import { recordToolTrace, runTool } from "@/lib/agent/tools.server";
 import { getOrgSettings } from "@/lib/api/settings.server";
 
 const DEFAULT_MODEL = "google/gemini-3.5-flash";
