@@ -9,6 +9,8 @@ export type OrgSettings = {
   confirmationDefault: ConfirmationDefault;
   jobRetentionDays: number;
   messageRetentionDays: number;
+  defaultModel: string;
+  costQualityTier: "economy" | "balanced" | "quality";
 };
 
 export const DEFAULT_ORG_SETTINGS: Omit<OrgSettings, "orgId"> = {
@@ -17,6 +19,8 @@ export const DEFAULT_ORG_SETTINGS: Omit<OrgSettings, "orgId"> = {
   confirmationDefault: "side_effecting",
   jobRetentionDays: 30,
   messageRetentionDays: 90,
+  defaultModel: "google/gemini-3.5-flash",
+  costQualityTier: "balanced",
 };
 
 /** Read a workspace's settings, falling back to defaults when no row exists yet. */
