@@ -75,6 +75,8 @@ export const updateWorkspaceSettings = createServerFn({ method: "POST" })
         confirmation_default: data.confirmationDefault,
         job_retention_days: data.jobRetentionDays,
         message_retention_days: data.messageRetentionDays,
+        default_model: data.defaultModel,
+        cost_quality_tier: data.costQualityTier,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "org_id" },
