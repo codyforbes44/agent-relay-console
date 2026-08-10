@@ -1,17 +1,17 @@
-import { authRedirectUrl } from "@/lib/site";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
+import { Check, Copy, Loader2 } from "lucide-react";
+import { useState } from "react";
 
-import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { ConsoleShell } from "@/components/workspace/ConsoleShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { getAccountSummary } from "@/lib/api/keys.functions";
 import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
-import { usePaddleCheckout } from "@/hooks/usePaddleCheckout";
+import { SITE_URL } from "@/lib/site";
+
+const SUPPORT_EMAIL = "support@3bi.ai";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
@@ -20,10 +20,10 @@ export const Route = createFileRoute("/_authenticated/billing")({
       {
         name: "description",
         content:
-          "Top up your Relay workspace with credit packs. Credits are spent per metered agent tool call.",
+          "Top up your Relay workspace with credit packs, settled in USDC over x402 or by invoice.",
       },
       { property: "og:title", content: "Buy credits — Relay Agent Tool API" },
-      { property: "og:description", content: "Self-serve credit packs for agent tool calls." },
+      { property: "og:description", content: "Credit packs for agent tool calls, paid in USDC." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -33,38 +33,49 @@ export const Route = createFileRoute("/_authenticated/billing")({
 
 function BillingPage() {
   return (
-    <>
-      <PaymentTestModeBanner />
-      <ConsoleShell
-        title="Buy credits"
-        description="Credits are consumed per metered tool call. Packs never expire."
-      >
-        {(org) => <BillingPanel orgId={org.id} />}
-      </ConsoleShell>
-    </>
+    <ConsoleShell
+      title="Buy credits"
+      description="Credits are consumed per metered tool call. Packs never expire."
+    >
+      {(org) => <BillingPanel orgId={org.id} />}
+    </ConsoleShell>
+  );
+}
+
+function topupCommand(credits: number) {
+  return `curl -X POST ${SITE_URL}/api/public/v1/credits/purchase \\
+  -H "Authorization: Bearer $RELAY_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"credits": ${credits}}'`;
+}
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="w-full"
+      onClick={async () => {
+        await navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+    >
+      {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+      {copied ? "Copied" : "Copy top-up call"}
+    </Button>
   );
 }
 
 function BillingPanel({ orgId }: { orgId: string }) {
   const summary = useServerFn(getAccountSummary);
-  const { openCheckout, loading } = usePaddleCheckout();
 
   const { data, isLoading } = useQuery({
     queryKey: ["usage", orgId],
     queryFn: () => summary({ data: { orgId } }),
     refetchInterval: 15_000,
   });
-
-  async function buy(priceId: string) {
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
-    await openCheckout({
-      priceId,
-      customerEmail: user?.email ?? undefined,
-      customData: { orgId, userId: user?.id ?? "" },
-      successUrl: authRedirectUrl("/usage?checkout=success"),
-    });
-  }
 
   return (
     <div className="space-y-6">
@@ -74,13 +85,32 @@ function BillingPanel({ orgId }: { orgId: string }) {
           <CardTitle className="text-3xl tabular-nums">
             {isLoading ? (
               <Loader2 className="size-5 animate-spin text-muted-foreground" />
+            ) : data?.unlimited ? (
+              "Unlimited"
             ) : (
-              data?.unlimited
-                ? "Unlimited"
-                : `${(data?.balance ?? 0).toLocaleString()} credits`
+              `${(data?.balance ?? 0).toLocaleString()} credits`
             )}
           </CardTitle>
         </CardHeader>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">How to pay</CardTitle>
+          <CardDescription>
+            Credits are sold directly by Agent Relay Console and settled in USDC on Base over x402.
+            Run the top-up call below with one of your workspace API keys — the first response is an
+            HTTP 402 offer, and once it is settled the credits land on this balance. For larger
+            purchases we can invoice instead.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" asChild>
+            <a href={`mailto:${SUPPORT_EMAIL}?subject=Credit%20purchase%20by%20invoice`}>
+              Pay by invoice
+            </a>
+          </Button>
+        </CardContent>
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -94,18 +124,22 @@ function BillingPanel({ orgId }: { orgId: string }) {
             </CardHeader>
             <CardContent className="mt-auto space-y-4">
               <p className="text-sm text-muted-foreground">{pack.blurb}</p>
-              <p className="text-lg font-semibold text-foreground">{formatUsd(pack.amountCents)}</p>
-              <Button className="w-full" disabled={loading} onClick={() => buy(pack.priceId)}>
-                {loading ? <Loader2 className="size-4 animate-spin" /> : "Buy pack"}
-              </Button>
+              <p className="text-lg font-semibold text-foreground">
+                {formatUsd(pack.amountCents)}{" "}
+                <span className="text-xs font-normal text-muted-foreground">in USDC</span>
+              </p>
+              <pre className="overflow-x-auto rounded-md border border-border bg-muted/40 p-3 text-[11px] leading-relaxed text-muted-foreground">
+                <code>{topupCommand(pack.credits)}</code>
+              </pre>
+              <CopyButton value={topupCommand(pack.credits)} />
             </CardContent>
           </Card>
         ))}
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Credits land in your workspace balance as soon as the payment clears. Machine API calls that
-        exceed your balance return HTTP 402 with a link back here.
+        Credits land in your workspace balance as soon as the payment settles on-chain. Machine API
+        calls that exceed your balance return HTTP 402 with a payable offer.
       </p>
     </div>
   );

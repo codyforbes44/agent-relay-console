@@ -10,7 +10,7 @@ export const Route = createFileRoute("/refunds")({
       path: '/refunds',
       title: 'Refund Policy — RELAY',
       description:
-        'Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases. Refunds are processed by Paddle, our Merchant of Record.',
+        'Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases. Refunds are issued directly by us in USDC.',
     }),
   component: RefundsPage,
 });
@@ -33,31 +33,26 @@ function RefundsPage() {
           <div>
             <h2 className="mb-2 text-base font-medium text-foreground">How to request a refund</h2>
             <p>
-              Our order process is conducted by our online reseller Paddle.com. Paddle.com is the
-              Merchant of Record for all our orders and handles refunds on our behalf. To request a
-              refund, visit{" "}
-              <a
-                className="underline"
-                href="https://paddle.net"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                paddle.net
+              Agent Relay Console sells credits directly and handles all refunds itself. To request
+              one, email{" "}
+              <a className="underline" href="mailto:support@3bi.ai">
+                support@3bi.ai
               </a>{" "}
-              with your order details, or contact Agent Relay Console support through the channel
-              listed in your console and we will pass the request on.
+              with your workspace name and the purchase date, or contact us through the support
+              channel listed in your console. We aim to respond within two business days.
             </p>
           </div>
 
           <div>
             <h2 className="mb-2 text-base font-medium text-foreground">How refunds are issued</h2>
             <p>
-              Approved refunds are returned to the original payment method. Any credits granted by
-              the refunded purchase are removed from your workspace balance. Processing times
-              depend on your bank or card issuer and are typically a few business days after
-              approval.
+              Approved refunds are returned in USDC to the wallet address that paid for the
+              purchase, or as a credit note against your invoice if you paid by invoice. Any credits
+              granted by the refunded purchase are removed from your workspace balance. On-chain
+              refunds usually settle within one business day of approval.
             </p>
           </div>
+
 
           <div>
             <h2 className="mb-2 text-base font-medium text-foreground">Free credits</h2>
