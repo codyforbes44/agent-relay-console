@@ -404,7 +404,7 @@ export const Route = createFileRoute("/api/agent")({
                     let status: ToolCallView["status"] = "success";
                     let error: string | null = null;
                     try {
-                      result = await runTool(contract.name, args);
+                      result = await runTool(contract.name, { ...args, orgId: input.orgId });
                     } catch (e) {
                       error = e instanceof Error ? e.message : "Tool failed";
                       status = "error";
