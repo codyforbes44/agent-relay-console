@@ -169,6 +169,9 @@ export const Route = createFileRoute("/api/agent")({
           if (!convo) return jsonError(404, "Conversation not found");
         }
 
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const orgSettings = await getOrgSettings(supabaseAdmin, input.orgId);
+
         const { data: job } = await supabase
           .from("jobs")
           .insert({ org_id: input.orgId, conversation_id: conversationId, status: "running" })
@@ -177,6 +180,10 @@ export const Route = createFileRoute("/api/agent")({
         const jobId = job?.id as string | undefined;
 
         const emittedToolCalls: ToolCallView[] = [];
+        const resolvedModel =
+          orgSettings.defaultModel && orgSettings.defaultModel !== "auto"
+            ? orgSettings.defaultModel
+            : (TIER_MODELS[orgSettings.costQualityTier] ?? DEFAULT_MODEL);
 
         // Handle a confirmation decision before running the model again.
         if (input.confirm) {
