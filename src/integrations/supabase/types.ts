@@ -336,6 +336,98 @@ export type Database = {
           },
         ]
       }
+      document_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          document_id: string
+          embedding: string
+          id: string
+          metadata: Json
+          org_id: string
+        }
+        Insert: {
+          chunk_index?: number
+          content: string
+          created_at?: string
+          document_id: string
+          embedding: string
+          id?: string
+          metadata?: Json
+          org_id: string
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          document_id?: string
+          embedding?: string
+          id?: string
+          metadata?: Json
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_chunks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          content_type: string
+          created_at: string
+          id: string
+          metadata: Json
+          org_id: string
+          source_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          org_id: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          org_id?: string
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       idempotency_keys: {
         Row: {
           created_at: string
@@ -488,7 +580,9 @@ export type Database = {
       org_settings: {
         Row: {
           confirmation_default: string
+          cost_quality_tier: string
           created_at: string
+          default_model: string
           job_retention_days: number
           mcp_base_url: string
           mcp_path_pattern: string
@@ -498,7 +592,9 @@ export type Database = {
         }
         Insert: {
           confirmation_default?: string
+          cost_quality_tier?: string
           created_at?: string
+          default_model?: string
           job_retention_days?: number
           mcp_base_url?: string
           mcp_path_pattern?: string
@@ -508,7 +604,9 @@ export type Database = {
         }
         Update: {
           confirmation_default?: string
+          cost_quality_tier?: string
           created_at?: string
+          default_model?: string
           job_retention_days?: number
           mcp_base_url?: string
           mcp_path_pattern?: string
@@ -871,6 +969,62 @@ export type Database = {
           },
         ]
       }
+      tool_traces: {
+        Row: {
+          args: Json
+          credits_charged: number
+          duration_ms: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          model: string | null
+          org_id: string
+          provider: string | null
+          request_id: string | null
+          result: Json | null
+          started_at: string
+          tool_name: string
+        }
+        Insert: {
+          args?: Json
+          credits_charged?: number
+          duration_ms?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          model?: string | null
+          org_id: string
+          provider?: string | null
+          request_id?: string | null
+          result?: Json | null
+          started_at?: string
+          tool_name: string
+        }
+        Update: {
+          args?: Json
+          credits_charged?: number
+          duration_ms?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          model?: string | null
+          org_id?: string
+          provider?: string | null
+          request_id?: string | null
+          result?: Json | null
+          started_at?: string
+          tool_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tool_traces_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usage_events: {
         Row: {
           created_at: string
@@ -971,6 +1125,22 @@ export type Database = {
       key_credits_spent: {
         Args: { _key_id: string; _since: string }
         Returns: number
+      }
+      match_document_chunks: {
+        Args: {
+          _document_ids?: string[]
+          _match_count?: number
+          _org_id: string
+          _query_embedding: string
+        }
+        Returns: {
+          chunk_index: number
+          content: string
+          document_id: string
+          id: string
+          metadata: Json
+          similarity: number
+        }[]
       }
       org_credit_balance: { Args: { _org_id: string }; Returns: number }
       org_unlimited_credits: { Args: { _org_id: string }; Returns: boolean }
