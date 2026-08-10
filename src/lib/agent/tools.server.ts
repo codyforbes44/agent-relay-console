@@ -433,6 +433,10 @@ export async function runTool(
       return crawlSite(args);
     case "extract_structured":
       return extractStructured(args);
+    case "search_web":
+      return searchWeb(args);
+    case "search_knowledge_base":
+      return searchKnowledgeBase(args);
     case "sandbox_search_knowledge_base": {
       const q = String(args['query'] ?? "").toLowerCase();
       const hits = KB.filter(
