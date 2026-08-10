@@ -15,6 +15,21 @@ const settingsSchema = z.object({
   confirmationDefault: z.enum(["side_effecting", "all", "none"]),
   jobRetentionDays: z.number().int().min(1).max(3650),
   messageRetentionDays: z.number().int().min(1).max(3650),
+  defaultModel: z
+    .string()
+    .trim()
+    .max(100)
+    .refine(
+      (v) =>
+        v === "auto" ||
+        [
+          "google/gemini-3.1-flash-lite",
+          "google/gemini-3.5-flash",
+          "google/gemini-3.1-pro-preview",
+        ].includes(v),
+      "Choose a supported model or auto",
+    ),
+  costQualityTier: z.enum(["economy", "balanced", "quality"]),
 });
 
 export type OrgSettingsInput = z.infer<typeof settingsSchema>;
