@@ -1143,6 +1143,10 @@ export type Database = {
         }[]
       }
       org_credit_balance: { Args: { _org_id: string }; Returns: number }
+      org_role_of: {
+        Args: { _org_id: string }
+        Returns: Database["public"]["Enums"]["org_role"]
+      }
       org_unlimited_credits: { Args: { _org_id: string }; Returns: boolean }
       refund_reserved_credits: {
         Args: { _reason: string; _usage_event_id: string }
