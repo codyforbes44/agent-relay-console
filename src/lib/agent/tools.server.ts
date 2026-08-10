@@ -470,10 +470,13 @@ async function executeCode(args: Record<string, unknown>): Promise<Record<string
 
   try {
     const { Sandbox } = await import("e2b");
-    const sbx = await Sandbox.create(language === "python" ? "python" : "node", { apiKey });
+    const template = language === "python" ? "python" : "node";
+    const sbx = await Sandbox.create(template, { apiKey });
     try {
-      const execution = await sbx.runCode(code, {
-        language,
+      const filename = `/tmp/relay_exec_${Date.now()}.${language === "python" ? "py" : "js"}`;
+      await sbx.files.write(filename, code);
+      const cmd = language === "python" ? `python3 ${filename}` : `node ${filename}`;
+      const execution = await sbx.commands.run(cmd, {
         timeoutMs: timeout * 1000,
       });
       return ok({
@@ -481,7 +484,6 @@ async function executeCode(args: Record<string, unknown>): Promise<Record<string
         stdout: execution.stdout ?? "",
         stderr: execution.stderr ?? "",
         exitCode: execution.exitCode ?? 0,
-        results: execution.results ?? [],
         executedAt: new Date().toISOString(),
       });
     } finally {
@@ -493,8 +495,10 @@ async function executeCode(args: Record<string, unknown>): Promise<Record<string
 }
 
 /**
- * Open an interactive remote browser (Browserbase), perform optional actions,
- * and return the final page text plus a screenshot URL.
+ * Open a URL in a remote Browserbase browser and return the rendered page text,
+ * title, and final URL via the Browserbase Fetch API. This runs the browser in
+ * Browserbase's cloud without requiring a local browser client, so it works in
+ * edge serverless runtimes.
  */
 async function browsePage(args: Record<string, unknown>): Promise<Record<string, unknown>> {
   const apiKey = process.env['BROWSERBASE_API_KEY'];
@@ -503,81 +507,31 @@ async function browsePage(args: Record<string, unknown>): Promise<Record<string,
   const url = String(args['url'] ?? "").trim();
   if (!url) return { ok: false, error: "url is required" };
 
-  const actions = Array.isArray(args['actions']) ? (args['actions'] as unknown[]) : [];
-  const screenshot = Boolean(args['screenshot'] ?? true);
-
   try {
     const { default: Browserbase } = await import("@browserbasehq/sdk");
     const bb = new Browserbase({ apiKey });
-    const session = await bb.sessions.create({
-      projectId: process.env['BROWSERBASE_PROJECT_ID'] ?? undefined,
+    const res = await bb.fetchAPI.create({
+      url,
+      format: "markdown",
+      allowRedirects: true,
     });
-    const wsUrl = session.connectUrl;
-    if (!wsUrl) return { ok: false, error: "Browserbase session did not return a connect URL" };
 
-    const { chromium } = await import("playwright-core");
-    const browser = await chromium.connectOverCDP(wsUrl);
-    try {
-      const context = await browser.newContext({ viewport: { width: 1280, height: 1800 } });
-      const page = await context.newPage();
-      await page.goto(url, { waitUntil: "domcontentloaded" });
+    const text = String(res.content);
+    const title = text.startsWith("# ") ? text.split("\n")[0].replace(/^#\s*/, "") : null;
 
-      for (const action of actions) {
-        const a = action as Record<string, unknown>;
-        const type = String(a['type'] ?? "");
-        const selector = typeof a['selector'] === "string" ? a['selector'] : undefined;
-        const value = typeof a['value'] === "string" ? a['value'] : undefined;
-        const delay = Number(a['delay'] ?? 0);
-        switch (type) {
-          case "click":
-            if (selector) await page.click(selector);
-            break;
-          case "type":
-            if (selector && value !== undefined) await page.fill(selector, value);
-            break;
-          case "wait":
-            await page.waitForTimeout(delay);
-            break;
-          case "navigate":
-            if (value) await page.goto(value, { waitUntil: "domcontentloaded" });
-            break;
-        }
-      }
-
-      let screenshotUrl: string | null = null;
-      if (screenshot) {
-        const screenshotBuffer = await page.screenshot({ fullPage: false });
-        // Upload screenshot to a temporary storage bucket so the agent can fetch it.
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const path = `screenshots/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
-        const { data, error } = await supabaseAdmin.storage.from("agent-uploads").upload(path, screenshotBuffer, {
-          contentType: "image/png",
-        });
-        if (!error && data?.path) {
-          const { data: signedUrl } = await supabaseAdmin.storage
-            .from("agent-uploads")
-            .createSignedUrl(data.path, 60 * 60);
-          screenshotUrl = signedUrl?.signedUrl ?? null;
-        }
-      }
-
-      const title = await page.title().catch(() => null);
-      const text = await page.evaluate(() => document.body.innerText).catch(() => "");
-
-      return ok({
-        url: page.url(),
-        title,
-        text: text.slice(0, 12_000),
-        screenshotUrl,
-        finishedAt: new Date().toISOString(),
-      });
-    } finally {
-      await browser.close();
-    }
+    return ok({
+      url,
+      statusCode: res.statusCode,
+      contentType: res.contentType,
+      title,
+      text,
+      finishedAt: new Date().toISOString(),
+    });
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Browser automation failed" };
   }
 }
+
 
 export async function runTool(
   name: string,
