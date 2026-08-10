@@ -45,6 +45,10 @@ export async function getOrgSettings(
     jobRetentionDays: (row['job_retention_days'] as number) ?? DEFAULT_ORG_SETTINGS.jobRetentionDays,
     messageRetentionDays:
       (row['message_retention_days'] as number) ?? DEFAULT_ORG_SETTINGS.messageRetentionDays,
+    defaultModel: (row['default_model'] as string) ?? DEFAULT_ORG_SETTINGS.defaultModel,
+    costQualityTier:
+      (row['cost_quality_tier'] as "economy" | "balanced" | "quality") ??
+      DEFAULT_ORG_SETTINGS.costQualityTier,
   };
 }
 
