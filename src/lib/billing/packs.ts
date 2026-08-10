@@ -1,5 +1,5 @@
-/** Credit packs sold through self-serve checkout. Price IDs are human-readable
- *  and identical across test and live environments. */
+/** Credit packs sold directly by Agent Relay Console. `priceId` is a stable,
+ *  human-readable pack identifier referenced by docs and pricing copy. */
 export type CreditPack = {
   priceId: string;
   credits: number;
