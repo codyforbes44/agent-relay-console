@@ -25,14 +25,18 @@ export const Route = createFileRoute("/auth")({
     const next = safeNext(s['next']);
     return next ? { next } : {};
   },
-  head: () => ({
-    meta: [
-      { title: "Sign in — Relay Agent Workspace" },
-      { name: "description", content: "Sign in to your Relay workspace to run and audit AI agent tasks." },
-      { property: "og:title", content: "Sign in — Relay Agent Workspace" },
-      { property: "og:description", content: "Access your tenant-scoped AI agent workspace." },
-    ],
-  }),
+  head: () => {
+    const base = publicHead({
+      path: "/auth",
+      title: "Sign in — RELAY human console",
+      description:
+        "Sign in to the RELAY human console to mint API keys, buy credits, review usage and approve side-effecting tool calls.",
+    });
+    return {
+      ...base,
+      meta: [...base.meta, { name: "robots", content: "noindex, follow" }],
+    };
+  },
   component: AuthPage,
 });
 
