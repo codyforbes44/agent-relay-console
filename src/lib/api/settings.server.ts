@@ -9,6 +9,8 @@ export type OrgSettings = {
   confirmationDefault: ConfirmationDefault;
   jobRetentionDays: number;
   messageRetentionDays: number;
+  defaultModel: string;
+  costQualityTier: "economy" | "balanced" | "quality";
 };
 
 export const DEFAULT_ORG_SETTINGS: Omit<OrgSettings, "orgId"> = {
@@ -17,6 +19,8 @@ export const DEFAULT_ORG_SETTINGS: Omit<OrgSettings, "orgId"> = {
   confirmationDefault: "side_effecting",
   jobRetentionDays: 30,
   messageRetentionDays: 90,
+  defaultModel: "google/gemini-3.5-flash",
+  costQualityTier: "balanced",
 };
 
 /** Read a workspace's settings, falling back to defaults when no row exists yet. */
@@ -41,6 +45,10 @@ export async function getOrgSettings(
     jobRetentionDays: (row['job_retention_days'] as number) ?? DEFAULT_ORG_SETTINGS.jobRetentionDays,
     messageRetentionDays:
       (row['message_retention_days'] as number) ?? DEFAULT_ORG_SETTINGS.messageRetentionDays,
+    defaultModel: (row['default_model'] as string) ?? DEFAULT_ORG_SETTINGS.defaultModel,
+    costQualityTier:
+      (row['cost_quality_tier'] as "economy" | "balanced" | "quality") ??
+      DEFAULT_ORG_SETTINGS.costQualityTier,
   };
 }
 

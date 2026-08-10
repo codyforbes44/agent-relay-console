@@ -135,6 +135,71 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       `${Array.isArray(a['fields']) ? (a['fields'] as unknown[]).length : 0} fields${a['url'] ? ` · ${str(a['url'])}` : ""}`,
   },
   {
+    // Real web search: Tavily returns ranked results with citations for agents.
+    name: "search_web",
+    label: "Search web",
+    description:
+      "Search the public web and return ranked results with titles, snippets, and source URLs. Uses a server-side search API. Read-only.",
+    sideEffecting: false,
+    icon: "search",
+    credits: 4,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      query: z.string().describe("Natural language search query"),
+      maxResults: z.number().optional().describe("Number of results to return, 1-20. Defaults to 5"),
+      includeAnswer: z.boolean().optional().describe("Include a short AI-generated answer based on the results. Defaults to false"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: { query: "x402 payment protocol summary" },
+    exampleResult: {
+      ok: true,
+      query: "x402 payment protocol summary",
+      results: [
+        {
+          title: "x402 - Machine-payable HTTP",
+          url: "https://x402.org",
+          content: "x402 is a protocol for machine payments over HTTP using stablecoins...",
+          score: 0.94,
+        },
+      ],
+      answer: "x402 lets servers request on-chain payment by returning HTTP 402.",
+      searchedAt: "2026-08-09T20:15:18.358Z",
+    },
+    summarize: (a) => `"${str(a['query'])}"`,
+  },
+  {
+    // Real vector knowledge base: tenant-scoped semantic search over uploaded documents.
+    name: "search_knowledge_base",
+    label: "Search knowledge base",
+    description:
+      "Search this workspace's uploaded documents using semantic similarity. Returns the most relevant text chunks with document titles and source URLs. Read-only.",
+    sideEffecting: false,
+    icon: "search",
+    credits: 3,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      query: z.string().describe("Natural language search query"),
+      maxResults: z.number().optional().describe("Number of chunks to return, 1-20. Defaults to 5"),
+      documentIds: z.array(z.string()).optional().describe("Optional list of document IDs to restrict the search to"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: { query: "refund policy" },
+    exampleResult: {
+      ok: true,
+      matches: [
+        {
+          documentId: "doc_...",
+          chunkIndex: 0,
+          title: "Refund policy",
+          sourceUrl: null,
+          content: "Refunds are issued within 14 days of purchase for annual plans...",
+          similarity: 0.91,
+        },
+      ],
+    },
+    summarize: (a) => `"${str(a['query'])}"`,
+  },
+  {
     name: "sandbox_search_knowledge_base",
     label: "Search knowledge base (sandbox)",
     description:
@@ -334,7 +399,6 @@ export const TOOLS_BY_NAME: Record<string, ToolContract> = Object.fromEntries(
  * responses carry a `deprecated` pointer to the new name.
  */
 export const DEPRECATED_TOOL_ALIASES: Record<string, string> = {
-  search_knowledge_base: "sandbox_search_knowledge_base",
   lookup_crm_contact: "sandbox_lookup_crm_contact",
   list_records: "sandbox_list_records",
   send_email: "sandbox_send_email",

@@ -76,6 +76,8 @@ function SettingsPage() {
       confirmationDefault: data.confirmationDefault,
       jobRetentionDays: data.jobRetentionDays,
       messageRetentionDays: data.messageRetentionDays,
+      defaultModel: data.defaultModel,
+      costQualityTier: data.costQualityTier,
     });
   }, [data]);
 
@@ -198,6 +200,59 @@ function SettingsPage() {
 
               <Card>
                 <CardHeader>
+                  <CardTitle className="text-base font-medium">Model routing</CardTitle>
+                  <CardDescription>
+                    Default model and cost/quality tier for the workspace chat agent. "Auto" lets the
+                    tier pick the model.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="defaultModel">Default model</Label>
+                    <Select
+                      value={form.defaultModel}
+                      onValueChange={(v) => setForm({ ...form, defaultModel: v })}
+                    >
+                      <SelectTrigger id="defaultModel">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="auto">Auto (use cost/quality tier)</SelectItem>
+                        <SelectItem value="google/gemini-3.1-flash-lite">
+                          Gemini 3.1 Flash Lite (fastest, cheapest)
+                        </SelectItem>
+                        <SelectItem value="google/gemini-3.5-flash">
+                          Gemini 3.5 Flash (balanced)
+                        </SelectItem>
+                        <SelectItem value="google/gemini-3.1-pro-preview">
+                          Gemini 3.1 Pro Preview (highest quality)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="costQualityTier">Cost/quality tier</Label>
+                    <Select
+                      value={form.costQualityTier}
+                      onValueChange={(v) =>
+                        setForm({ ...form, costQualityTier: v as OrgSettingsInput["costQualityTier"] })
+                      }
+                    >
+                      <SelectTrigger id="costQualityTier">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="economy">Economy</SelectItem>
+                        <SelectItem value="balanced">Balanced</SelectItem>
+                        <SelectItem value="quality">Quality</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
                   <CardTitle className="text-base font-medium">Retention</CardTitle>
                   <CardDescription>
                     How long this workspace keeps agent jobs and conversation history.
@@ -256,6 +311,8 @@ function SettingsPage() {
                       confirmationDefault: data.confirmationDefault,
                       jobRetentionDays: data.jobRetentionDays,
                       messageRetentionDays: data.messageRetentionDays,
+                      defaultModel: data.defaultModel,
+                      costQualityTier: data.costQualityTier,
                     })
                   }
                 >

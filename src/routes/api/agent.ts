@@ -5,10 +5,17 @@ import { z } from "zod";
 
 import { createLovableAiGatewayProvider, getLovableAiGatewayRunId } from "@/lib/ai-gateway.server";
 import { TOOL_CONTRACTS, TOOLS_BY_NAME, type AgentResponse, type ToolCallView } from "@/lib/agent/contracts";
-import { runTool } from "@/lib/agent/tools.server";
+import { recordToolTrace, runTool } from "@/lib/agent/tools.server";
+import { getOrgSettings } from "@/lib/api/settings.server";
 
-const MODEL = "google/gemini-3.5-flash";
+const DEFAULT_MODEL = "google/gemini-3.5-flash";
 const RATE_LIMIT_PER_MINUTE = 20;
+
+const TIER_MODELS: Record<string, string> = {
+  economy: "google/gemini-3.1-flash-lite",
+  balanced: "google/gemini-3.5-flash",
+  quality: "google/gemini-3.1-pro-preview",
+};
 
 const RequestSchema = z.object({
   orgId: z.string().uuid(),
@@ -162,6 +169,9 @@ export const Route = createFileRoute("/api/agent")({
           if (!convo) return jsonError(404, "Conversation not found");
         }
 
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const orgSettings = await getOrgSettings(supabaseAdmin, input.orgId);
+
         const { data: job } = await supabase
           .from("jobs")
           .insert({ org_id: input.orgId, conversation_id: conversationId, status: "running" })
@@ -170,6 +180,10 @@ export const Route = createFileRoute("/api/agent")({
         const jobId = job?.id as string | undefined;
 
         const emittedToolCalls: ToolCallView[] = [];
+        const resolvedModel =
+          orgSettings.defaultModel && orgSettings.defaultModel !== "auto"
+            ? orgSettings.defaultModel
+            : (TIER_MODELS[orgSettings.costQualityTier] ?? DEFAULT_MODEL);
 
         // Handle a confirmation decision before running the model again.
         if (input.confirm) {
@@ -342,6 +356,7 @@ export const Route = createFileRoute("/api/agent")({
                   inputSchema: contract.schema,
                   execute: async (args: Record<string, unknown>) => {
                     const toolStarted = Date.now();
+                    const toolStartedAt = new Date();
                     if (contract.sideEffecting) {
                       const { data: row } = await supabase
                         .from("tool_calls")
@@ -380,6 +395,15 @@ export const Route = createFileRoute("/api/agent")({
                         conversationId,
                         tool: contract.name,
                       });
+                      void recordToolTrace({
+                        orgId: input.orgId,
+                        requestId,
+                        toolName: contract.name,
+                        args,
+                        error: null,
+                        durationMs: Date.now() - toolStartedAt.getTime(),
+                        startedAt: toolStartedAt,
+                      });
                       return {
                         status: "awaiting_confirmation",
                         note: "Queued for human approval. Do not retry.",
@@ -390,7 +414,7 @@ export const Route = createFileRoute("/api/agent")({
                     let status: ToolCallView["status"] = "success";
                     let error: string | null = null;
                     try {
-                      result = await runTool(contract.name, args);
+                      result = await runTool(contract.name, { ...args, orgId: input.orgId });
                     } catch (e) {
                       error = e instanceof Error ? e.message : "Tool failed";
                       status = "error";
@@ -430,6 +454,16 @@ export const Route = createFileRoute("/api/agent")({
                       status,
                       ms: Date.now() - toolStarted,
                     });
+                    void recordToolTrace({
+                      orgId: input.orgId,
+                      requestId,
+                      toolName: contract.name,
+                      args,
+                      result,
+                      error,
+                      durationMs: Date.now() - toolStartedAt.getTime(),
+                      startedAt: toolStartedAt,
+                    });
                     return result;
                   },
                 }),
@@ -438,7 +472,7 @@ export const Route = createFileRoute("/api/agent")({
 
             try {
               const result = streamText({
-                model: gateway(MODEL),
+                model: gateway(resolvedModel),
                 system: SYSTEM_PROMPT,
                 messages: modelMessages,
                 tools,

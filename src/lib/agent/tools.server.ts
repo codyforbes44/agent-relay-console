@@ -1,8 +1,42 @@
 /**
- * Simulated tool handlers. Each returns a compact, serializable result.
+ * Tool handlers. Each returns a compact, serializable result.
  * Swap these bodies for real integrations without touching the agent loop
  * or the UI: the typed contracts in `contracts.ts` stay the same.
  */
+
+import { tavily } from "@tavily/core";
+
+import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+
+export async function recordToolTrace(input: {
+  orgId: string;
+  requestId?: string;
+  toolName: string;
+  args?: Record<string, unknown>;
+  result?: Record<string, unknown>;
+  error?: string | null;
+  creditsCharged?: number;
+  model?: string;
+  provider?: string;
+  durationMs: number;
+  startedAt: Date;
+}) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("tool_traces").insert({
+    org_id: input.orgId,
+    request_id: input.requestId ?? null,
+    tool_name: input.toolName,
+    args: (input.args ?? {}) as Record<string, never>,
+    result: input.result ? (input.result as Record<string, never>) : null,
+    error: input.error ?? null,
+    credits_charged: input.creditsCharged ?? 0,
+    model: input.model ?? null,
+    provider: input.provider ?? "lovable-ai-gateway",
+    duration_ms: input.durationMs,
+    started_at: input.startedAt.toISOString(),
+    finished_at: new Date().toISOString(),
+  });
+}
 
 const CONTACTS = [
   { id: "c_1024", name: "Dana Whitfield", email: "dana@northwind.io", company: "Northwind", stage: "customer", mrr: 4200 },
@@ -290,6 +324,134 @@ async function extractStructured(args: Record<string, unknown>): Promise<Record<
   });
 }
 
+/**
+ * Real web search via Tavily. Returns ranked results with citations for agents.
+ */
+async function searchWeb(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const apiKey = process.env['TAVILY_API_KEY'];
+  if (!apiKey) return { ok: false, error: "Web search is not configured" };
+
+  const query = String(args['query'] ?? "").trim();
+  if (!query) return { ok: false, error: "query is required" };
+
+  const maxResults = Math.min(Math.max(Number(args['maxResults'] ?? 5) || 5, 1), 20);
+  const includeAnswer = Boolean(args['includeAnswer'] ?? false);
+
+  try {
+    const tv = tavily({ apiKey });
+    const searchOptions: { maxResults: number; includeAnswer?: "basic" | "advanced"; searchDepth: "basic" } = {
+      maxResults,
+      searchDepth: "basic",
+    };
+    if (includeAnswer) searchOptions.includeAnswer = "basic";
+    const res = await tv.search(query, searchOptions);
+
+    return ok({
+      query,
+      results: (res.results ?? []).map((r) => ({
+        title: r.title ?? "",
+        url: r.url ?? "",
+        content: r.content ?? "",
+        score: r.score ?? 0,
+      })),
+      answer: typeof res.answer === "string" ? res.answer : null,
+      searchedAt: new Date().toISOString(),
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Web search failed" };
+  }
+}
+
+/**
+ * Real semantic knowledge-base search over workspace documents using pgvector.
+ * Embeds the query through the Lovable AI Gateway, then queries tenant-scoped chunks.
+ */
+async function searchKnowledgeBase(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const query = String(args['query'] ?? "").trim();
+  if (!query) return { ok: false, error: "query is required" };
+
+  const orgId = typeof args['orgId'] === "string" ? args['orgId'] : null;
+  if (!orgId) return { ok: false, error: "orgId is required for knowledge base search" };
+
+  const maxResults = Math.min(Math.max(Number(args['maxResults'] ?? 5) || 5, 1), 20);
+  const documentIds = Array.isArray(args['documentIds']) ? (args['documentIds'] as unknown[]).map(String) : null;
+
+  const apiKey = process.env['LOVABLE_API_KEY'];
+  if (!apiKey) return { ok: false, error: "Knowledge base search is temporarily unavailable" };
+
+  try {
+    const gateway = createLovableAiGatewayProvider(apiKey);
+    const embedRes = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
+      method: "POST",
+      headers: {
+        "Lovable-API-Key": apiKey,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "openai/text-embedding-3-large",
+        input: query,
+      }),
+    });
+    if (!embedRes.ok) {
+      const body = await embedRes.text();
+      return { ok: false, error: `Embedding failed [${embedRes.status}]: ${body.slice(0, 200)}` };
+    }
+    const embedJson = (await embedRes.json()) as { data?: { embedding: number[] }[] };
+    const embedding = embedJson.data?.[0]?.embedding;
+    if (!embedding || embedding.length !== 3072) {
+      return { ok: false, error: "Invalid embedding response from model gateway" };
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const params: {
+      _org_id: string;
+      _query_embedding: string;
+      _match_count: number;
+      _document_ids?: string[];
+    } = {
+      _org_id: orgId,
+      _query_embedding: `[${embedding.join(",")}]`,
+      _match_count: maxResults,
+    };
+    if (documentIds?.length) params._document_ids = documentIds;
+    const { data, error } = await supabaseAdmin.rpc("match_document_chunks", params);
+    if (error) {
+      return { ok: false, error: `Search failed: ${error.message}` };
+    }
+
+    const matches = (data ?? []) as Array<{
+      id: string;
+      document_id: string;
+      chunk_index: number;
+      content: string;
+      metadata: Record<string, unknown>;
+      similarity: number;
+    }>;
+
+    // Fetch document titles for the matched chunks.
+    const docIds = [...new Set(matches.map((m) => m.document_id))];
+    const { data: docs } = await supabaseAdmin
+      .from("documents")
+      .select("id, title, source_url")
+      .in("id", docIds.length ? docIds : ["00000000-0000-0000-0000-000000000000"]);
+    const docMap = Object.fromEntries((docs ?? []).map((d) => [d.id as string, d as { title?: string; source_url?: string | null }]));
+
+    return ok({
+      query,
+      matches: matches.map((m) => ({
+        documentId: m.document_id,
+        chunkIndex: m.chunk_index,
+        title: docMap[m.document_id]?.title ?? "Untitled",
+        sourceUrl: docMap[m.document_id]?.source_url ?? null,
+        content: m.content,
+        similarity: m.similarity,
+      })),
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Knowledge base search failed" };
+  }
+}
+
 export async function runTool(
   name: string,
   args: Record<string, unknown>,
@@ -301,6 +463,10 @@ export async function runTool(
       return crawlSite(args);
     case "extract_structured":
       return extractStructured(args);
+    case "search_web":
+      return searchWeb(args);
+    case "search_knowledge_base":
+      return searchKnowledgeBase(args);
     case "sandbox_search_knowledge_base": {
       const q = String(args['query'] ?? "").toLowerCase();
       const hits = KB.filter(

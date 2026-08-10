@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { resolveTool } from "@/lib/agent/contracts";
-import { runTool } from "@/lib/agent/tools.server";
+import { recordToolTrace, runTool } from "@/lib/agent/tools.server";
 import { apiError, json, preflight, toolDescriptor } from "@/lib/api/catalog.server";
 import {
   CONFIRMATION_HEADER,
@@ -51,6 +51,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
       POST: async ({ params, request }) => {
         const requestId = crypto.randomUUID();
         const started = Date.now();
+        const toolStartedAt = new Date();
         const origin = new URL(request.url).origin;
         // Deprecated pre-sandbox names still resolve, but everything downstream
         // (metering, confirmations, audit) uses the canonical name.
@@ -364,32 +365,63 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         const reserved = reservation;
 
         let result: Record<string, unknown>;
+        let toolError: string | null = null;
         try {
-          result = await runTool(toolName, parsed.data);
+          result = await runTool(toolName, { ...parsed.data, orgId: identity.orgId });
         } catch (e) {
-          const message = e instanceof Error ? e.message : "Tool execution failed";
+          toolError = e instanceof Error ? e.message : "Tool execution failed";
+          await recordToolTrace({
+            orgId: identity.orgId,
+            requestId,
+            toolName,
+            args: parsed.data as Record<string, unknown>,
+            error: toolError,
+            creditsCharged: 0,
+            durationMs: Date.now() - toolStartedAt.getTime(),
+            startedAt: toolStartedAt,
+          });
           await releaseIdem();
           await refundReservedCredits(supabaseAdmin, reserved.usageEventId, "tool_failed");
-          log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message });
-          return apiError(502, "tool_failed", message);
+          log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message: toolError });
+          return apiError(502, "tool_failed", toolError);
         }
 
         // Tools report failure in-band as { ok: false, error }. Treat that the
         // same as a throw: refund the reservation and answer 502 tool_failed,
         // so a failed call never costs credits.
         if (result['ok'] === false) {
-          const message = String(result['error'] ?? "Tool execution failed");
+          toolError = String(result['error'] ?? "Tool execution failed");
+          await recordToolTrace({
+            orgId: identity.orgId,
+            requestId,
+            toolName,
+            args: parsed.data as Record<string, unknown>,
+            result,
+            error: toolError,
+            creditsCharged: 0,
+            durationMs: Date.now() - toolStartedAt.getTime(),
+            startedAt: toolStartedAt,
+          });
           await releaseIdem();
           await refundReservedCredits(supabaseAdmin, reserved.usageEventId, "tool_failed");
-          log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message });
-          return apiError(502, "tool_failed", message);
+          log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message: toolError });
+          return apiError(502, "tool_failed", toolError);
         }
-
 
         const latencyMs = Date.now() - started;
         await Promise.all([
           finalizeUsage(supabaseAdmin, reserved.usageEventId, latencyMs),
           touchKey(supabaseAdmin, identity.keyId),
+          recordToolTrace({
+            orgId: identity.orgId,
+            requestId,
+            toolName,
+            args: parsed.data as Record<string, unknown>,
+            result,
+            creditsCharged: tool.credits,
+            durationMs: Date.now() - toolStartedAt.getTime(),
+            startedAt: toolStartedAt,
+          }),
         ]);
 
         log("public_tool_call", {
