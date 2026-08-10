@@ -76,6 +76,8 @@ function SettingsPage() {
       confirmationDefault: data.confirmationDefault,
       jobRetentionDays: data.jobRetentionDays,
       messageRetentionDays: data.messageRetentionDays,
+      defaultModel: data.defaultModel,
+      costQualityTier: data.costQualityTier,
     });
   }, [data]);
 
