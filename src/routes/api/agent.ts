@@ -4,8 +4,14 @@ import { streamText, stepCountIs, tool, type ModelMessage } from "ai";
 import { z } from "zod";
 
 import { createLovableAiGatewayProvider, getLovableAiGatewayRunId } from "@/lib/ai-gateway.server";
-import { TOOL_CONTRACTS, TOOLS_BY_NAME, type AgentResponse, type ToolCallView } from "@/lib/agent/contracts";
+import {
+  TOOL_CONTRACTS,
+  TOOLS_BY_NAME,
+  type AgentResponse,
+  type ToolCallView,
+} from "@/lib/agent/contracts";
 import { recordToolTrace, runTool } from "@/lib/agent/tools.server";
+import { finalizeUsage, refundReservedCredits, reserveCredits } from "@/lib/api/metering.server";
 import { getOrgSettings } from "@/lib/api/settings.server";
 
 const DEFAULT_MODEL = "google/gemini-3.5-flash";
@@ -50,8 +56,8 @@ function jsonError(status: number, error: string, extra: Partial<AgentResponse> 
 }
 
 function userClient(token: string): SupabaseClient {
-  const url = process.env['SUPABASE_URL']!;
-  const key = process.env['SUPABASE_PUBLISHABLE_KEY']!;
+  const url = process.env["SUPABASE_URL"]!;
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: {
@@ -71,7 +77,65 @@ Side-effecting tools (sandbox_send_email, sandbox_update_crm_record, sandbox_cre
 when you call them: they are queued for explicit human approval. When a tool returns
 status "awaiting_confirmation", stop, do not retry it, and tell the user in one short sentence
 what you are about to do and that you need their approval.
+If a tool reports insufficient credits, do not retry it; tell the user to buy credits on the
+Billing page.
 Be concise. Use markdown. Never invent tool results.`;
+
+type MeteredRun = {
+  result: Record<string, unknown>;
+  status: "success" | "error";
+  error: string | null;
+};
+
+/**
+ * Chat-console parity with the public API and MCP runtime: credits are
+ * reserved atomically before the tool runs and refunded when it fails, so a
+ * failed call is free and a successful one is always charged.
+ */
+async function runToolMetered(
+  admin: SupabaseClient,
+  input: { orgId: string; toolName: string; args: Record<string, unknown>; requestId: string },
+): Promise<MeteredRun> {
+  const contract = TOOLS_BY_NAME[input.toolName];
+  const credits = contract?.credits ?? 0;
+
+  const reservation = await reserveCredits(admin, {
+    orgId: input.orgId,
+    keyId: null,
+    toolName: input.toolName,
+    credits,
+    requestId: input.requestId,
+  });
+
+  if (reservation.status === "insufficient") {
+    const error = `Insufficient credits: this call costs ${credits} and the workspace balance is ${reservation.balance}. Buy credits on the Billing page.`;
+    return { result: { ok: false, error }, status: "error", error };
+  }
+  if (reservation.status !== "ok") {
+    const error = "Credit metering is temporarily unavailable, try again shortly";
+    return { result: { ok: false, error }, status: "error", error };
+  }
+
+  const started = Date.now();
+  let result: Record<string, unknown>;
+  try {
+    result = await runTool(input.toolName, { ...input.args, orgId: input.orgId });
+  } catch (e) {
+    const error = e instanceof Error ? e.message : "Tool failed";
+    await refundReservedCredits(admin, reservation.usageEventId, "tool_failed");
+    return { result: { ok: false, error }, status: "error", error };
+  }
+
+  // In-band failures ({ ok: false }) are refunded too — a failed call is free.
+  if (result["ok"] === false) {
+    const error = String(result["error"] ?? "Tool failed");
+    await refundReservedCredits(admin, reservation.usageEventId, "tool_failed");
+    return { result, status: "error", error };
+  }
+
+  await finalizeUsage(admin, reservation.usageEventId, Date.now() - started);
+  return { result, status: "success", error: null };
+}
 
 export const Route = createFileRoute("/api/agent")({
   server: {
@@ -94,7 +158,10 @@ export const Route = createFileRoute("/api/agent")({
         }
         const parsed = RequestSchema.safeParse(raw);
         if (!parsed.success) {
-          return jsonError(400, parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "));
+          return jsonError(
+            400,
+            parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "),
+          );
         }
         const input = parsed.data;
         if (!input.message && !input.confirm) {
@@ -201,7 +268,11 @@ export const Route = createFileRoute("/api/agent")({
           if (!input.confirm.approved) {
             await supabase
               .from("tool_calls")
-              .update({ status: "denied", decided_at: new Date().toISOString(), decided_by: user.id })
+              .update({
+                status: "denied",
+                decided_at: new Date().toISOString(),
+                decided_by: user.id,
+              })
               .eq("id", pending.id);
             await supabase.from("audit_logs").insert({
               org_id: input.orgId,
@@ -227,13 +298,18 @@ export const Route = createFileRoute("/api/agent")({
               tool_name: pending.tool_name,
               payload: { toolCallId: pending.id, args: pending.args, requestId },
             });
-            try {
-              const result = await runTool(pending.tool_name, pending.args ?? {});
+            const run = await runToolMetered(supabaseAdmin, {
+              orgId: input.orgId,
+              toolName: pending.tool_name,
+              args: (pending.args ?? {}) as Record<string, unknown>,
+              requestId,
+            });
+            if (run.status === "success") {
               await supabase
                 .from("tool_calls")
                 .update({
                   status: "success",
-                  result,
+                  result: run.result,
                   decided_at: new Date().toISOString(),
                   decided_by: user.id,
                 })
@@ -243,22 +319,27 @@ export const Route = createFileRoute("/api/agent")({
                 user_id: user.id,
                 action: "tool.executed",
                 tool_name: pending.tool_name,
-                payload: { toolCallId: pending.id, result, requestId },
+                payload: { toolCallId: pending.id, result: run.result, requestId },
               });
               emittedToolCalls.push({
                 id: pending.id,
                 toolName: pending.tool_name,
                 args: pending.args ?? {},
-                result,
+                result: run.result,
                 status: "success",
                 sideEffecting: true,
                 error: null,
               });
-            } catch (e) {
-              const message = e instanceof Error ? e.message : "Tool failed";
+            } else {
+              const message = run.error ?? "Tool failed";
               await supabase
                 .from("tool_calls")
-                .update({ status: "error", error: message, decided_at: new Date().toISOString(), decided_by: user.id })
+                .update({
+                  status: "error",
+                  error: message,
+                  decided_at: new Date().toISOString(),
+                  decided_by: user.id,
+                })
                 .eq("id", pending.id);
               await supabase.from("audit_logs").insert({
                 org_id: input.orgId,
@@ -319,7 +400,7 @@ export const Route = createFileRoute("/api/agent")({
           });
         }
 
-        const apiKey = process.env['LOVABLE_API_KEY'];
+        const apiKey = process.env["LOVABLE_API_KEY"];
         if (!apiKey) {
           await finish({
             conversationId,
@@ -410,16 +491,15 @@ export const Route = createFileRoute("/api/agent")({
                       };
                     }
 
-                    let result: Record<string, unknown>;
-                    let status: ToolCallView["status"] = "success";
-                    let error: string | null = null;
-                    try {
-                      result = await runTool(contract.name, { ...args, orgId: input.orgId });
-                    } catch (e) {
-                      error = e instanceof Error ? e.message : "Tool failed";
-                      status = "error";
-                      result = { ok: false, error };
-                    }
+                    const run = await runToolMetered(supabaseAdmin, {
+                      orgId: input.orgId,
+                      toolName: contract.name,
+                      args,
+                      requestId,
+                    });
+                    const result = run.result;
+                    const status: ToolCallView["status"] = run.status;
+                    const error = run.error;
                     const { data: row } = await supabase
                       .from("tool_calls")
                       .insert({

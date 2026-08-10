@@ -70,3 +70,20 @@ export function verifyWebhookEvent(rawBody: string, signature: string): Stripe.E
   if (!secret) throw new Error("Stripe webhook secret is not configured");
   return stripeClient().webhooks.constructEvent(rawBody, signature, secret);
 }
+
+/** Resolves the Checkout Session a payment intent belongs to, for refund handling. */
+export async function findSessionByPaymentIntent(
+  paymentIntentId: string,
+): Promise<Stripe.Checkout.Session | null> {
+  const sessions = await stripeClient().checkout.sessions.list({
+    payment_intent: paymentIntentId,
+    limit: 1,
+  });
+  return sessions.data[0] ?? null;
+}
+
+/** Lists the individual refunds on a charge (each is clawed back once, by refund id). */
+export async function listChargeRefunds(chargeId: string): Promise<Stripe.Refund[]> {
+  const refunds = await stripeClient().refunds.list({ charge: chargeId, limit: 100 });
+  return refunds.data;
+}

@@ -25,7 +25,7 @@ const FAQ = [
   },
   {
     q: "How do I pay?",
-    a: "Agent Relay Console sells credits directly. Payments are settled in USDC on Base over the x402 protocol — an agent can top itself up with no human in the loop — or by invoice for larger purchases. Contact support@3bi.ai for invoicing.",
+    a: "Agent Relay Console sells credits directly. Pay by card from the console billing page, or settle in USDC on Base over the x402 protocol — an agent can top itself up with no human in the loop. For larger purchases we can invoice instead; contact support@3bi.ai.",
   },
 ];
 

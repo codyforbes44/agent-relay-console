@@ -7,10 +7,10 @@ import { publicHead } from "@/lib/site";
 export const Route = createFileRoute("/privacy")({
   head: () =>
     publicHead({
-      path: '/privacy',
-      title: 'Privacy Notice — RELAY',
+      path: "/privacy",
+      title: "Privacy Notice — RELAY",
       description:
-        'How Agent Relay Console collects, uses, shares and retains personal data for its metered agent tool API, and the rights you have over that data.',
+        "How Agent Relay Console collects, uses, shares and retains personal data for its metered agent tool API, and the rights you have over that data.",
     }),
   component: PrivacyPage,
 });
@@ -63,8 +63,9 @@ function PrivacyPage() {
               </li>
             </ul>
             <p className="mt-2">
-              Payment card details are never collected or stored by us; they are handled by our
-              Merchant of Record.
+              Payment card details are never collected or stored by us; card payments are processed
+              by our payment processor, Stripe, which handles your card data under its own privacy
+              policy.
             </p>
           </Section>
 
@@ -77,9 +78,11 @@ function PrivacyPage() {
               </li>
               <li>
                 <strong className="text-foreground">Payment and settlement records</strong> — we
-                sell credits directly and record our own billing data. Payments settled in USDC on
-                the Base network are recorded on a public blockchain, including the paying wallet
-                address, amount and transaction hash; we cannot alter or delete that public record.
+                sell credits directly and record our own billing data. Card payments are processed
+                by Stripe, which receives the data needed to complete the transaction. Payments
+                settled in USDC on the Base network are recorded on a public blockchain, including
+                the paying wallet address, amount and transaction hash; we cannot alter or delete
+                that public record.
               </li>
               <li>
                 <strong className="text-foreground">Professional advisers</strong> such as legal and
@@ -95,18 +98,18 @@ function PrivacyPage() {
 
           <Section title="4. International transfers">
             <p>
-              Our providers may process data outside your country, including outside the UK and
-              EEA. Where that happens we rely on appropriate safeguards such as adequacy decisions
-              or Standard Contractual Clauses.
+              Our providers may process data outside your country, including outside the UK and EEA.
+              Where that happens we rely on appropriate safeguards such as adequacy decisions or
+              Standard Contractual Clauses.
             </p>
           </Section>
 
           <Section title="5. Retention">
             <p>
               Account, conversation and usage records are kept for as long as your account is
-              active. After account closure we delete or anonymise personal data within a
-              reasonable period, except where we must keep records longer to meet legal, tax or
-              accounting obligations, or to resolve disputes.
+              active. After account closure we delete or anonymise personal data within a reasonable
+              period, except where we must keep records longer to meet legal, tax or accounting
+              obligations, or to resolve disputes.
             </p>
           </Section>
 

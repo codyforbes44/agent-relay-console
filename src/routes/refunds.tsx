@@ -7,10 +7,10 @@ import { publicHead } from "@/lib/site";
 export const Route = createFileRoute("/refunds")({
   head: () =>
     publicHead({
-      path: '/refunds',
-      title: 'Refund Policy — RELAY',
+      path: "/refunds",
+      title: "Refund Policy — RELAY",
       description:
-        'Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases. Refunds are issued directly by us in USDC.',
+        "Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases. Refunds are issued directly by us to your original payment method.",
     }),
   component: RefundsPage,
 });
@@ -25,9 +25,10 @@ function RefundsPage() {
 
         <div className="mt-8 space-y-6 text-sm leading-relaxed text-muted-foreground">
           <p>
-            Agent Relay Console offers a <strong className="text-foreground">30-day
-            money-back guarantee</strong> on credit pack purchases. If you are not satisfied with
-            your purchase, you can request a full refund within 30 days of your order date.
+            Agent Relay Console offers a{" "}
+            <strong className="text-foreground">30-day money-back guarantee</strong> on credit pack
+            purchases. If you are not satisfied with your purchase, you can request a full refund
+            within 30 days of your order date.
           </p>
 
           <div>
@@ -46,13 +47,14 @@ function RefundsPage() {
           <div>
             <h2 className="mb-2 text-base font-medium text-foreground">How refunds are issued</h2>
             <p>
-              Approved refunds are returned in USDC to the wallet address that paid for the
-              purchase, or as a credit note against your invoice if you paid by invoice. Any credits
-              granted by the refunded purchase are removed from your workspace balance. On-chain
-              refunds usually settle within one business day of approval.
+              Approved refunds are returned to the original payment method: card purchases are
+              refunded to the card used at checkout, USDC purchases are returned to the wallet
+              address that paid, and invoice purchases receive a credit note. Any credits granted by
+              the refunded purchase are removed from your workspace balance. Card refunds typically
+              appear within 5–10 business days depending on your bank; on-chain refunds usually
+              settle within one business day of approval.
             </p>
           </div>
-
 
           <div>
             <h2 className="mb-2 text-base font-medium text-foreground">Free credits</h2>

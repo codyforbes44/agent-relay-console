@@ -1,10 +1,102 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
 
-import { verifyWebhookEvent } from "@/lib/api/stripe.server";
+import {
+  findSessionByPaymentIntent,
+  listChargeRefunds,
+  verifyWebhookEvent,
+} from "@/lib/api/stripe.server";
 
 function log(event: string, fields: Record<string, unknown>) {
   console.log(JSON.stringify({ event, at: new Date().toISOString(), ...fields }));
+}
+
+/**
+ * Claws back credits for a refunded card purchase. Each Stripe refund is
+ * written once, keyed by (source, external_ref) = ('stripe', refund.id), so
+ * webhook replays and repeated charge.refunded events (e.g. a second partial
+ * refund) never double-deduct. Partial refunds remove a proportional share of
+ * the purchased credits. The balance may go negative when credits were
+ * already spent — that is intentional: the workspace owes the difference.
+ */
+async function handleChargeRefunded(charge: Stripe.Charge): Promise<Response> {
+  const paymentIntentId =
+    typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+  if (!paymentIntentId) {
+    log("stripe_refund_no_intent", { chargeId: charge.id });
+    return Response.json({ received: true, ignored: "no payment intent" });
+  }
+
+  const session = await findSessionByPaymentIntent(paymentIntentId);
+  if (!session) {
+    // Not a Checkout purchase we know how to attribute; acknowledge and log.
+    log("stripe_refund_no_session", { chargeId: charge.id, paymentIntentId });
+    return Response.json({ received: true, ignored: "no session for payment intent" });
+  }
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: purchase } = await supabaseAdmin
+    .from("credit_purchases")
+    .select("org_id, user_id, credits, amount_cents")
+    .eq("transaction_id", session.id)
+    .maybeSingle();
+
+  if (!purchase) {
+    log("stripe_refund_no_purchase", { chargeId: charge.id, sessionId: session.id });
+    return Response.json({ received: true, ignored: "no recorded purchase" });
+  }
+
+  const chargedCents = purchase.amount_cents ?? charge.amount;
+  const refunds = await listChargeRefunds(charge.id);
+  let clawedBack = 0;
+
+  for (const refund of refunds) {
+    if (refund.status !== "succeeded") continue;
+    const creditsToRemove = Math.min(
+      purchase.credits,
+      Math.round((purchase.credits * refund.amount) / Math.max(chargedCents, 1)),
+    );
+    if (creditsToRemove <= 0) continue;
+
+    const { error } = await supabaseAdmin.from("credit_ledger").insert({
+      org_id: purchase.org_id,
+      delta: -creditsToRemove,
+      kind: "refund",
+      source: "stripe",
+      external_ref: refund.id,
+      description: `Card refund — ${creditsToRemove.toLocaleString()} credits removed (${session.id})`,
+    });
+    // Unique violation = this refund was already clawed back; skip silently.
+    if (error) {
+      if (!error.message.includes("duplicate key")) {
+        log("stripe_refund_ledger_failed", { refundId: refund.id, message: error.message });
+        return Response.json({ error: "ledger write failed" }, { status: 500 });
+      }
+      continue;
+    }
+
+    clawedBack += creditsToRemove;
+    await supabaseAdmin.from("audit_logs").insert({
+      org_id: purchase.org_id,
+      user_id: purchase.user_id,
+      action: "credits.refunded",
+      payload: {
+        source: "stripe",
+        sessionId: session.id,
+        refundId: refund.id,
+        amountCents: refund.amount,
+        creditsRemoved: creditsToRemove,
+      },
+    });
+  }
+
+  log("stripe_refund_processed", {
+    chargeId: charge.id,
+    sessionId: session.id,
+    orgId: purchase.org_id,
+    creditsRemoved: clawedBack,
+  });
+  return Response.json({ received: true, creditsRemoved: clawedBack });
 }
 
 /**
@@ -31,6 +123,10 @@ export const Route = createFileRoute("/api/stripe/webhook")({
             message: e instanceof Error ? e.message : String(e),
           });
           return Response.json({ error: "invalid signature" }, { status: 400 });
+        }
+
+        if (event.type === "charge.refunded") {
+          return handleChargeRefunded(event.data.object);
         }
 
         if (event.type !== "checkout.session.completed") {

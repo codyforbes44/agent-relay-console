@@ -57,6 +57,9 @@ export const updateOrgToolSetting = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!membership) throw new Error("No workspace found");
+    if (membership.role !== "owner" && membership.role !== "admin") {
+      throw new Error("Only workspace owners and admins can change tool visibility");
+    }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await setToolEnabled(supabaseAdmin, membership.org_id, data.toolName, data.enabled);

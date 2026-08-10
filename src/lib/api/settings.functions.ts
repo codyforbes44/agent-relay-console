@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -34,7 +35,7 @@ const settingsSchema = z.object({
 
 export type OrgSettingsInput = z.infer<typeof settingsSchema>;
 
-async function currentMembership(supabase: any, userId: string) {
+async function currentMembership(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
     .from("org_members")
     .select("org_id, role")
@@ -45,6 +46,13 @@ async function currentMembership(supabase: any, userId: string) {
   if (error) throw new Error(error.message);
   if (!data) throw new Error("No workspace found");
   return data as { org_id: string; role: string };
+}
+
+/** Settings changes (including disabling the confirmation gate) are owner/admin only. */
+function requireManagerRole(role: string) {
+  if (role !== "owner" && role !== "admin") {
+    throw new Error("Only workspace owners and admins can change settings");
+  }
 }
 
 export const getWorkspaceSettings = createServerFn({ method: "GET" })
@@ -65,6 +73,7 @@ export const updateWorkspaceSettings = createServerFn({ method: "POST" })
   .inputValidator((input: OrgSettingsInput) => settingsSchema.parse(input))
   .handler(async ({ data, context }) => {
     const membership = await currentMembership(context.supabase, context.userId);
+    requireManagerRole(membership.role);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { error } = await supabaseAdmin.from("org_settings").upsert(

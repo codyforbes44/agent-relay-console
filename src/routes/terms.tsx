@@ -7,10 +7,10 @@ import { publicHead } from "@/lib/site";
 export const Route = createFileRoute("/terms")({
   head: () =>
     publicHead({
-      path: '/terms',
-      title: 'Terms & Conditions — RELAY',
+      path: "/terms",
+      title: "Terms & Conditions — RELAY",
       description:
-        'The terms governing use of the Agent Relay Console metered agent tool API, including acceptable use, IP ownership, billing and termination.',
+        "The terms governing use of the Agent Relay Console metered agent tool API, including acceptable use, IP ownership, billing and termination.",
     }),
   component: TermsPage,
 });
@@ -82,21 +82,21 @@ function TermsPage() {
               We retain all right, title and interest in the Service, including its software,
               documentation, tool catalog and branding. You receive a limited, non-exclusive,
               non-transferable right to use the Service in accordance with these terms and your
-              credit balance. You retain ownership of the content you submit, and grant us a
-              limited licence to host and process it solely to provide the Service.
+              credit balance. You retain ownership of the content you submit, and grant us a limited
+              licence to host and process it solely to provide the Service.
             </p>
           </Section>
 
           <Section title="6. Payment, billing and tax">
             <p>
               Credits are sold directly by Agent Relay Console as one-time packs at the prices shown
-              on our pricing page. Prices are quoted in US dollars and settled in USDC on the Base
-              network using the x402 payment protocol, or by invoice where we have agreed that in
-              advance. There is no subscription and no automatic renewal; you buy credits only when
-              you choose to. Prices exclude any sales tax or VAT that may apply, and you are
-              responsible for any taxes arising from your purchase other than taxes on our income.
-              Credits are consumed per successful tool call and do not expire. Refunds are governed
-              by our refund policy.
+              on our pricing page. Prices are quoted in US dollars and payable by card through our
+              payment processor, in USDC on the Base network using the x402 payment protocol, or by
+              invoice where we have agreed that in advance. There is no subscription and no
+              automatic renewal; you buy credits only when you choose to. Prices exclude any sales
+              tax or VAT that may apply, and you are responsible for any taxes arising from your
+              purchase other than taxes on our income. Credits are consumed per successful tool call
+              and do not expire. Refunds are governed by our refund policy.
             </p>
           </Section>
 
