@@ -70,11 +70,13 @@ automation, no password, no email verification loop.
 ## Catalog
 
 Live tools (demo=false) do real work and cost credits: fetch_url (outbound HTTPS fetch + text extraction),
-crawl_site (same-origin multi-page fetch) and extract_structured (model-backed field extraction from a URL or text).
-Every sandbox_* tool is free (0 credits), returns fixture data (demo=true) and changes nothing; they exist so agents can
-rehearse auth, schemas, idempotency and the two-step confirmation gate. The pre-rename names (search_knowledge_base,
-lookup_crm_contact, list_records, send_email, update_crm_record, create_payment, delete_record) still resolve to their
-sandbox_* equivalents and return a "deprecated" pointer. Workspace owners can disable individual tools in the console.
+crawl_site (same-origin multi-page fetch), extract_structured (model-backed field extraction from a URL or text),
+search_web (Tavily-powered web search with optional AI answer), and search_knowledge_base (semantic vector search
+over documents uploaded to the workspace knowledge base). Every sandbox_* tool is free (0 credits), returns fixture
+data (demo=true) and changes nothing; they exist so agents can rehearse auth, schemas, idempotency and the two-step
+confirmation gate. The pre-rename names (search_knowledge_base, lookup_crm_contact, list_records, send_email,
+update_crm_record, create_payment, delete_record) still resolve to their sandbox_* equivalents and return a "deprecated"
+pointer. Workspace owners can disable individual tools in the console.
 
 ${tools}
 `;
