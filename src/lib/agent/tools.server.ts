@@ -309,11 +309,12 @@ async function searchWeb(args: Record<string, unknown>): Promise<Record<string, 
 
   try {
     const tv = tavily({ apiKey });
-    const res = await tv.search(query, {
+    const searchOptions: { maxResults: number; includeAnswer?: "basic" | "advanced"; searchDepth: "basic" } = {
       maxResults,
-      includeAnswer: includeAnswer ? "basic" : undefined,
       searchDepth: "basic",
-    });
+    };
+    if (includeAnswer) searchOptions.includeAnswer = "basic";
+    const res = await tv.search(query, searchOptions);
 
     return ok({
       query,
