@@ -51,6 +51,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
       POST: async ({ params, request }) => {
         const requestId = crypto.randomUUID();
         const started = Date.now();
+        const toolStartedAt = new Date();
         const origin = new URL(request.url).origin;
         // Deprecated pre-sandbox names still resolve, but everything downstream
         // (metering, confirmations, audit) uses the canonical name.
