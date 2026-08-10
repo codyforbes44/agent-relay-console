@@ -23,7 +23,9 @@ export const getAdminOverview = createServerFn({ method: "GET" })
     const [orgs, profiles, keys, usage, ledger, purchases, audit] = await Promise.all([
       supabase.from("organizations").select("id, name, slug, created_at, created_by"),
       supabase.from("profiles").select("id, email, display_name, created_at"),
-      supabase.from("agent_keys").select("id, org_id, label, key_prefix, revoked_at, last_used_at, created_at"),
+      supabase
+        .from("agent_keys")
+        .select("id, org_id, label, key_prefix, revoked_at, last_used_at, created_at"),
       supabase
         .from("usage_events")
         .select("id, org_id, tool_name, credits, status, error_code, latency_ms, created_at")
@@ -45,7 +47,6 @@ export const getAdminOverview = createServerFn({ method: "GET" })
     for (const r of [orgs, profiles, keys, usage, ledger, purchases, audit]) {
       if (r.error) throw new Error(r.error.message);
     }
-
 
     const balances = new Map<string, number>();
     for (const row of ledger.data ?? []) {
@@ -90,7 +91,10 @@ export const adminAdjustCredits = createServerFn({ method: "POST" })
     z
       .object({
         orgId: z.string().uuid(),
-        delta: z.number().int().refine((n) => n !== 0, "Delta must be non-zero"),
+        delta: z
+          .number()
+          .int()
+          .refine((n) => n !== 0, "Delta must be non-zero"),
         reason: z.string().trim().min(1).max(200),
       })
       .parse(input),
@@ -126,14 +130,15 @@ export const adminRevokeKey = createServerFn({ method: "POST" })
 
 export const adminSetRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { userId: string; role: "super_admin" | "admin" | "member"; grant: boolean }) =>
-    z
-      .object({
-        userId: z.string().uuid(),
-        role: z.enum(["super_admin", "admin", "member"]),
-        grant: z.boolean(),
-      })
-      .parse(input),
+  .inputValidator(
+    (input: { userId: string; role: "super_admin" | "admin" | "member"; grant: boolean }) =>
+      z
+        .object({
+          userId: z.string().uuid(),
+          role: z.enum(["super_admin", "admin", "member"]),
+          grant: z.boolean(),
+        })
+        .parse(input),
   )
   .handler(async ({ data, context }) => {
     const guard = await context.supabase.rpc("is_super_admin");

@@ -21,7 +21,7 @@ Reading of the landscape:
 - **Skyfire / KYA — adopt the idea, not the vendor, now.** The valuable part is a verifiable claim that "this agent acts for this principal, under these limits." RELAY can issue that itself from `agent_keys` today and federate later.
 - **Rye / universal checkout — out of scope.** RELAY is the merchant, not the buyer.
 
-The strategic point: RELAY's differentiator is being *payable by a machine*, not just callable by one. Spend controls are half the product — a merchant that lets an agent pay is useless if the agent's owner cannot bound the damage.
+The strategic point: RELAY's differentiator is being _payable by a machine_, not just callable by one. Spend controls are half the product — a merchant that lets an agent pay is useless if the agent's owner cannot bound the damage.
 
 ## Phase 1 — Machine-payable 402 (the core)
 

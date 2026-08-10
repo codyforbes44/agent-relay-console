@@ -65,7 +65,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       truncated: false,
       fetchedAt: "2026-08-09T20:15:18.358Z",
     },
-    summarize: (a) => str(a['url']),
+    summarize: (a) => str(a["url"]),
   },
   {
     // Real crawl: same-origin pages only, sequential, hard page cap.
@@ -102,7 +102,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       ],
       crawledAt: "2026-08-09T20:15:18.358Z",
     },
-    summarize: (a) => `${str(a['url'])} · ${Number(a['maxPages'] ?? 3)} pages`,
+    summarize: (a) => `${str(a["url"])} · ${Number(a["maxPages"] ?? 3)} pages`,
   },
   {
     // Real model-backed extraction. The provider key stays server-side.
@@ -118,8 +118,11 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     schema: z.object({
       fields: z
         .array(z.string())
-        .describe("Field names to extract, e.g. [\"companyName\", \"pricingModel\"]"),
-      url: z.string().optional().describe("Absolute https:// URL to read. Required unless text is given"),
+        .describe('Field names to extract, e.g. ["companyName", "pricingModel"]'),
+      url: z
+        .string()
+        .optional()
+        .describe("Absolute https:// URL to read. Required unless text is given"),
       text: z.string().optional().describe("Raw text to extract from instead of fetching a URL"),
       instruction: z.string().optional().describe("Optional extra guidance for the extraction"),
     }) as unknown as z.ZodType<Record<string, unknown>>,
@@ -132,7 +135,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       extractedAt: "2026-08-09T20:15:18.358Z",
     },
     summarize: (a) =>
-      `${Array.isArray(a['fields']) ? (a['fields'] as unknown[]).length : 0} fields${a['url'] ? ` · ${str(a['url'])}` : ""}`,
+      `${Array.isArray(a["fields"]) ? (a["fields"] as unknown[]).length : 0} fields${a["url"] ? ` · ${str(a["url"])}` : ""}`,
   },
   {
     // Real web search: Tavily returns ranked results with citations for agents.
@@ -147,8 +150,14 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     demo: false,
     schema: z.object({
       query: z.string().describe("Natural language search query"),
-      maxResults: z.number().optional().describe("Number of results to return, 1-20. Defaults to 5"),
-      includeAnswer: z.boolean().optional().describe("Include a short AI-generated answer based on the results. Defaults to false"),
+      maxResults: z
+        .number()
+        .optional()
+        .describe("Number of results to return, 1-20. Defaults to 5"),
+      includeAnswer: z
+        .boolean()
+        .optional()
+        .describe("Include a short AI-generated answer based on the results. Defaults to false"),
     }) as unknown as z.ZodType<Record<string, unknown>>,
     example: { query: "x402 payment protocol summary" },
     exampleResult: {
@@ -165,7 +174,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       answer: "x402 lets servers request on-chain payment by returning HTTP 402.",
       searchedAt: "2026-08-09T20:15:18.358Z",
     },
-    summarize: (a) => `"${str(a['query'])}"`,
+    summarize: (a) => `"${str(a["query"])}"`,
   },
   {
     // Real vector knowledge base: tenant-scoped semantic search over uploaded documents.
@@ -181,7 +190,10 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     schema: z.object({
       query: z.string().describe("Natural language search query"),
       maxResults: z.number().optional().describe("Number of chunks to return, 1-20. Defaults to 5"),
-      documentIds: z.array(z.string()).optional().describe("Optional list of document IDs to restrict the search to"),
+      documentIds: z
+        .array(z.string())
+        .optional()
+        .describe("Optional list of document IDs to restrict the search to"),
     }) as unknown as z.ZodType<Record<string, unknown>>,
     example: { query: "refund policy" },
     exampleResult: {
@@ -197,7 +209,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
         },
       ],
     },
-    summarize: (a) => `"${str(a['query'])}"`,
+    summarize: (a) => `"${str(a["query"])}"`,
   },
   {
     // Real code execution in a sandboxed environment.
@@ -212,7 +224,10 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     demo: false,
     schema: z.object({
       code: z.string().describe("Python or JavaScript code to execute"),
-      language: z.enum(["python", "javascript"]).optional().describe("Language. Defaults to python"),
+      language: z
+        .enum(["python", "javascript"])
+        .optional()
+        .describe("Language. Defaults to python"),
       timeout: z.number().optional().describe("Timeout in seconds, 1-300. Defaults to 60"),
     }) as unknown as z.ZodType<Record<string, unknown>>,
     example: { code: "print('hello')", language: "python" },
@@ -224,7 +239,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       exitCode: 0,
       executedAt: "2026-08-09T20:15:18.358Z",
     },
-    summarize: (a) => `${str(a['language'] ?? "python")} snippet`,
+    summarize: (a) => `${str(a["language"] ?? "python")} snippet`,
   },
   {
     // Real browser automation: render a page in Browserbase's cloud browser and return the page text.
@@ -250,7 +265,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       text: "Example Domain\n\nThis domain is for use in illustrative examples...",
       finishedAt: "2026-08-09T20:15:18.358Z",
     },
-    summarize: (a) => str(a['url']),
+    summarize: (a) => str(a["url"]),
   },
 
   {
@@ -276,13 +291,12 @@ export const TOOL_CONTRACTS: ToolContract[] = [
         },
       ],
     },
-    summarize: (a) => `"${str(a['query'])}"`,
+    summarize: (a) => `"${str(a["query"])}"`,
   },
   {
     name: "sandbox_lookup_crm_contact",
     label: "Look up CRM contact (sandbox)",
-    description:
-      "Sandbox: returns a fixture CRM contact by email. Free — no real CRM is queried.",
+    description: "Sandbox: returns a fixture CRM contact by email. Free — no real CRM is queried.",
     sideEffecting: false,
     icon: "user",
     credits: 0,
@@ -303,7 +317,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
         mrr: 4200,
       },
     },
-    summarize: (a) => str(a['email']),
+    summarize: (a) => str(a["email"]),
   },
   {
     name: "sandbox_list_records",
@@ -332,7 +346,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       ],
       nextCursor: null,
     },
-    summarize: (a) => `${str(a['type'])}${a['status'] ? ` · ${str(a['status'])}` : ""}`,
+    summarize: (a) => `${str(a["type"])}${a["status"] ? ` · ${str(a["status"])}` : ""}`,
   },
   {
     name: "sandbox_send_email",
@@ -362,7 +376,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       subject: "Your invoice is ready",
       deliveredAt: "2026-08-09T20:15:18.358Z",
     },
-    summarize: (a) => `${str(a['to'])} — ${str(a['subject'])}`,
+    summarize: (a) => `${str(a["to"])} — ${str(a["subject"])}`,
   },
   {
     name: "sandbox_update_crm_record",
@@ -378,7 +392,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       recordId: z.string().describe("CRM record id"),
       fields: z
         .record(z.string(), z.unknown())
-        .describe("Object of field names to new values, e.g. { stage: \"churn_risk\" }"),
+        .describe('Object of field names to new values, e.g. { stage: "churn_risk" }'),
     }) as unknown as z.ZodType<Record<string, unknown>>,
     example: { recordId: "c_1024", fields: { stage: "churn_risk", owner: "ae_12" } },
     exampleResult: {
@@ -388,7 +402,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       updatedFields: { stage: "churn_risk", owner: "ae_12" },
       updatedAt: "2026-08-09T20:15:18.358Z",
     },
-    summarize: (a) => str(a['recordId']),
+    summarize: (a) => str(a["recordId"]),
   },
   {
     name: "sandbox_create_payment",
@@ -416,7 +430,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       status: "succeeded",
     },
     summarize: (a) =>
-      `${(Number(a['amountCents'] ?? 0) / 100).toFixed(2)} ${str(a['currency']).toUpperCase()} · ${str(a['customerId'])}`,
+      `${(Number(a["amountCents"] ?? 0) / 100).toFixed(2)} ${str(a["currency"]).toUpperCase()} · ${str(a["customerId"])}`,
   },
   {
     name: "sandbox_delete_record",
@@ -439,7 +453,7 @@ export const TOOL_CONTRACTS: ToolContract[] = [
       deleted: { type: "tickets", recordId: "t_51" },
       deletedAt: "2026-08-09T20:15:18.358Z",
     },
-    summarize: (a) => `${str(a['type'])} · ${str(a['recordId'])}`,
+    summarize: (a) => `${str(a["type"])} · ${str(a["recordId"])}`,
   },
 ];
 
@@ -476,7 +490,6 @@ export function resolveTool(name: string): {
 
 export const PUBLIC_TOOLS = TOOL_CONTRACTS.filter((t) => t.publicApi);
 
-
 /** Full example success envelope returned by POST /api/public/v1/tools/{name}. */
 export function exampleSuccessEnvelope(tool: ToolContract, balanceBefore = 500) {
   return {
@@ -490,12 +503,7 @@ export function exampleSuccessEnvelope(tool: ToolContract, balanceBefore = 500) 
 }
 
 export type ToolCallStatus =
-  | "pending"
-  | "awaiting_confirmation"
-  | "approved"
-  | "denied"
-  | "success"
-  | "error";
+  "pending" | "awaiting_confirmation" | "approved" | "denied" | "success" | "error";
 
 export type ToolCallView = {
   id: string;
@@ -508,11 +516,7 @@ export type ToolCallView = {
 };
 
 export type AgentStatus =
-  | "streaming"
-  | "awaiting_confirmation"
-  | "complete"
-  | "error"
-  | "cancelled";
+  "streaming" | "awaiting_confirmation" | "complete" | "error" | "cancelled";
 
 export type AgentResponse = {
   conversationId: string | null;

@@ -8,7 +8,6 @@ import { API_ERRORS, ERROR_ENVELOPE_EXAMPLE } from "@/lib/api/errors";
 import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
 import { SITE_URL, publicHead } from "@/lib/site";
 
-
 export const Route = createFileRoute("/docs")({
   head: () =>
     publicHead({
@@ -76,7 +75,6 @@ curl -X POST ${SITE_URL}/api/public/v1/tools/sandbox_send_email \\
         </Section>
 
         <Section title="0. Agents sign themselves up">
-
           <p className="mb-3 text-sm text-muted-foreground">
             No browser, no password, no email verification loop. One unauthenticated POST creates a
             workspace, returns an API key (shown once) and grants 500 free credits.
@@ -94,8 +92,8 @@ curl -X POST ${SITE_URL}/api/public/v1/tools/sandbox_send_email \\
           <p className="mt-3 text-sm text-muted-foreground">
             Signup is limited to 3 workspaces per address per 24h (
             <Mono>429 signup_rate_limited</Mono>). When credits run out, call{" "}
-            <Mono>POST /api/public/v1/claim</Mono> for a fresh one-hour claim URL and hand it to your
-            human operator: they sign in, take ownership of the workspace and buy credits. The
+            <Mono>POST /api/public/v1/claim</Mono> for a fresh one-hour claim URL and hand it to
+            your human operator: they sign in, take ownership of the workspace and buy credits. The
             agent&apos;s key keeps working throughout. Rotate a key with{" "}
             <Mono>POST /api/public/v1/keys/rotate</Mono> — the old key stays valid for 10 more
             minutes. Machine-readable version of this page: <Mono>{`${SITE_URL}/llms.txt`}</Mono>.
@@ -108,8 +106,9 @@ curl -X POST ${SITE_URL}/api/public/v1/tools/sandbox_send_email \\
             <a className="underline" href="https://x402.org" target="_blank" rel="noreferrer">
               x402
             </a>{" "}
-            spec: settle <Mono>accepts[0]</Mono> in USDC on Base, then retry the same request with an{" "}
-            <Mono>X-PAYMENT</Mono> header. Credits are added and the call executes in that one retry.
+            spec: settle <Mono>accepts[0]</Mono> in USDC on Base, then retry the same request with
+            an <Mono>X-PAYMENT</Mono> header. Credits are added and the call executes in that one
+            retry.
           </p>
           <Code>{`{
   "x402Version": 1,
@@ -149,7 +148,6 @@ curl -X POST ${SITE_URL}/api/public/v1/tools/sandbox_send_email \\
             the console.
           </p>
         </Section>
-
 
         <Section title="1. Discovery">
           <p className="mb-3 text-sm text-muted-foreground">
@@ -269,7 +267,9 @@ x-api-key: sk_agent_xxxxxxxx_...`}</Code>
                     </td>
                     <td className="px-3 py-2 text-muted-foreground">{e.cause}</td>
                     <td className="px-3 py-2 text-muted-foreground">{e.action}</td>
-                    <td className="px-3 py-2 text-muted-foreground">{e.retryable ? "yes" : "no"}</td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {e.retryable ? "yes" : "no"}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -289,20 +289,18 @@ x-api-key: sk_agent_xxxxxxxx_...`}</Code>
 
         <Section title="9. Starter catalog, examples & credit prices">
           <p className="mb-3 text-sm text-muted-foreground">
-            The catalog has two tiers. Live tools (<Mono>fetch_url</Mono>,{" "}
-            <Mono>crawl_site</Mono>, <Mono>extract_structured</Mono>,{" "}
-            <Mono>search_web</Mono>, <Mono>search_knowledge_base</Mono>,{" "}
-            <Mono>execute_code</Mono>, <Mono>browse_page</Mono>) do real network, model, vector search,
-            code execution and remote browser work, cost credits and return{" "}
-            <Mono>&quot;demo&quot;: false</Mono>.{" "}
+            The catalog has two tiers. Live tools (<Mono>fetch_url</Mono>, <Mono>crawl_site</Mono>,{" "}
+            <Mono>extract_structured</Mono>, <Mono>search_web</Mono>,{" "}
+            <Mono>search_knowledge_base</Mono>, <Mono>execute_code</Mono>, <Mono>browse_page</Mono>)
+            do real network, model, vector search, code execution and remote browser work, cost
+            credits and return <Mono>&quot;demo&quot;: false</Mono>.{" "}
             <Mono>search_knowledge_base</Mono> runs semantic search over documents uploaded to the
-            workspace knowledge base. <Mono>execute_code</Mono> runs Python or JavaScript in an isolated
-            E2B sandbox. <Mono>browse_page</Mono> renders a URL in a Browserbase cloud browser and returns
-            the markdown text. Every <Mono>sandbox_*</Mono> tool is free (0 credits), returns
-            fixture data with <Mono>&quot;demo&quot;: true</Mono> and changes nothing — use them to
-            rehearse auth, schemas, idempotency and the confirmation gate. Workspace owners can
-            disable any tool in the console.
-
+            workspace knowledge base. <Mono>execute_code</Mono> runs Python or JavaScript in an
+            isolated E2B sandbox. <Mono>browse_page</Mono> renders a URL in a Browserbase cloud
+            browser and returns the markdown text. Every <Mono>sandbox_*</Mono> tool is free (0
+            credits), returns fixture data with <Mono>&quot;demo&quot;: true</Mono> and changes
+            nothing — use them to rehearse auth, schemas, idempotency and the confirmation gate.
+            Workspace owners can disable any tool in the console.
           </p>
           <div className="space-y-4">
             {PUBLIC_TOOLS.map((t) => (
@@ -352,8 +350,8 @@ structuredContent: ${JSON.stringify({
           <p className="mt-3 text-xs text-muted-foreground">
             <Mono>sandbox_*</Mono> tools are free and return fixtures with{" "}
             <Mono>&quot;demo&quot;: true</Mono>. Their pre-rename names (e.g.{" "}
-            <Mono>send_email</Mono>) still resolve for now and answer with a{" "}
-            <Mono>deprecated</Mono> pointer to the new name.
+            <Mono>send_email</Mono>) still resolve for now and answer with a <Mono>deprecated</Mono>{" "}
+            pointer to the new name.
           </p>
           <h3 className="mt-6 text-sm font-medium text-foreground">What credits cost</h3>
           <ul className="mt-2 divide-y divide-border rounded-lg border border-border">
@@ -377,7 +375,6 @@ structuredContent: ${JSON.stringify({
           </p>
         </Section>
 
-
         <Section title="10. Security best practices for operators">
           <ul className="mt-2 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
             <li>
@@ -391,10 +388,11 @@ structuredContent: ${JSON.stringify({
               connection.
             </li>
             <li>
-              Side-effecting tools (sandbox_send_email, sandbox_update_crm_record, sandbox_create_payment, sandbox_delete_record)
-              always take two calls: an unconfirmed call that returns a preview and a single-use
-              token, then the confirmed call. Because the token is issued by the server and bound
-              to the previewed arguments, an agent cannot authorize itself in advance.
+              Side-effecting tools (sandbox_send_email, sandbox_update_crm_record,
+              sandbox_create_payment, sandbox_delete_record) always take two calls: an unconfirmed
+              call that returns a preview and a single-use token, then the confirmed call. Because
+              the token is issued by the server and bound to the previewed arguments, an agent
+              cannot authorize itself in advance.
             </li>
             <li>
               Rotate keys regularly. The rotation endpoint keeps the old key valid for 10 minutes,
@@ -414,7 +412,6 @@ structuredContent: ${JSON.stringify({
             metered against your workspace credits exactly like HTTP calls. Side-effecting tools are
             marked with the MCP <Mono>destructiveHint</Mono> annotation, so compliant clients ask
             the human to approve the call before it runs.
-
           </p>
           <Code>{`${SITE_URL}/mcp   # Streamable HTTP, OAuth 2.1 (dynamic client registration)`}</Code>
           <p className="mt-3 text-sm text-muted-foreground">
@@ -422,10 +419,10 @@ structuredContent: ${JSON.stringify({
             come back as JSON text plus <Mono>structuredContent</Mono> with the same{" "}
             <Mono>demo</Mono> and <Mono>credits</Mono> fields, and failures (including an exhausted
             balance) surface as an MCP tool error rather than an HTTP status code. The{" "}
-            <Mono>idempotency-key</Mono> header is HTTP-only. Confirmation is not: over MCP the
-            same gate is expressed as a <Mono>confirmation_token</Mono> argument — the first call
-            returns the preview and token as a tool error, the second call carries the token.
-            Usage from MCP appears in the same console usage history.
+            <Mono>idempotency-key</Mono> header is HTTP-only. Confirmation is not: over MCP the same
+            gate is expressed as a <Mono>confirmation_token</Mono> argument — the first call returns
+            the preview and token as a tool error, the second call carries the token. Usage from MCP
+            appears in the same console usage history.
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
             <strong>Tool visibility note:</strong> The MCP list-tools endpoint may show the full
@@ -434,7 +431,6 @@ structuredContent: ${JSON.stringify({
             disallowed tool returns a clear <Mono>tool_disabled</Mono> error instead of running.
           </p>
         </Section>
-
 
         <Section title="12. Account status">
           <Code>{`GET /api/public/v1/me
@@ -454,7 +450,6 @@ structuredContent: ${JSON.stringify({
             .
           </p>
         </Section>
-
       </main>
     </PublicShell>
   );

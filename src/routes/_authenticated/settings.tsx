@@ -169,7 +169,10 @@ function SettingsPage() {
                   <Select
                     value={form.confirmationDefault}
                     onValueChange={(v) =>
-                      setForm({ ...form, confirmationDefault: v as OrgSettingsInput["confirmationDefault"] })
+                      setForm({
+                        ...form,
+                        confirmationDefault: v as OrgSettingsInput["confirmationDefault"],
+                      })
                     }
                   >
                     <SelectTrigger className="max-w-md">
@@ -202,8 +205,8 @@ function SettingsPage() {
                 <CardHeader>
                   <CardTitle className="text-base font-medium">Model routing</CardTitle>
                   <CardDescription>
-                    Default model and cost/quality tier for the workspace chat agent. "Auto" lets the
-                    tier pick the model.
+                    Default model and cost/quality tier for the workspace chat agent. "Auto" lets
+                    the tier pick the model.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4 sm:grid-cols-2">
@@ -235,7 +238,10 @@ function SettingsPage() {
                     <Select
                       value={form.costQualityTier}
                       onValueChange={(v) =>
-                        setForm({ ...form, costQualityTier: v as OrgSettingsInput["costQualityTier"] })
+                        setForm({
+                          ...form,
+                          costQualityTier: v as OrgSettingsInput["costQualityTier"],
+                        })
                       }
                     >
                       <SelectTrigger id="costQualityTier">

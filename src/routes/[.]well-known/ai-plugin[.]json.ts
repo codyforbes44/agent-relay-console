@@ -24,7 +24,11 @@ export const Route = createFileRoute("/.well-known/ai-plugin.json")({
             authorization_type: "bearer",
             signup_url: `${origin}/api/public/v1/signup`,
           },
-          api: { type: "openapi", url: `${origin}/api/public/v1/openapi.json`, is_user_authenticated: true },
+          api: {
+            type: "openapi",
+            url: `${origin}/api/public/v1/openapi.json`,
+            is_user_authenticated: true,
+          },
           logo_url: `${origin}/favicon.png`,
           contact_email: "support@3bi.ai",
           legal_info_url: `${origin}/terms`,

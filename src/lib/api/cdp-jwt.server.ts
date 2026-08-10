@@ -77,7 +77,12 @@ export async function cdpJwt(
       );
 
   const now = Math.floor(Date.now() / 1000);
-  const header = { alg, kid: credentials.keyId, typ: "JWT", nonce: crypto.randomUUID().replace(/-/g, "") };
+  const header = {
+    alg,
+    kid: credentials.keyId,
+    typ: "JWT",
+    nonce: crypto.randomUUID().replace(/-/g, ""),
+  };
   const payload = {
     iss: "cdp",
     sub: credentials.keyId,

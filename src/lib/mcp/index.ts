@@ -13,7 +13,7 @@ import sandboxUpdateCrmRecord from "./tools/sandbox-update-crm-record";
 
 // The OAuth issuer must be the direct Supabase host; the project ref is the
 // only value that survives publish unchanged.
-const projectRef = import.meta.env['VITE_SUPABASE_PROJECT_ID'] ?? "project-ref-unset";
+const projectRef = import.meta.env["VITE_SUPABASE_PROJECT_ID"] ?? "project-ref-unset";
 
 export default defineMcp({
   name: "agent-hub",

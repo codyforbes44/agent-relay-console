@@ -39,15 +39,45 @@ export async function recordToolTrace(input: {
 }
 
 const CONTACTS = [
-  { id: "c_1024", name: "Dana Whitfield", email: "dana@northwind.io", company: "Northwind", stage: "customer", mrr: 4200 },
-  { id: "c_1088", name: "Marcus Lee", email: "marcus@lumenlabs.dev", company: "Lumen Labs", stage: "trial", mrr: 0 },
-  { id: "c_1131", name: "Priya Raman", email: "priya@fernbrook.co", company: "Fernbrook", stage: "customer", mrr: 890 },
+  {
+    id: "c_1024",
+    name: "Dana Whitfield",
+    email: "dana@northwind.io",
+    company: "Northwind",
+    stage: "customer",
+    mrr: 4200,
+  },
+  {
+    id: "c_1088",
+    name: "Marcus Lee",
+    email: "marcus@lumenlabs.dev",
+    company: "Lumen Labs",
+    stage: "trial",
+    mrr: 0,
+  },
+  {
+    id: "c_1131",
+    name: "Priya Raman",
+    email: "priya@fernbrook.co",
+    company: "Fernbrook",
+    stage: "customer",
+    mrr: 890,
+  },
 ];
 
 const KB = [
-  { title: "Refund policy", body: "Refunds are issued within 14 days of purchase for annual plans, pro-rated after that." },
-  { title: "Escalation runbook", body: "Sev-1 incidents page the on-call engineer and require a status page update within 15 minutes." },
-  { title: "Onboarding checklist", body: "New workspaces get a kickoff call, a sandbox tenant, and a 30-day success review." },
+  {
+    title: "Refund policy",
+    body: "Refunds are issued within 14 days of purchase for annual plans, pro-rated after that.",
+  },
+  {
+    title: "Escalation runbook",
+    body: "Sev-1 incidents page the on-call engineer and require a status page update within 15 minutes.",
+  },
+  {
+    title: "Onboarding checklist",
+    body: "New workspaces get a kickoff call, a sandbox tenant, and a 30-day success review.",
+  },
 ];
 
 function ok<T>(data: T) {
@@ -82,7 +112,7 @@ function htmlToText(html: string): { title: string | null; text: string } {
  * this metered tool can never be used to probe our own network.
  */
 async function fetchUrl(args: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const raw = String(args['url'] ?? "").trim();
+  const raw = String(args["url"] ?? "").trim();
   let target: URL;
   try {
     target = new URL(raw);
@@ -103,7 +133,7 @@ async function fetchUrl(args: Record<string, unknown>): Promise<Record<string, u
     host === "[::1]";
   if (blocked) return { ok: false, error: "That host is not reachable from this API" };
 
-  const maxChars = Math.min(Math.max(Number(args['maxChars'] ?? 8000) || 8000, 200), 50_000);
+  const maxChars = Math.min(Math.max(Number(args["maxChars"] ?? 8000) || 8000, 200), 50_000);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -161,17 +191,20 @@ async function fetchUrl(args: Record<string, unknown>): Promise<Record<string, u
 async function fetchReadable(
   rawUrl: string,
   maxChars: number,
-): Promise<{ ok: true; url: string; status: number; title: string | null; text: string } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; url: string; status: number; title: string | null; text: string }
+  | { ok: false; error: string }
+> {
   const result = (await fetchUrl({ url: rawUrl, maxChars })) as Record<string, unknown>;
-  if (result['ok'] !== true) {
-    return { ok: false, error: String(result['error'] ?? "Fetch failed") };
+  if (result["ok"] !== true) {
+    return { ok: false, error: String(result["error"] ?? "Fetch failed") };
   }
   return {
     ok: true,
-    url: String(result['url']),
-    status: Number(result['status']),
-    title: (result['title'] as string | null) ?? null,
-    text: String(result['text'] ?? ""),
+    url: String(result["url"]),
+    status: Number(result["status"]),
+    title: (result["title"] as string | null) ?? null,
+    text: String(result["text"] ?? ""),
   };
 }
 
@@ -183,7 +216,13 @@ function sameOriginLinks(html: string, base: URL, limit: number): string[] {
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) && out.length < limit) {
     const href = m[1];
-    if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("javascript:")) continue;
+    if (
+      !href ||
+      href.startsWith("#") ||
+      href.startsWith("mailto:") ||
+      href.startsWith("javascript:")
+    )
+      continue;
     let next: URL;
     try {
       next = new URL(href, base);
@@ -205,21 +244,27 @@ function sameOriginLinks(html: string, base: URL, limit: number): string[] {
  * Sequential by design: the target site sees one request at a time.
  */
 async function crawlSite(args: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const seed = String(args['url'] ?? "").trim();
+  const seed = String(args["url"] ?? "").trim();
   let base: URL;
   try {
     base = new URL(seed);
   } catch {
     return { ok: false, error: "url must be an absolute https:// URL" };
   }
-  const maxPages = Math.min(Math.max(Number(args['maxPages'] ?? 3) || 3, 1), 10);
-  const maxChars = Math.min(Math.max(Number(args['maxCharsPerPage'] ?? 4000) || 4000, 200), 20_000);
+  const maxPages = Math.min(Math.max(Number(args["maxPages"] ?? 3) || 3, 1), 10);
+  const maxChars = Math.min(Math.max(Number(args["maxCharsPerPage"] ?? 4000) || 4000, 200), 20_000);
 
   const first = await fetchReadable(base.toString(), maxChars);
   if (!first.ok) return { ok: false, error: first.error };
 
   const pages: Record<string, unknown>[] = [
-    { url: first.url, status: first.status, title: first.title, text: first.text, chars: first.text.length },
+    {
+      url: first.url,
+      status: first.status,
+      title: first.title,
+      text: first.text,
+      chars: first.text.length,
+    },
   ];
 
   if (maxPages > 1) {
@@ -240,7 +285,13 @@ async function crawlSite(args: Record<string, unknown>): Promise<Record<string, 
         pages.push({ url: link, error: page.error });
         continue;
       }
-      pages.push({ url: page.url, status: page.status, title: page.title, text: page.text, chars: page.text.length });
+      pages.push({
+        url: page.url,
+        status: page.status,
+        title: page.title,
+        text: page.text,
+        chars: page.text.length,
+      });
     }
   }
 
@@ -258,13 +309,16 @@ async function crawlSite(args: Record<string, unknown>): Promise<Record<string, 
  * the server, and the caller only pays credits.
  */
 async function extractStructured(args: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const fields = Array.isArray(args['fields']) ? (args['fields'] as unknown[]).map(String).filter(Boolean) : [];
-  if (fields.length === 0) return { ok: false, error: "fields must be a non-empty array of field names" };
+  const fields = Array.isArray(args["fields"])
+    ? (args["fields"] as unknown[]).map(String).filter(Boolean)
+    : [];
+  if (fields.length === 0)
+    return { ok: false, error: "fields must be a non-empty array of field names" };
 
-  let source = typeof args['text'] === "string" ? (args['text'] as string) : "";
+  let source = typeof args["text"] === "string" ? (args["text"] as string) : "";
   let sourceUrl: string | null = null;
   if (!source) {
-    const url = String(args['url'] ?? "").trim();
+    const url = String(args["url"] ?? "").trim();
     if (!url) return { ok: false, error: "Provide either url or text" };
     const page = await fetchReadable(url, 12_000);
     if (!page.ok) return { ok: false, error: page.error };
@@ -273,10 +327,10 @@ async function extractStructured(args: Record<string, unknown>): Promise<Record<
   }
   if (!source.trim()) return { ok: false, error: "Nothing readable to extract from" };
 
-  const apiKey = process.env['LOVABLE_API_KEY'];
+  const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) return { ok: false, error: "Extraction is temporarily unavailable" };
 
-  const instruction = String(args['instruction'] ?? "").trim();
+  const instruction = String(args["instruction"] ?? "").trim();
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -299,13 +353,18 @@ async function extractStructured(args: Record<string, unknown>): Promise<Record<
 
   if (!res.ok) {
     const body = await res.text();
-    if (res.status === 429) return { ok: false, error: "Extraction rate limit reached, retry shortly" };
+    if (res.status === 429)
+      return { ok: false, error: "Extraction rate limit reached, retry shortly" };
     return { ok: false, error: `Extraction failed [${res.status}]: ${body.slice(0, 300)}` };
   }
 
   const payload = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   const raw = payload.choices?.[0]?.message?.content ?? "";
-  const cleaned = raw.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  const cleaned = raw
+    .trim()
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
   let data: Record<string, unknown>;
   try {
     data = JSON.parse(cleaned) as Record<string, unknown>;
@@ -328,18 +387,22 @@ async function extractStructured(args: Record<string, unknown>): Promise<Record<
  * Real web search via Tavily. Returns ranked results with citations for agents.
  */
 async function searchWeb(args: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const apiKey = process.env['TAVILY_API_KEY'];
+  const apiKey = process.env["TAVILY_API_KEY"];
   if (!apiKey) return { ok: false, error: "Web search is not configured" };
 
-  const query = String(args['query'] ?? "").trim();
+  const query = String(args["query"] ?? "").trim();
   if (!query) return { ok: false, error: "query is required" };
 
-  const maxResults = Math.min(Math.max(Number(args['maxResults'] ?? 5) || 5, 1), 20);
-  const includeAnswer = Boolean(args['includeAnswer'] ?? false);
+  const maxResults = Math.min(Math.max(Number(args["maxResults"] ?? 5) || 5, 1), 20);
+  const includeAnswer = Boolean(args["includeAnswer"] ?? false);
 
   try {
     const tv = tavily({ apiKey });
-    const searchOptions: { maxResults: number; includeAnswer?: "basic" | "advanced"; searchDepth: "basic" } = {
+    const searchOptions: {
+      maxResults: number;
+      includeAnswer?: "basic" | "advanced";
+      searchDepth: "basic";
+    } = {
       maxResults,
       searchDepth: "basic",
     };
@@ -366,17 +429,21 @@ async function searchWeb(args: Record<string, unknown>): Promise<Record<string, 
  * Real semantic knowledge-base search over workspace documents using pgvector.
  * Embeds the query through the Lovable AI Gateway, then queries tenant-scoped chunks.
  */
-async function searchKnowledgeBase(args: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const query = String(args['query'] ?? "").trim();
+async function searchKnowledgeBase(
+  args: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const query = String(args["query"] ?? "").trim();
   if (!query) return { ok: false, error: "query is required" };
 
-  const orgId = typeof args['orgId'] === "string" ? args['orgId'] : null;
+  const orgId = typeof args["orgId"] === "string" ? args["orgId"] : null;
   if (!orgId) return { ok: false, error: "orgId is required for knowledge base search" };
 
-  const maxResults = Math.min(Math.max(Number(args['maxResults'] ?? 5) || 5, 1), 20);
-  const documentIds = Array.isArray(args['documentIds']) ? (args['documentIds'] as unknown[]).map(String) : null;
+  const maxResults = Math.min(Math.max(Number(args["maxResults"] ?? 5) || 5, 1), 20);
+  const documentIds = Array.isArray(args["documentIds"])
+    ? (args["documentIds"] as unknown[]).map(String)
+    : null;
 
-  const apiKey = process.env['LOVABLE_API_KEY'];
+  const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) return { ok: false, error: "Knowledge base search is temporarily unavailable" };
 
   try {
@@ -434,7 +501,12 @@ async function searchKnowledgeBase(args: Record<string, unknown>): Promise<Recor
       .from("documents")
       .select("id, title, source_url")
       .in("id", docIds.length ? docIds : ["00000000-0000-0000-0000-000000000000"]);
-    const docMap = Object.fromEntries((docs ?? []).map((d) => [d.id as string, d as { title?: string; source_url?: string | null }]));
+    const docMap = Object.fromEntries(
+      (docs ?? []).map((d) => [
+        d.id as string,
+        d as { title?: string; source_url?: string | null },
+      ]),
+    );
 
     return ok({
       query,
@@ -457,16 +529,16 @@ async function searchKnowledgeBase(args: Record<string, unknown>): Promise<Recor
  * and isolated to the sandbox. stdout, stderr and exit code are returned.
  */
 async function executeCode(args: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const apiKey = process.env['E2B_API_KEY'];
+  const apiKey = process.env["E2B_API_KEY"];
   if (!apiKey) return { ok: false, error: "Code execution is not configured" };
 
-  const code = String(args['code'] ?? "");
+  const code = String(args["code"] ?? "");
   if (!code.trim()) return { ok: false, error: "code is required" };
-  const language = (String(args['language'] ?? "python") as "python" | "javascript") || "python";
+  const language = (String(args["language"] ?? "python") as "python" | "javascript") || "python";
   if (language !== "python" && language !== "javascript") {
     return { ok: false, error: "language must be python or javascript" };
   }
-  const timeout = Math.min(Math.max(Number(args['timeout'] ?? 60) || 60, 1), 300);
+  const timeout = Math.min(Math.max(Number(args["timeout"] ?? 60) || 60, 1), 300);
 
   try {
     const { Sandbox } = await import("e2b");
@@ -501,10 +573,10 @@ async function executeCode(args: Record<string, unknown>): Promise<Record<string
  * edge serverless runtimes.
  */
 async function browsePage(args: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const apiKey = process.env['BROWSERBASE_API_KEY'];
+  const apiKey = process.env["BROWSERBASE_API_KEY"];
   if (!apiKey) return { ok: false, error: "Browser automation is not configured" };
 
-  const url = String(args['url'] ?? "").trim();
+  const url = String(args["url"] ?? "").trim();
   if (!url) return { ok: false, error: "url is required" };
 
   try {
@@ -520,7 +592,6 @@ async function browsePage(args: Record<string, unknown>): Promise<Record<string,
     const firstLine = text.split("\n")[0];
     const title = firstLine && firstLine.startsWith("# ") ? firstLine.replace(/^#\s*/, "") : null;
 
-
     return ok({
       url,
       statusCode: res.statusCode,
@@ -533,7 +604,6 @@ async function browsePage(args: Record<string, unknown>): Promise<Record<string,
     return { ok: false, error: e instanceof Error ? e.message : "Browser automation failed" };
   }
 }
-
 
 export async function runTool(
   name: string,
@@ -551,22 +621,22 @@ export async function runTool(
     case "search_knowledge_base":
       return searchKnowledgeBase(args);
     case "sandbox_search_knowledge_base": {
-      const q = String(args['query'] ?? "").toLowerCase();
+      const q = String(args["query"] ?? "").toLowerCase();
       const hits = KB.filter(
         (d) => d.title.toLowerCase().includes(q) || d.body.toLowerCase().includes(q),
       );
       return ok({ matches: (hits.length ? hits : KB).slice(0, 3) });
     }
     case "sandbox_lookup_crm_contact": {
-      const email = String(args['email'] ?? "").toLowerCase();
+      const email = String(args["email"] ?? "").toLowerCase();
       const contact = CONTACTS.find((c) => c.email.toLowerCase() === email);
       return contact ? ok({ contact }) : { ok: false, error: "No contact found for that email" };
     }
     case "sandbox_list_records": {
-      const type = String(args['type'] ?? "contacts");
-      const status = args['status'] ? String(args['status']) : null;
-      const limit = Math.min(Math.max(Number(args['limit'] ?? 25) || 25, 1), 100);
-      const offset = Number.parseInt(String(args['cursor'] ?? "0"), 10) || 0;
+      const type = String(args["type"] ?? "contacts");
+      const status = args["status"] ? String(args["status"]) : null;
+      const limit = Math.min(Math.max(Number(args["limit"] ?? 25) || 25, 1), 100);
+      const offset = Number.parseInt(String(args["cursor"] ?? "0"), 10) || 0;
 
       const all: Array<Record<string, unknown>> =
         type === "contacts"
@@ -578,11 +648,16 @@ export async function runTool(
               ]
             : [
                 { id: "t_51", subject: "SSO login loop", priority: "high", status: "open" },
-                { id: "t_52", subject: "Export missing columns", priority: "normal", status: "pending" },
+                {
+                  id: "t_52",
+                  subject: "Export missing columns",
+                  priority: "normal",
+                  status: "pending",
+                },
               ];
 
       const filtered = status
-        ? all.filter((r) => r['status'] === status || r['stage'] === status)
+        ? all.filter((r) => r["status"] === status || r["stage"] === status)
         : all;
       const rows = filtered.slice(offset, offset + limit);
       const next = offset + limit;
@@ -598,30 +673,30 @@ export async function runTool(
       return ok({
         simulated: true,
         messageId: `sim_${crypto.randomUUID().slice(0, 8)}`,
-        to: args['to'],
-        subject: args['subject'],
+        to: args["to"],
+        subject: args["subject"],
         deliveredAt: new Date().toISOString(),
       });
     case "sandbox_update_crm_record":
       return ok({
         simulated: true,
-        recordId: args['recordId'],
-        updatedFields: args['fields'],
+        recordId: args["recordId"],
+        updatedFields: args["fields"],
         updatedAt: new Date().toISOString(),
       });
     case "sandbox_create_payment":
       return ok({
         simulated: true,
         paymentId: `pay_${crypto.randomUUID().slice(0, 8)}`,
-        customerId: args['customerId'],
-        amountCents: args['amountCents'],
-        currency: args['currency'],
+        customerId: args["customerId"],
+        amountCents: args["amountCents"],
+        currency: args["currency"],
         status: "succeeded",
       });
     case "sandbox_delete_record":
       return ok({
         simulated: true,
-        deleted: { type: args['type'], recordId: args['recordId'] },
+        deleted: { type: args["type"], recordId: args["recordId"] },
         deletedAt: new Date().toISOString(),
       });
     default:

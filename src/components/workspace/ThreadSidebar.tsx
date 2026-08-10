@@ -97,7 +97,6 @@ export function ThreadSidebar({
         )}
       </nav>
 
-
       <div className="space-y-1 border-t border-sidebar-border p-3">
         <Link
           to="/keys"
@@ -160,7 +159,6 @@ export function ThreadSidebar({
           Sign out
         </Button>
       </div>
-
     </aside>
   );
 }

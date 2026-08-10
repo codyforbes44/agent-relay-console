@@ -11,7 +11,8 @@ export const Route = createFileRoute("/api/public/v1/me")({
       OPTIONS: async () => preflight(),
       GET: async ({ request }) => {
         const raw = readBearer(request);
-        if (!raw) return apiError(401, "missing_api_key", "Provide Authorization: Bearer sk_agent_...");
+        if (!raw)
+          return apiError(401, "missing_api_key", "Provide Authorization: Bearer sk_agent_...");
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const identity = await authenticateAgentKey(supabaseAdmin, raw);

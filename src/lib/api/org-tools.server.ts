@@ -19,10 +19,7 @@ const DEFAULT_TOOL_NAMES = TOOL_CONTRACTS.filter((t) => t.publicApi).map((t) => 
  * The registry in `contracts.ts` is the single source of truth — the database
  * no longer carries a hardcoded tool list, so rows are created on demand.
  */
-export async function ensureOrgToolRows(
-  admin: SupabaseClient,
-  orgId: string,
-): Promise<void> {
+export async function ensureOrgToolRows(admin: SupabaseClient, orgId: string): Promise<void> {
   const rows = TOOL_CONTRACTS.filter((t) => t.publicApi).map((t) => ({
     org_id: orgId,
     tool_name: t.name,
@@ -35,10 +32,7 @@ export async function ensureOrgToolRows(
 }
 
 /** Returns the workspace's visibility rows for the current public tool set. */
-export async function getOrgTools(
-  admin: SupabaseClient,
-  orgId: string,
-): Promise<OrgToolRow[]> {
+export async function getOrgTools(admin: SupabaseClient, orgId: string): Promise<OrgToolRow[]> {
   const { data, error } = await admin
     .from("org_tools")
     .select("*")

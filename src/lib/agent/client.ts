@@ -110,7 +110,10 @@ export async function streamAgent(
       return { ...cancelled(body.conversationId ?? null), content: text, toolCalls };
     }
     return {
-      ...errorResponse(body.conversationId ?? null, e instanceof Error ? e.message : "Stream failed"),
+      ...errorResponse(
+        body.conversationId ?? null,
+        e instanceof Error ? e.message : "Stream failed",
+      ),
       content: text,
       toolCalls,
     };
@@ -133,5 +136,12 @@ function errorResponse(conversationId: string | null, error: string): AgentRespo
 }
 
 function cancelled(conversationId: string | null): AgentResponse {
-  return { conversationId, messageId: null, status: "cancelled", content: "", toolCalls: [], error: null };
+  return {
+    conversationId,
+    messageId: null,
+    status: "cancelled",
+    content: "",
+    toolCalls: [],
+    error: null,
+  };
 }

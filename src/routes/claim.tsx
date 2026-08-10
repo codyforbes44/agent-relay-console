@@ -20,7 +20,7 @@ type State =
 export const Route = createFileRoute("/claim")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>): { token?: string } => {
-    const token = typeof s['token'] === "string" ? s['token'] : undefined;
+    const token = typeof s["token"] === "string" ? s["token"] : undefined;
     return token ? { token } : {};
   },
   head: () =>
@@ -54,7 +54,11 @@ function ClaimPage() {
       });
       if (cancelled) return;
       if (error) setState({ kind: "error", message: error.message });
-      else if (!orgId) setState({ kind: "error", message: "This claim link is invalid, already used, or expired." });
+      else if (!orgId)
+        setState({
+          kind: "error",
+          message: "This claim link is invalid, already used, or expired.",
+        });
       else setState({ kind: "done", orgId: String(orgId) });
     })();
     return () => {
@@ -78,8 +82,8 @@ function ClaimPage() {
         {state.kind === "signin" && (
           <>
             <p className="mt-4 text-muted-foreground">
-              An agent created this workspace and its API key. Sign in to take ownership: you get the
-              usage history, key management and the ability to buy credits.
+              An agent created this workspace and its API key. Sign in to take ownership: you get
+              the usage history, key management and the ability to buy credits.
             </p>
             <Button className="mt-6" asChild>
               <Link to="/auth" search={{ next }}>

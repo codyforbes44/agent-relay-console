@@ -61,7 +61,8 @@ export const API_ERRORS: ApiErrorSpec[] = [
     status: 403,
     code: "budget_exceeded",
     cause: "The call would exceed a per-call, 24-hour, or lifetime credit cap set on this key.",
-    action: "Wait for the window to roll over, or ask the key owner to raise the cap in the console.",
+    action:
+      "Wait for the window to roll over, or ask the key owner to raise the cap in the console.",
     retryable: false,
     extra: ["spent", "required", "limit", "window"],
   },
@@ -140,7 +141,8 @@ export const API_ERRORS: ApiErrorSpec[] = [
     code: "confirmation_mismatch",
     cause:
       "The token is bound to a specific tool and argument set; this request differs from what was previewed.",
-    action: "Send the exact body that was previewed, or request a new confirmation for the new body.",
+    action:
+      "Send the exact body that was previewed, or request a new confirmation for the new body.",
     retryable: false,
   },
   {

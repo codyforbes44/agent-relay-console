@@ -191,7 +191,8 @@ export async function redeemConfirmation(
       failure: {
         status: 409,
         code: "confirmation_used",
-        message: "This confirmation token was already redeemed. Request a new one for the next call.",
+        message:
+          "This confirmation token was already redeemed. Request a new one for the next call.",
       },
     };
   }

@@ -113,9 +113,8 @@ async function runMetered(
   }
 
   const started = Date.now();
-  const { reserveCredits, refundReservedCredits, finalizeUsage } = await import(
-    "@/lib/api/metering.server"
-  );
+  const { reserveCredits, refundReservedCredits, finalizeUsage } =
+    await import("@/lib/api/metering.server");
 
   // Same atomic reserve-then-run path as the HTTP API: balance is checked and
   // debited in one transaction so concurrent sessions cannot double-spend.
@@ -148,13 +147,11 @@ async function runMetered(
   }
 
   // In-band failures ({ ok: false }) are refunded too — a failed call is free.
-  if (result['ok'] === false) {
+  if (result["ok"] === false) {
     await refundReservedCredits(supabaseAdmin, reservation.usageEventId, "tool_failed");
     if (confirmationId) await releaseConfirmation(supabaseAdmin, confirmationId);
-    return fail(String(result['error'] ?? "Tool execution failed"));
+    return fail(String(result["error"] ?? "Tool execution failed"));
   }
-
-
 
   await finalizeUsage(supabaseAdmin, reservation.usageEventId, Date.now() - started);
 

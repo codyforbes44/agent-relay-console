@@ -71,11 +71,13 @@ if (catalogNames.join(",") !== expectedNames.join(",")) {
 for (const tool of catalog.tools) {
   const c = publicTools.find((x) => x.name === tool.name);
   if (!c) continue;
-  if (tool.credits !== c.credits) fail(`catalog ${tool.name}: credits ${tool.credits} ≠ ${c.credits}`);
+  if (tool.credits !== c.credits)
+    fail(`catalog ${tool.name}: credits ${tool.credits} ≠ ${c.credits}`);
   if (tool.sideEffecting !== c.sideEffecting) fail(`catalog ${tool.name}: sideEffecting drift`);
   if (!tool.inputSchema?.properties) fail(`catalog ${tool.name}: missing inputSchema`);
   if (!tool.example?.request?.body) fail(`catalog ${tool.name}: missing example.request.body`);
-  if (!tool.example?.response?.result) fail(`catalog ${tool.name}: missing example.response.result`);
+  if (!tool.example?.response?.result)
+    fail(`catalog ${tool.name}: missing example.response.result`);
   if (!Array.isArray(tool.example?.errors) || tool.example.errors.length === 0) {
     fail(`catalog ${tool.name}: missing example.errors`);
   }
@@ -90,10 +92,17 @@ for (const tool of catalog.tools) {
   }
   if (tool.sideEffecting) {
     const steps = tool.confirmation?.steps;
-    if (tool.confirmation?.header !== "x-confirmation-token" || !Array.isArray(steps) || steps.length !== 2) {
+    if (
+      tool.confirmation?.header !== "x-confirmation-token" ||
+      !Array.isArray(steps) ||
+      steps.length !== 2
+    ) {
       fail(`catalog ${tool.name}: missing two-step confirmation flow`);
     } else {
-      if (steps[0]?.response?.status !== 428 || !steps[0]?.response?.body?.error?.confirmationToken) {
+      if (
+        steps[0]?.response?.status !== 428 ||
+        !steps[0]?.response?.body?.error?.confirmationToken
+      ) {
         fail(`catalog ${tool.name}: step 1 must return 428 with a confirmationToken`);
       }
       if (!steps[1]?.request?.headers?.["x-confirmation-token"]) {
@@ -118,7 +127,8 @@ if (billableContracts.length === 0) {
 for (const c of billableContracts) {
   const tool = catalog.tools.find((t) => t.name === c.name);
   if (!tool) continue;
-  if (!(tool.credits > 0)) fail(`catalog ${c.name}: billable tool serialized with credits ${tool.credits}`);
+  if (!(tool.credits > 0))
+    fail(`catalog ${c.name}: billable tool serialized with credits ${tool.credits}`);
   if (!(Number(tool.usdPerCall) > 0)) {
     fail(`catalog ${c.name}: billable tool missing a positive usdPerCall (got ${tool.usdPerCall})`);
   }
@@ -129,11 +139,15 @@ const pricing = catalog.pricing;
 if (!pricing) {
   fail("catalog: missing top-level pricing block");
 } else {
-  if (pricing.unit !== "credit") fail(`catalog pricing: unit should be "credit" (got ${pricing.unit})`);
-  if (pricing.currency !== "USD") fail(`catalog pricing: currency should be "USD" (got ${pricing.currency})`);
-  if (!(Number(pricing.usdPerCredit) > 0)) fail("catalog pricing: usdPerCredit missing or not positive");
+  if (pricing.unit !== "credit")
+    fail(`catalog pricing: unit should be "credit" (got ${pricing.unit})`);
+  if (pricing.currency !== "USD")
+    fail(`catalog pricing: currency should be "USD" (got ${pricing.currency})`);
+  if (!(Number(pricing.usdPerCredit) > 0))
+    fail("catalog pricing: usdPerCredit missing or not positive");
   if (typeof pricing.freeGrant !== "number") fail("catalog pricing: freeGrant missing");
-  if (!Array.isArray(pricing.packs) || pricing.packs.length === 0) fail("catalog pricing: packs[] is empty");
+  if (!Array.isArray(pricing.packs) || pricing.packs.length === 0)
+    fail("catalog pricing: packs[] is empty");
   if (!pricing.purchase) fail("catalog pricing: purchase block missing");
   if (!pricing.pricingUrl) fail("catalog pricing: pricingUrl missing");
 }
@@ -171,7 +185,13 @@ for (const t of publicTools) {
     fail(`openapi ${t.name}: description does not state ${t.credits} credits`);
   }
 }
-for (const p of ["/api/public/v1/signup", "/api/public/v1/claim", "/api/public/v1/keys/rotate", "/api/public/v1/me", "/api/public/v1/tools"]) {
+for (const p of [
+  "/api/public/v1/signup",
+  "/api/public/v1/claim",
+  "/api/public/v1/keys/rotate",
+  "/api/public/v1/me",
+  "/api/public/v1/tools",
+]) {
   if (!openapi.paths?.[p]) fail(`openapi: missing onboarding path ${p}`);
 }
 

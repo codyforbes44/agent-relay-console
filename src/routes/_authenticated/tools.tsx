@@ -43,14 +43,19 @@ function ToolsPage() {
   });
 
   return (
-    <ConsoleShell title="Tool catalog" description="Choose which tools agents can invoke in this workspace.">
+    <ConsoleShell
+      title="Tool catalog"
+      description="Choose which tools agents can invoke in this workspace."
+    >
       {() => (
         <div className="space-y-6">
           <Alert variant="default" className="border-primary/20 bg-primary/5">
             <Info className="size-4 text-primary" />
             <AlertTitle className="text-sm font-medium">Workspace-level controls</AlertTitle>
             <AlertDescription className="text-sm text-muted-foreground">
-              Disabling a tool here blocks it for every API key and MCP connection in this workspace, even when an agent has the budget and confirmation to run it. Existing allowlists on individual keys still apply.
+              Disabling a tool here blocks it for every API key and MCP connection in this
+              workspace, even when an agent has the budget and confirmation to run it. Existing
+              allowlists on individual keys still apply.
             </AlertDescription>
           </Alert>
 
@@ -70,10 +75,7 @@ function ToolsPage() {
           {data?.tools.map((tool) => (
             <Card
               key={tool.name}
-              className={cn(
-                "transition-opacity",
-                !tool.enabled && "opacity-60",
-              )}
+              className={cn("transition-opacity", !tool.enabled && "opacity-60")}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-4">

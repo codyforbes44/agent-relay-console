@@ -14,10 +14,10 @@ The CI guards are still worth adding, because nothing currently prevents the cod
 - `package.json` — add `"check:api:prod": "node scripts/check-api-consistency.mjs https://3bi.ai"`, run as a post-deploy smoke step rather than a pre-merge gate, so the deployed surface is guarded as well as the build.
 - Serialization order in `catalog()`: billable tools before the zero-credit `sandbox_*` ones, so a cold agent reads the value story first. `PUBLIC_TOOLS` order already puts them first today; the change is an explicit sort so it can't drift.
 
-
 ## 1. Atomic credit reservation (fixes findings 1 and 2)
 
 New Postgres function `reserve_credits(_org_id, _key_id, _tool_name, _credits, _request_id, _latency_ms, _max_per_call, _daily_cap, _total_cap)`:
+
 - Takes a per-org advisory lock, re-reads the ledger balance inside the same transaction, and returns `insufficient` with the current balance when it's short.
 - Evaluates the key's owner-set spend guardrails in the same transaction: per-call, rolling-24h and lifetime caps are computed under the lock and return a `budget_exceeded` variant with `{ spent, required, limit, window }`. This removes the same TOCTOU shape the balance check had — `checkKeyGuardrails` keeps only the non-monetary checks (expiry, allowed tools), which are not racy. Your cost note is right: `credit_ledger` has no `key_id`, so the cap aggregate joins ledger → `usage_events` on `key_id`, which is a per-call aggregate over the key's history — cheap but not free. The migration adds `usage_events (key_id, created_at desc)` and an index on `credit_ledger (usage_event_id)` so both the 24h and lifetime variants stay index-only.
 - Otherwise inserts the `usage_events` row and the matching `credit_ledger` debit in one transaction, returning the usage event id and the post-debit balance.
@@ -26,7 +26,8 @@ New Postgres function `reserve_credits(_org_id, _key_id, _tool_name, _credits, _
 Companion `refund_reserved_credits(_usage_event_id, _reason)`: inserts a compensating positive ledger entry and marks the usage event `error`, used when the tool throws after reservation.
 
 Route changes in `src/routes/api/public/v1/tools.$toolName.ts`:
-- Replace `getBalance()` → run → `recordUsage()` with: reserve *before* `runTool`, then on success only patch latency/status; on throw, call the refund.
+
+- Replace `getBalance()` → run → `recordUsage()` with: reserve _before_ `runTool`, then on success only patch latency/status; on throw, call the refund.
 - The 402 path stays: reservation returning `insufficient` supplies the authoritative balance for the offer, and after an x402 settlement we retry the reservation once instead of re-reading the balance.
 - The success payload reports the balance the RPC returned, not `balance - credits` (fixes the cosmetic drift nit).
 - `recordUsage` keeps its existing role for zero-credit rejection/audit rows only, and stops failing silently: an insert error is logged as a structured `metering_write_failed` event.

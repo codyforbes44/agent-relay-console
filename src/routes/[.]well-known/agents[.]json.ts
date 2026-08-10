@@ -32,7 +32,12 @@ export const Route = createFileRoute("/.well-known/agents.json")({
           },
           interfaces: [
             { protocol: "rest", url: `${origin}/api/public/v1`, auth: "bearer" },
-            { protocol: "mcp", transport: "streamable-http", url: `${origin}/mcp`, auth: "oauth2.1" },
+            {
+              protocol: "mcp",
+              transport: "streamable-http",
+              url: `${origin}/mcp`,
+              auth: "oauth2.1",
+            },
           ],
           onboarding: {
             machine: { url: `${origin}/api/public/v1/signup`, method: "POST", free_credits: 500 },

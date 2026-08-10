@@ -5,23 +5,27 @@ An authenticated, multi-tenant workspace where members of an organization chat w
 ## What gets built
 
 **Auth & organizations**
+
 - Sign in with email/password and Google.
 - Every user belongs to one or more organizations; a personal org is created on first sign-in.
 - All conversations, messages, jobs, and audit logs are scoped to an organization. Members only ever see their org's data, enforced in the database itself.
 
 **Chat workspace**
+
 - Sidebar with the org switcher and a list of threads (create, rename, delete).
 - Each thread has its own URL, so refreshing or sharing a link restores that thread.
 - Streaming assistant replies with a live "thinking" indicator, markdown rendering, stop/cancel button, and retry on the last turn.
 - Task progress strip showing the current job status (queued, running, waiting for confirmation, done, failed).
 
 **Tool timeline**
+
 - Every tool invocation appears inline in the assistant message: tool name, icon, status, collapsed inputs, and a compact result view.
 - Read-only tools (search knowledge base, look up CRM record, list records) run automatically.
 - Side-effecting tools (send email, update CRM, create payment, delete record) pause and render a confirmation card with the exact arguments. Nothing happens until the user approves; deny returns a refusal to the model so it can continue.
 - Tools are simulated behind a typed contract layer so real providers can be dropped in later without touching the UI or the agent loop.
 
 **Safety & reliability**
+
 - Single client endpoint: `POST /api/agent`. No model keys ever reach the browser.
 - Request validation on every field, per-user and per-org rate limits, and idempotency keys so a retried request never duplicates a message or a tool side effect.
 - Structured server logs with request id, org id, user id, conversation id, tool name, latency, and outcome.

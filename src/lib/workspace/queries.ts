@@ -74,7 +74,9 @@ export const threadMessagesQuery = (conversationId: string) =>
           .order("created_at", { ascending: true }),
         supabase
           .from("tool_calls")
-          .select("id, message_id, tool_name, args, result, status, side_effecting, error, created_at")
+          .select(
+            "id, message_id, tool_name, args, result, status, side_effecting, error, created_at",
+          )
           .eq("conversation_id", conversationId)
           .order("created_at", { ascending: true }),
       ]);

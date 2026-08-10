@@ -49,7 +49,9 @@ export function x402Config(): X402Config | null {
   return {
     payTo,
     network,
-    facilitatorUrl: (process.env["X402_FACILITATOR_URL"]?.trim() || DEFAULT_FACILITATOR[network]).replace(/\/$/, ""),
+    facilitatorUrl: (
+      process.env["X402_FACILITATOR_URL"]?.trim() || DEFAULT_FACILITATOR[network]
+    ).replace(/\/$/, ""),
     asset: USDC[network],
     assetName: "USDC",
     assetVersion: "2",
@@ -102,7 +104,9 @@ export function readPaymentHeader(request: Request): unknown | null {
   const header = request.headers.get("x-payment");
   if (!header) return null;
   try {
-    return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(header.trim()), (c) => c.charCodeAt(0))));
+    return JSON.parse(
+      new TextDecoder().decode(Uint8Array.from(atob(header.trim()), (c) => c.charCodeAt(0))),
+    );
   } catch {
     try {
       return JSON.parse(header);

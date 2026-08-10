@@ -104,7 +104,8 @@ export function ChatWindow({ orgId, threadId }: { orgId: string; threadId: strin
 
       setRun({
         status: response.status,
-        text: response.status === "error" || response.status === "cancelled" ? response.content : "",
+        text:
+          response.status === "error" || response.status === "cancelled" ? response.content : "",
         toolCalls: response.status === "error" ? response.toolCalls : [],
         error: response.error,
       });
@@ -262,7 +263,6 @@ export function ChatWindow({ orgId, threadId }: { orgId: string; threadId: strin
                 disabled={!busy && input.trim().length === 0}
                 onStop={onCancel}
               />
-
             </PromptInputFooter>
           </PromptInput>
         </div>

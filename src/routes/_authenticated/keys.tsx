@@ -18,7 +18,8 @@ export const Route = createFileRoute("/_authenticated/keys")({
       { title: "API keys — Relay Agent Tool API" },
       {
         name: "description",
-        content: "Create and revoke workspace API keys that let autonomous agents call metered tools.",
+        content:
+          "Create and revoke workspace API keys that let autonomous agents call metered tools.",
       },
       { property: "og:title", content: "API keys — Relay Agent Tool API" },
       { property: "og:description", content: "Manage machine credentials for agent tool access." },
@@ -76,7 +77,8 @@ function KeysPanel({ orgId }: { orgId: string }) {
         <CardHeader>
           <CardTitle className="text-base">Create a key</CardTitle>
           <CardDescription>
-            The secret is shown once. Store it in your agent's environment — it is never recoverable.
+            The secret is shown once. Store it in your agent's environment — it is never
+            recoverable.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row">
@@ -87,7 +89,11 @@ function KeysPanel({ orgId }: { orgId: string }) {
             maxLength={80}
           />
           <Button onClick={() => createMutation.mutate()} disabled={createMutation.isPending}>
-            {createMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <KeyRound className="size-4" />}
+            {createMutation.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <KeyRound className="size-4" />
+            )}
             Create key
           </Button>
         </CardContent>

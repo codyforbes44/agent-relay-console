@@ -8,7 +8,6 @@ import { SITE_URL, publicHead } from "@/lib/site";
 
 const SERVER_NAME = "relay";
 
-
 export const Route = createFileRoute("/connect")({
   head: () =>
     publicHead({
@@ -139,7 +138,6 @@ function ConnectPage() {
           </p>
         </div>
 
-
         <div className="space-y-4">
           <h2 className="text-xl font-semibold text-foreground">Connect</h2>
 
@@ -186,7 +184,12 @@ function ConnectPage() {
               items={[
                 <>
                   Open the{" "}
-                  <a className="text-primary underline" href={claudeLink} target="_blank" rel="noreferrer">
+                  <a
+                    className="text-primary underline"
+                    href={claudeLink}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     prefilled custom connector dialog
                   </a>
                   .
@@ -219,8 +222,9 @@ function ConnectPage() {
             <Steps
               items={[
                 <>
-                  Open Cursor → Settings → <span className="text-foreground">MCP &amp; Integrations</span>{" "}
-                  → “Add custom MCP”.
+                  Open Cursor → Settings →{" "}
+                  <span className="text-foreground">MCP &amp; Integrations</span> → “Add custom
+                  MCP”.
                 </>,
                 <>
                   Add an entry named <code className="font-mono">relay</code> with the server URL
@@ -241,7 +245,6 @@ function ConnectPage() {
           </Section>
 
           <Section title="Other MCP clients">
-
             <Steps
               items={[
                 <>Open the client’s MCP server or custom connector settings.</>,

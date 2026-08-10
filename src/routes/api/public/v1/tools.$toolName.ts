@@ -44,7 +44,8 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
 
       GET: async ({ params, request }) => {
         const { tool } = resolveTool(params.toolName);
-        if (!tool?.publicApi) return apiError(404, "unknown_tool", `No such tool: ${params.toolName}`);
+        if (!tool?.publicApi)
+          return apiError(404, "unknown_tool", `No such tool: ${params.toolName}`);
         return json({ ok: true, tool: toolDescriptor(tool, new URL(request.url).origin) });
       },
 
@@ -57,10 +58,12 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         // (metering, confirmations, audit) uses the canonical name.
         const requestedName = params.toolName;
         const { tool, canonicalName: toolName, deprecatedAlias } = resolveTool(requestedName);
-        if (!tool?.publicApi) return apiError(404, "unknown_tool", `No such tool: ${requestedName}`);
+        if (!tool?.publicApi)
+          return apiError(404, "unknown_tool", `No such tool: ${requestedName}`);
 
         const raw = readBearer(request);
-        if (!raw) return apiError(401, "missing_api_key", "Provide Authorization: Bearer sk_agent_...");
+        if (!raw)
+          return apiError(401, "missing_api_key", "Provide Authorization: Bearer sk_agent_...");
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const identity = await authenticateAgentKey(supabaseAdmin, raw);
@@ -81,7 +84,12 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
             latencyMs: Date.now() - started,
             requestId,
           });
-          return apiError(violation.status, violation.code, violation.message, violation.extra ?? {});
+          return apiError(
+            violation.status,
+            violation.code,
+            violation.message,
+            violation.extra ?? {},
+          );
         }
 
         // Workspace-level tool visibility: a disabled tool cannot be invoked.
@@ -99,8 +107,6 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           return apiError(403, "tool_disabled", `Tool ${toolName} is disabled for this workspace`);
         }
 
-
-
         if (!(await checkRateLimit(supabaseAdmin, identity.keyId))) {
           return apiError(429, "rate_limited", "Too many calls for this key, retry in a minute");
         }
@@ -115,7 +121,10 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         const parsed = tool.schema.safeParse(body);
         if (!parsed.success) {
           return apiError(422, "invalid_input", "Input does not match the tool schema", {
-            issues: parsed.error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
+            issues: parsed.error.issues.map((i) => ({
+              path: i.path.join("."),
+              message: i.message,
+            })),
           });
         }
 
@@ -217,9 +226,13 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
               .eq("idem_key", idemKey)
               .maybeSingle();
             if (existing?.response) {
-              return json({ ...(existing.response as Record<string, unknown>), replayed: true }, 200, {
-                "idempotency-replayed": "true",
-              });
+              return json(
+                { ...(existing.response as Record<string, unknown>), replayed: true },
+                200,
+                {
+                  "idempotency-replayed": "true",
+                },
+              );
             }
             // No time-based reclaim: nothing bounds tool execution, so deleting
             // a claim could re-run a live call. The agent must use a new key.
@@ -271,12 +284,21 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
             latencyMs: Date.now() - started,
             requestId,
           });
-          return apiError(violation.status, violation.code, violation.message, violation.extra ?? {});
+          return apiError(
+            violation.status,
+            violation.code,
+            violation.message,
+            violation.extra ?? {},
+          );
         }
 
         if (reservation.status === "error") {
           await releaseIdem();
-          return apiError(503, "metering_unavailable", "Credit metering is temporarily unavailable, retry shortly");
+          return apiError(
+            503,
+            "metering_unavailable",
+            "Credit metering is temporarily unavailable, retry shortly",
+          );
         }
 
         if (reservation.status === "insufficient") {
@@ -295,7 +317,11 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
 
           if (offer && paymentPayload) {
             try {
-              const settlement = await verifyAndSettle(offer.config, paymentPayload, offer.requirements);
+              const settlement = await verifyAndSettle(
+                offer.config,
+                paymentPayload,
+                offer.requirements,
+              );
               await creditSettledPayment(supabaseAdmin, {
                 orgId: identity.orgId,
                 keyId: identity.keyId,
@@ -316,7 +342,12 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
                 payer: settlement.payer,
                 transaction: settlement.txHash,
               };
-              log("x402_settled", { requestId, orgId: identity.orgId, credits: offer.credits, tx: settlement.txHash });
+              log("x402_settled", {
+                requestId,
+                orgId: identity.orgId,
+                credits: offer.credits,
+                tx: settlement.txHash,
+              });
             } catch (e) {
               const message = e instanceof Error ? e.message : "Payment could not be settled";
               await markIntentFailed(supabaseAdmin, offer.nonce, message);
@@ -327,7 +358,8 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           }
 
           if (reservation.status !== "ok") {
-            const currentBalance = reservation.status === "insufficient" ? reservation.balance : balance;
+            const currentBalance =
+              reservation.status === "insufficient" ? reservation.balance : balance;
             await releaseIdem();
             if (!offer) {
               // No x402 config: still answer with everything needed to top up.
@@ -382,15 +414,20 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           });
           await releaseIdem();
           await refundReservedCredits(supabaseAdmin, reserved.usageEventId, "tool_failed");
-          log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message: toolError });
+          log("public_tool_error", {
+            requestId,
+            toolName,
+            orgId: identity.orgId,
+            message: toolError,
+          });
           return apiError(502, "tool_failed", toolError);
         }
 
         // Tools report failure in-band as { ok: false, error }. Treat that the
         // same as a throw: refund the reservation and answer 502 tool_failed,
         // so a failed call never costs credits.
-        if (result['ok'] === false) {
-          toolError = String(result['error'] ?? "Tool execution failed");
+        if (result["ok"] === false) {
+          toolError = String(result["error"] ?? "Tool execution failed");
           await recordToolTrace({
             orgId: identity.orgId,
             requestId,
@@ -404,7 +441,12 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           });
           await releaseIdem();
           await refundReservedCredits(supabaseAdmin, reserved.usageEventId, "tool_failed");
-          log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message: toolError });
+          log("public_tool_error", {
+            requestId,
+            toolName,
+            orgId: identity.orgId,
+            message: toolError,
+          });
           return apiError(502, "tool_failed", toolError);
         }
 
@@ -438,9 +480,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           requestId,
           tool: toolName,
           demo: tool.demo,
-          ...(deprecatedAlias
-            ? { deprecated: { calledAs: deprecatedAlias, use: toolName } }
-            : {}),
+          ...(deprecatedAlias ? { deprecated: { calledAs: deprecatedAlias, use: toolName } } : {}),
           credits: { charged: tool.credits, balance: reserved.balance },
           ...(paymentReceipt ? { payment: paymentReceipt } : {}),
           result,
@@ -472,7 +512,6 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           "x-request-id": requestId,
           "x-credits-charged": String(tool.credits),
         });
-
       },
     },
   },

@@ -64,12 +64,22 @@ export function KeyLimitsEditor({ keyRow, orgId }: { keyRow: KeyLimitsRow; orgId
       </p>
 
       <div className="grid gap-3 sm:grid-cols-4">
-        <Field label="Max credits / call" value={perCall} onChange={setPerCall} placeholder="no limit" />
+        <Field
+          label="Max credits / call"
+          value={perCall}
+          onChange={setPerCall}
+          placeholder="no limit"
+        />
         <Field label="Credits / 24h" value={daily} onChange={setDaily} placeholder="no limit" />
         <Field label="Lifetime credits" value={total} onChange={setTotal} placeholder="no limit" />
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">Expires</Label>
-          <Input type="date" value={expires} onChange={(e) => setExpires(e.target.value)} className="h-8" />
+          <Input
+            type="date"
+            value={expires}
+            onChange={(e) => setExpires(e.target.value)}
+            className="h-8"
+          />
         </div>
       </div>
 
@@ -84,7 +94,9 @@ export function KeyLimitsEditor({ keyRow, orgId }: { keyRow: KeyLimitsRow; orgId
               <button
                 key={t.name}
                 type="button"
-                onClick={() => setTools(on ? tools.filter((x) => x !== t.name) : [...tools, t.name])}
+                onClick={() =>
+                  setTools(on ? tools.filter((x) => x !== t.name) : [...tools, t.name])
+                }
                 className={`rounded-full border px-2.5 py-1 font-mono text-[11px] transition-colors ${
                   on
                     ? "border-primary bg-primary/10 text-primary"

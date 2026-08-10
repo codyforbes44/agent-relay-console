@@ -5,7 +5,15 @@ import { PublicShell } from "@/components/public/PublicShell";
 import { Button } from "@/components/ui/button";
 import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
 import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
-import { SITE_NAME, SITE_URL, SITE_TITLE, SITE_DESCRIPTION, SITE_PRODUCT_NAME, canonical, publicHead } from "@/lib/site";
+import {
+  SITE_NAME,
+  SITE_URL,
+  SITE_TITLE,
+  SITE_DESCRIPTION,
+  SITE_PRODUCT_NAME,
+  canonical,
+  publicHead,
+} from "@/lib/site";
 
 const TITLE = SITE_TITLE;
 const DESCRIPTION = SITE_DESCRIPTION;
@@ -73,7 +81,6 @@ const STEPS = [
   },
 ] as const;
 
-
 const FEATURES = [
   {
     icon: KeyRound,
@@ -133,13 +140,13 @@ function Landing() {
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            500 free credits per workspace. No card required to start. Machine-readable onboarding at{" "}
+            500 free credits per workspace. No card required to start. Machine-readable onboarding
+            at{" "}
             <a className="underline underline-offset-4" href="/llms.txt">
               /llms.txt
             </a>
             .
           </p>
-
         </section>
 
         <section className="mx-auto max-w-3xl px-6 pb-16">
@@ -189,7 +196,6 @@ function Landing() {
           </div>
         </section>
 
-
         <section className="mx-auto max-w-5xl px-6 pb-20">
           <h2 className="text-center text-2xl font-semibold tracking-tight text-foreground">
             Built for callers with no hands
@@ -206,12 +212,14 @@ function Landing() {
         </section>
 
         <section className="mx-auto max-w-3xl px-6 pb-20">
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">Starter tool catalog</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+            Starter tool catalog
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Prices are per successful call. Side-effecting tools are marked and gated. Live tools
-            do real work and cost credits; every{" "}
-            <span className="font-mono">sandbox_*</span> tool is free and returns fixture data, so
-            agents can rehearse the full flow before spending anything.
+            Prices are per successful call. Side-effecting tools are marked and gated. Live tools do
+            real work and cost credits; every <span className="font-mono">sandbox_*</span> tool is
+            free and returns fixture data, so agents can rehearse the full flow before spending
+            anything.
           </p>
           <ul className="mt-5 divide-y divide-border rounded-lg border border-border">
             {PUBLIC_TOOLS.map((t) => (

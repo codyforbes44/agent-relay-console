@@ -29,7 +29,6 @@ import {
   adminSetRole,
 } from "@/lib/admin/admin.functions";
 
-
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
@@ -40,7 +39,10 @@ export const Route = createFileRoute("/_authenticated/admin")({
           "Platform control room: workspaces, users, API keys, credits, revenue and tool usage across Agent Relay Console.",
       },
       { property: "og:title", content: "Super admin — Agent Relay Console" },
-      { property: "og:description", content: "Platform-wide administration for Agent Relay Console." },
+      {
+        property: "og:description",
+        content: "Platform-wide administration for Agent Relay Console.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -77,7 +79,6 @@ function AdminPanel() {
   const [errorsOnly, setErrorsOnly] = useState(false);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["admin"] });
-
 
   const adjust = useMutation({
     mutationFn: useServerFn(adminAdjustCredits),
@@ -142,7 +143,6 @@ function AdminPanel() {
     : d.keys;
   const filteredUsage = errorsOnly ? d.usage.filter((e) => e.status !== "success") : d.usage;
 
-
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -189,7 +189,9 @@ function AdminPanel() {
                   key={o.id}
                   org={o}
                   pending={adjust.isPending}
-                  onAdjust={(delta, reason) => adjust.mutate({ data: { orgId: o.id, delta, reason } })}
+                  onAdjust={(delta, reason) =>
+                    adjust.mutate({ data: { orgId: o.id, delta, reason } })
+                  }
                 />
               ))}
               {!filteredOrgs.length && (
@@ -221,7 +223,10 @@ function AdminPanel() {
                 {filteredUsers.slice(0, 100).map((u) => {
                   const isSuper = superAdmins.has(u.id);
                   return (
-                    <li key={u.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                    <li
+                      key={u.id}
+                      className="flex flex-wrap items-center justify-between gap-3 py-3"
+                    >
                       <div>
                         <p className="text-sm font-medium text-foreground">
                           {u.display_name ?? "Member"}
@@ -248,7 +253,11 @@ function AdminPanel() {
                             })
                           }
                           trigger={
-                            <Button size="sm" variant={isSuper ? "outline" : "default"} disabled={setRole.isPending}>
+                            <Button
+                              size="sm"
+                              variant={isSuper ? "outline" : "default"}
+                              disabled={setRole.isPending}
+                            >
                               {isSuper ? (
                                 <>
                                   <ShieldOff className="size-3.5" /> Revoke
@@ -298,7 +307,9 @@ function AdminPanel() {
                       </p>
                       <p className="font-mono text-xs text-muted-foreground">
                         {k.key_prefix}··· · {k.revoked_at ? "revoked" : "active"} ·{" "}
-                        {k.last_used_at ? `used ${new Date(k.last_used_at).toLocaleString()}` : "never used"}
+                        {k.last_used_at
+                          ? `used ${new Date(k.last_used_at).toLocaleString()}`
+                          : "never used"}
                       </p>
                     </div>
                     {!k.revoked_at && (
@@ -343,8 +354,10 @@ function AdminPanel() {
               </div>
               <ul className="divide-y divide-border">
                 {filteredUsage.map((e) => (
-
-                  <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                  <li
+                    key={e.id}
+                    className="flex flex-wrap items-center justify-between gap-2 py-2.5"
+                  >
                     <div>
                       <p className="font-mono text-sm text-foreground">{e.tool_name}</p>
                       <p className="text-xs text-muted-foreground">
@@ -369,7 +382,6 @@ function AdminPanel() {
                 {!filteredUsage.length && (
                   <p className="text-sm text-muted-foreground">No calls to show.</p>
                 )}
-
               </ul>
             </CardContent>
           </Card>
@@ -384,7 +396,10 @@ function AdminPanel() {
             <CardContent>
               <ul className="divide-y divide-border">
                 {d.purchases.map((p) => (
-                  <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                  <li
+                    key={p.id}
+                    className="flex flex-wrap items-center justify-between gap-2 py-2.5"
+                  >
                     <div>
                       <p className="text-sm text-foreground">
                         {p.credits.toLocaleString()} credits · {p.environment}
@@ -417,7 +432,10 @@ function AdminPanel() {
             <CardContent>
               <ul className="divide-y divide-border">
                 {d.audit.map((a) => (
-                  <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                  <li
+                    key={a.id}
+                    className="flex flex-wrap items-center justify-between gap-2 py-2.5"
+                  >
                     <div>
                       <p className="font-mono text-sm text-foreground">{a.action}</p>
                       <p className="text-xs text-muted-foreground">
@@ -469,7 +487,11 @@ function Confirm({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
-            className={destructive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : undefined}
+            className={
+              destructive
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : undefined
+            }
           >
             {confirmLabel}
           </AlertDialogAction>
@@ -480,12 +502,18 @@ function Confirm({
 }
 
 function OrgRow({
-
   org,
   pending,
   onAdjust,
 }: {
-  org: { id: string; name: string; slug: string; balance: number; recentSpend: number; keyCount: number };
+  org: {
+    id: string;
+    name: string;
+    slug: string;
+    balance: number;
+    recentSpend: number;
+    keyCount: number;
+  };
   pending: boolean;
   onAdjust: (delta: number, reason: string) => void;
 }) {
@@ -501,7 +529,8 @@ function OrgRow({
         </div>
         <div className="flex gap-4 text-xs text-muted-foreground">
           <span>
-            balance <span className="font-mono text-foreground">{org.balance.toLocaleString()}</span>
+            balance{" "}
+            <span className="font-mono text-foreground">{org.balance.toLocaleString()}</span>
           </span>
           <span>
             recent spend <span className="font-mono text-foreground">{org.recentSpend}</span>
@@ -548,7 +577,6 @@ function OrgRow({
             </Button>
           }
         />
-
       </div>
     </div>
   );

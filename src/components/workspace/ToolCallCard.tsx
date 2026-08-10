@@ -79,9 +79,7 @@ export function ToolCallCard({
 
       {call.status === "awaiting_confirmation" && onDecision && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-warning/5 px-4 py-3">
-          <p className="text-sm text-foreground">
-            Approval required before this action runs.
-          </p>
+          <p className="text-sm text-foreground">Approval required before this action runs.</p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled={busy} onClick={() => onDecision(false)}>
               Deny

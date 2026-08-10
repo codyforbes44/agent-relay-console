@@ -44,7 +44,6 @@ export const Route = createFileRoute("/.well-known/agent-manifest.json")({
           docs_url: `${origin}/docs`,
           llms_txt: `${origin}/llms.txt`,
 
-
           tool_names: PUBLIC_TOOLS.map((t) => t.name),
         });
       },

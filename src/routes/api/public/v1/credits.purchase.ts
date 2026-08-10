@@ -3,7 +3,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { apiError, json, preflight } from "@/lib/api/catalog.server";
 import { authenticateAgentKey, readBearer } from "@/lib/api/keys.server";
 import { checkRateLimit, getBalance } from "@/lib/api/metering.server";
-import { buildOffer, creditSettledPayment, markIntentFailed, offerBody, recordIntent } from "@/lib/api/payments.server";
+import {
+  buildOffer,
+  creditSettledPayment,
+  markIntentFailed,
+  offerBody,
+  recordIntent,
+} from "@/lib/api/payments.server";
 import { readPaymentHeader, verifyAndSettle } from "@/lib/api/x402.server";
 import {
   MACHINE_TOPUP_MAX_CREDITS,
@@ -25,7 +31,8 @@ export const Route = createFileRoute("/api/public/v1/credits/purchase")({
         const requestId = crypto.randomUUID();
 
         const raw = readBearer(request);
-        if (!raw) return apiError(401, "missing_api_key", "Provide Authorization: Bearer sk_agent_...");
+        if (!raw)
+          return apiError(401, "missing_api_key", "Provide Authorization: Bearer sk_agent_...");
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const identity = await authenticateAgentKey(supabaseAdmin, raw);
@@ -43,7 +50,11 @@ export const Route = createFileRoute("/api/public/v1/credits/purchase")({
         }
 
         const credits = Math.floor(Number(body.credits ?? MACHINE_TOPUP_MIN_CREDITS));
-        if (!Number.isFinite(credits) || credits < MACHINE_TOPUP_MIN_CREDITS || credits > MACHINE_TOPUP_MAX_CREDITS) {
+        if (
+          !Number.isFinite(credits) ||
+          credits < MACHINE_TOPUP_MIN_CREDITS ||
+          credits > MACHINE_TOPUP_MAX_CREDITS
+        ) {
           return apiError(
             422,
             "invalid_input",
@@ -78,7 +89,11 @@ export const Route = createFileRoute("/api/public/v1/credits/purchase")({
         }
 
         try {
-          const settlement = await verifyAndSettle(offer.config, paymentPayload, offer.requirements);
+          const settlement = await verifyAndSettle(
+            offer.config,
+            paymentPayload,
+            offer.requirements,
+          );
           await creditSettledPayment(supabaseAdmin, {
             orgId: identity.orgId,
             keyId: identity.keyId,

@@ -7,9 +7,15 @@ import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
 import { AlertTriangle } from "lucide-react";
 
 type OAuthApi = {
-  getAuthorizationDetails: (id: string) => Promise<{ data: AuthorizationDetails | null; error: Error | null }>;
-  approveAuthorization: (id: string) => Promise<{ data: AuthorizationDetails | null; error: Error | null }>;
-  denyAuthorization: (id: string) => Promise<{ data: AuthorizationDetails | null; error: Error | null }>;
+  getAuthorizationDetails: (
+    id: string,
+  ) => Promise<{ data: AuthorizationDetails | null; error: Error | null }>;
+  approveAuthorization: (
+    id: string,
+  ) => Promise<{ data: AuthorizationDetails | null; error: Error | null }>;
+  denyAuthorization: (
+    id: string,
+  ) => Promise<{ data: AuthorizationDetails | null; error: Error | null }>;
 };
 
 type AuthorizationDetails = {
@@ -21,7 +27,7 @@ type AuthorizationDetails = {
 export const Route = createFileRoute("/.lovable/oauth/consent")({
   ssr: false,
   validateSearch: (s: Record<string, unknown>) => ({
-    authorization_id: typeof s['authorization_id'] === "string" ? s['authorization_id'] : "",
+    authorization_id: typeof s["authorization_id"] === "string" ? s["authorization_id"] : "",
   }),
   beforeLoad: async ({ search, location }) => {
     if (!search.authorization_id) throw new Error("Missing authorization_id");
@@ -83,12 +89,14 @@ function Consent() {
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {clientName} will be able to call Relay tools as you. Each call debits credits from your
-          workspace balance. Side-effecting tools still require an explicit per-call confirmation from
-          you or your client.
+          workspace balance. Side-effecting tools still require an explicit per-call confirmation
+          from you or your client.
         </p>
 
         <div className="mt-6 rounded-lg border border-border bg-card p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tool catalog</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Tool catalog
+          </p>
           <ul className="mt-3 space-y-2">
             {PUBLIC_TOOLS.map((t) => (
               <li key={t.name} className="flex items-center justify-between text-sm">
@@ -113,7 +121,12 @@ function Consent() {
           </p>
         )}
         <div className="mt-6 flex gap-2">
-          <Button variant="outline" className="flex-1" disabled={busy} onClick={() => decide(false)}>
+          <Button
+            variant="outline"
+            className="flex-1"
+            disabled={busy}
+            onClick={() => decide(false)}
+          >
             Deny
           </Button>
           <Button className="flex-1" disabled={busy} onClick={() => decide(true)}>

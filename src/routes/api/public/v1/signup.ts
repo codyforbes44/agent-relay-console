@@ -36,7 +36,10 @@ export const Route = createFileRoute("/api/public/v1/signup")({
         const parsed = bodySchema.safeParse(raw);
         if (!parsed.success) {
           return apiError(422, "validation_failed", "Invalid signup payload", {
-            issues: parsed.error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
+            issues: parsed.error.issues.map((i) => ({
+              path: i.path.join("."),
+              message: i.message,
+            })),
           });
         }
 

@@ -15,7 +15,8 @@ export const Route = createFileRoute("/api/public/v1/claim")({
       OPTIONS: async () => preflight(),
       POST: async ({ request }) => {
         const raw = readBearer(request);
-        if (!raw) return apiError(401, "missing_api_key", "Provide Authorization: Bearer sk_agent_...");
+        if (!raw)
+          return apiError(401, "missing_api_key", "Provide Authorization: Bearer sk_agent_...");
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const identity = await authenticateAgentKey(supabaseAdmin, raw);
@@ -35,7 +36,11 @@ export const Route = createFileRoute("/api/public/v1/claim")({
           const claim = await createClaimToken(supabaseAdmin, identity.orgId, origin);
           return json({
             ok: true,
-            claim: { url: claim.url, expiresAt: claim.expiresAt, ttlMinutes: CLAIM_TOKEN_TTL_MINUTES },
+            claim: {
+              url: claim.url,
+              expiresAt: claim.expiresAt,
+              ttlMinutes: CLAIM_TOKEN_TTL_MINUTES,
+            },
             instructions:
               "Show this URL to your operator. After they sign in, the workspace is theirs and credits can be purchased.",
           });

@@ -12,6 +12,7 @@ Strip the card-checkout integration end to end. Credits are sold directly by Age
 ## Code removal
 
 Delete:
+
 - `src/lib/paddle.ts`, `src/lib/paddle.server.ts`
 - `src/hooks/usePaddleCheckout.ts`
 - `src/utils/payments.functions.ts` (only holds `resolvePaddlePrice`)

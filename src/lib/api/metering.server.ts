@@ -59,7 +59,10 @@ export type ReserveResult =
  * Balance and owner-set spend caps are evaluated inside one transaction under
  * a per-org lock, so concurrent calls cannot double-spend.
  */
-export async function reserveCredits(admin: SupabaseClient, input: ReserveInput): Promise<ReserveResult> {
+export async function reserveCredits(
+  admin: SupabaseClient,
+  input: ReserveInput,
+): Promise<ReserveResult> {
   const { data, error } = await admin.rpc("reserve_credits", {
     _org_id: input.orgId,
     _key_id: input.keyId,
@@ -72,7 +75,13 @@ export async function reserveCredits(admin: SupabaseClient, input: ReserveInput)
     _total_cap: input.totalCap ?? null,
   });
   if (error) {
-    console.error(JSON.stringify({ event: "reserve_credits_failed", orgId: input.orgId, message: error.message }));
+    console.error(
+      JSON.stringify({
+        event: "reserve_credits_failed",
+        orgId: input.orgId,
+        message: error.message,
+      }),
+    );
     return { status: "error", message: error.message };
   }
   const row = (data ?? {}) as Record<string, unknown>;
@@ -106,7 +115,11 @@ export async function reserveCredits(admin: SupabaseClient, input: ReserveInput)
 }
 
 /** Compensating entry when a tool throws after its credits were reserved. */
-export async function refundReservedCredits(admin: SupabaseClient, usageEventId: string, reason: string) {
+export async function refundReservedCredits(
+  admin: SupabaseClient,
+  usageEventId: string,
+  reason: string,
+) {
   const { error } = await admin.rpc("refund_reserved_credits", {
     _usage_event_id: usageEventId,
     _reason: reason,
@@ -117,10 +130,19 @@ export async function refundReservedCredits(admin: SupabaseClient, usageEventId:
 }
 
 /** Post-execution patch of the reserved usage row (latency only). */
-export async function finalizeUsage(admin: SupabaseClient, usageEventId: string, latencyMs: number) {
-  const { error } = await admin.from("usage_events").update({ latency_ms: latencyMs }).eq("id", usageEventId);
+export async function finalizeUsage(
+  admin: SupabaseClient,
+  usageEventId: string,
+  latencyMs: number,
+) {
+  const { error } = await admin
+    .from("usage_events")
+    .update({ latency_ms: latencyMs })
+    .eq("id", usageEventId);
   if (error) {
-    console.error(JSON.stringify({ event: "metering_write_failed", usageEventId, message: error.message }));
+    console.error(
+      JSON.stringify({ event: "metering_write_failed", usageEventId, message: error.message }),
+    );
   }
 }
 
@@ -182,7 +204,12 @@ export async function touchKey(admin: SupabaseClient, keyId: string) {
   await admin.from("agent_keys").update({ last_used_at: new Date().toISOString() }).eq("id", keyId);
 }
 
-export type GuardrailViolation = { status: number; code: string; message: string; extra?: Record<string, unknown> };
+export type GuardrailViolation = {
+  status: number;
+  code: string;
+  message: string;
+  extra?: Record<string, unknown>;
+};
 
 /**
  * Non-monetary key checks (expiry, allowed tools). These are not racy.
@@ -197,10 +224,19 @@ export async function checkKeyGuardrails(
   const { limits } = identity;
 
   if (limits.expiresAt && new Date(limits.expiresAt).getTime() <= Date.now()) {
-    return { status: 401, code: "key_expired", message: "This API key has passed its expiry date", extra: { expiredAt: limits.expiresAt } };
+    return {
+      status: 401,
+      code: "key_expired",
+      message: "This API key has passed its expiry date",
+      extra: { expiredAt: limits.expiresAt },
+    };
   }
 
-  if (limits.allowedTools && limits.allowedTools.length > 0 && !limits.allowedTools.includes(toolName)) {
+  if (
+    limits.allowedTools &&
+    limits.allowedTools.length > 0 &&
+    !limits.allowedTools.includes(toolName)
+  ) {
     return {
       status: 403,
       code: "tool_not_allowed",
@@ -229,11 +265,20 @@ export function budgetViolation(result: {
     status: 403,
     code: "budget_exceeded",
     message: BUDGET_MESSAGE[result.window] ?? "This call would exceed the key's credit cap",
-    extra: { spent: result.spent, required: result.required, limit: result.limit, window: result.window },
+    extra: {
+      spent: result.spent,
+      required: result.required,
+      limit: result.limit,
+      window: result.window,
+    },
   };
 }
 
-export async function keyCreditsSpent(admin: SupabaseClient, keyId: string, since: string): Promise<number> {
+export async function keyCreditsSpent(
+  admin: SupabaseClient,
+  keyId: string,
+  since: string,
+): Promise<number> {
   const { data, error } = await admin.rpc("key_credits_spent", { _key_id: keyId, _since: since });
   if (error) return 0;
   return Number(data ?? 0);

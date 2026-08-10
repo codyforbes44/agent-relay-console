@@ -14,7 +14,7 @@ Determine which external AI API resources are required for RELAY to be considere
 
 ## Recommendation
 
-RELAY is a *platform* that sells tools to other agents. To be best-in-class, it does not need to build every AI capability itself; it needs to expose the right AI primitives as metered, typed, secure tools. The highest-leverage additions are:
+RELAY is a _platform_ that sells tools to other agents. To be best-in-class, it does not need to build every AI capability itself; it needs to expose the right AI primitives as metered, typed, secure tools. The highest-leverage additions are:
 
 1. **Web search API** — agents need current, summarized web results beyond raw page fetching.
 2. **Embeddings + vector knowledge base** — replace the `sandbox_search_knowledge_base` with real semantic search over tenant-owned documents.
@@ -30,6 +30,7 @@ RELAY is a *platform* that sells tools to other agents. To be best-in-class, it 
 Why: `fetch_url` and `crawl_site` are useful, but agents often need a ranked, summarized answer to a query without choosing URLs. A search tool is a natural credit-burner and a common first call in agent workflows.
 
 Options:
+
 - **Tavily** — built for AI agents, returns structured JSON with citations, cheap, fast.
 - **Exa** — neural search, excellent for semantic discovery.
 - **Serper** (Google Search API) — reliable, familiar, cheap at scale.
@@ -42,6 +43,7 @@ Recommended: **Tavily** for general AI search, with a future option to add **Exa
 Why: The current `sandbox_search_knowledge_base` is a fixture. A real vector knowledge base lets tenants upload documents and query them semantically. This turns RELAY from a tool API into a memory/retrieval layer for agents.
 
 Options:
+
 - **Supabase pgvector** (already available via Lovable Cloud) + an embedding model from Lovable AI Gateway (`text-embedding-3-small`, `text-embedding-3-large`, or `google/text-embedding-004`).
 - **Pinecone / Weaviate / Qdrant** if scale or hybrid search is needed later.
 
@@ -52,6 +54,7 @@ Recommended: Use **Supabase pgvector** + Lovable AI Gateway embeddings. This kee
 Why: Agents that reason about code need to run it. A `run_code` tool is a high-value, defensible capability.
 
 Options:
+
 - **E2B** — sandboxes for AI-generated code, fast, ephemeral, supports Python/JS.
 - **Modal** — more general serverless compute.
 - **Firecracker-based custom sandbox** — high effort.
@@ -63,6 +66,7 @@ Recommended: **E2B** for a managed, secure, metered code execution tool.
 Why: Many modern sites require JavaScript, login sessions, or form interaction. Raw fetch cannot handle these.
 
 Options:
+
 - **Browserbase** — headless browsers for agents, good API.
 - **Firecrawl** — scrape + crawl with JS rendering, good for agents.
 - **ScrapingBee** — simpler proxy + JS rendering.
@@ -74,6 +78,7 @@ Recommended: **Browserbase** for interactive browser sessions; add **Firecrawl**
 Why: The agent loop is hardcoded to `google/gemini-3.5-flash`. Best-in-class platforms should route to the best available model, fall back on failures, and expose model choice as a workspace setting.
 
 Options:
+
 - Already on Lovable AI Gateway; can call multiple models (`google/gemini-3.6-flash`, `openai/gpt-5.5`, `openai/gpt-5.6-terra`, etc.) from the same gateway key.
 - Add a small router that picks model by task complexity or cost target.
 
@@ -84,6 +89,7 @@ Recommended: **No new vendor**. Implement model routing within Lovable AI Gatewa
 Why: Tenants will upload PDFs, DOCX, images of documents. Extracting clean text + tables + images is a common AI agent need.
 
 Options:
+
 - **Unstructured API** — gold standard for messy documents.
 - **LlamaParse** — excellent for complex PDFs with tables.
 - **Lovable AI Gateway multimodal models** — can already describe images and read documents via chat/completions.
@@ -95,6 +101,7 @@ Recommended: Start with **Lovable AI Gateway multimodal models** for image/PDF u
 Why: As the tool catalog grows, RELAY needs to track latency, cost, success rate, and user satisfaction per tool. This is both an operational necessity and a product differentiator (tenants can see which tools are reliable).
 
 Options:
+
 - **Langfuse** — open-source, self-hostable or managed, good for tracing.
 - **LangSmith** — if using LangChain (not currently used).
 - **Braintrust** — strong evaluation framework.
@@ -107,6 +114,7 @@ Recommended: Start with a **custom trace table in Supabase** (cost, latency, mod
 Why: Not core to the current positioning, but easy to add as a credit-burning premium tool.
 
 Options:
+
 - Lovable AI Gateway already has image models (`google/gemini-2.5-flash-image`, `google/gemini-3-pro-image`, etc.).
 
 Recommended: **No new vendor** — expose gateway image models as a new tool when requested.
@@ -115,7 +123,7 @@ Recommended: **No new vendor** — expose gateway image models as a new tool whe
 
 - **Standalone vector DBs** (Pinecone, Weaviate) — Supabase pgvector is sufficient until multi-tenant scale demands it.
 - **Niche model providers** (Mistral, Cohere, Groq) — Lovable AI Gateway covers the mainstream; add only if a specific customer demands it.
-- **General SaaS integrations** (Salesforce, HubSpot, SendGrid, Stripe) — these are important revenue tools, but they are *SaaS integrations*, not *AI API resources*. Treat them as separate marketplace connectors, not AI primitives.
+- **General SaaS integrations** (Salesforce, HubSpot, SendGrid, Stripe) — these are important revenue tools, but they are _SaaS integrations_, not _AI API resources_. Treat them as separate marketplace connectors, not AI primitives.
 
 ## Implementation plan
 
@@ -155,4 +163,3 @@ Recommended: **No new vendor** — expose gateway image models as a new tool whe
 - A tenant can upload documents and query them semantically.
 - The agent loop can be configured per workspace for cost vs. quality.
 - Every tool call has latency/cost traces visible in the console.
-

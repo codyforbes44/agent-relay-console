@@ -1,20 +1,16 @@
 import { zodToJsonSchema } from "zod-to-json-schema";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import {
-  PUBLIC_TOOLS,
-  exampleSuccessEnvelope,
-  type ToolContract,
-} from "@/lib/agent/contracts";
+import { PUBLIC_TOOLS, exampleSuccessEnvelope, type ToolContract } from "@/lib/agent/contracts";
 import { TOOL_ERRORS } from "@/lib/api/errors";
 import { visibleToolsForOrg } from "@/lib/api/org-tools.server";
 import { pricingDocument } from "@/lib/api/pricing.server";
 import { usdForCredits } from "@/lib/billing/packs";
 
-
 export const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
-  "access-control-allow-headers": "authorization, content-type, x-api-key, x-confirmation-token, idempotency-key, x-payment",
+  "access-control-allow-headers":
+    "authorization, content-type, x-api-key, x-confirmation-token, idempotency-key, x-payment",
   "access-control-allow-methods": "GET, POST, OPTIONS",
 };
 
@@ -65,9 +61,7 @@ function errorResponses(sideEffecting: boolean) {
                 error: {
                   code: err.code,
                   message: err.cause,
-                  ...(err.code === "insufficient_credits"
-                    ? { required: 5, balance: 2 }
-                    : {}),
+                  ...(err.code === "insufficient_credits" ? { required: 5, balance: 2 } : {}),
                 },
               },
             },
@@ -78,7 +72,6 @@ function errorResponses(sideEffecting: boolean) {
   }
   return byStatus;
 }
-
 
 export function toolDescriptor(tool: ToolContract, origin: string) {
   const headers: Record<string, string> = {
@@ -157,13 +150,12 @@ export function toolDescriptor(tool: ToolContract, origin: string) {
         body: tool.example,
       },
       response: exampleSuccessEnvelope(tool),
-      errors: TOOL_ERRORS.filter((e) => tool.sideEffecting || !e.code.startsWith("confirmation_")).map(
-        (e) => ({ status: e.status, code: e.code, cause: e.cause, action: e.action }),
-      ),
+      errors: TOOL_ERRORS.filter(
+        (e) => tool.sideEffecting || !e.code.startsWith("confirmation_"),
+      ).map((e) => ({ status: e.status, code: e.code, cause: e.cause, action: e.action })),
     },
   };
 }
-
 
 export function catalog(origin: string, tools: ToolContract[] = PUBLIC_TOOLS) {
   return {
@@ -266,8 +258,6 @@ export function openApiDocument(origin: string) {
           },
           ...errorResponses(tool.sideEffecting),
         },
-
-
       },
     };
   }

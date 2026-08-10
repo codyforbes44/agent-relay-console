@@ -147,7 +147,6 @@
   --sidebar-ring: oklch(0.78 0.16 66);
 }
 
-
 @layer base {
   * {
     border-color: var(--color-border);
@@ -165,5 +164,4 @@
   .font-mono {
     font-family: var(--font-mono);
   }
-
 }
