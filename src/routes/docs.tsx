@@ -290,12 +290,14 @@ x-api-key: sk_agent_xxxxxxxx_...`}</Code>
         <Section title="9. Starter catalog, examples & credit prices">
           <p className="mb-3 text-sm text-muted-foreground">
             The catalog has two tiers. Live tools (<Mono>fetch_url</Mono>,{" "}
-            <Mono>crawl_site</Mono>, <Mono>extract_structured</Mono>) do real network and model
-            work, cost credits and return <Mono>&quot;demo&quot;: false</Mono>. Every{" "}
-            <Mono>sandbox_*</Mono> tool is free (0 credits), returns fixture data with{" "}
-            <Mono>&quot;demo&quot;: true</Mono> and changes nothing — use them to rehearse
-            auth, schemas, idempotency and the confirmation gate. Workspace owners can disable
-            any tool in the console.
+            <Mono>crawl_site</Mono>, <Mono>extract_structured</Mono>,{" "}
+            <Mono>search_web</Mono>, <Mono>search_knowledge_base</Mono>) do real network, model and
+            vector search work, cost credits and return <Mono>&quot;demo&quot;: false</Mono>.{" "}
+            <Mono>search_knowledge_base</Mono> runs semantic search over documents uploaded to the
+            workspace knowledge base. Every <Mono>sandbox_*</Mono> tool is free (0 credits), returns
+            fixture data with <Mono>&quot;demo&quot;: true</Mono> and changes nothing — use them to
+            rehearse auth, schemas, idempotency and the confirmation gate. Workspace owners can
+            disable any tool in the console.
           </p>
           <div className="space-y-4">
             {PUBLIC_TOOLS.map((t) => (
