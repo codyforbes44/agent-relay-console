@@ -96,9 +96,8 @@ function PricingPage() {
           ))}
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          Prices are in US dollars and exclude any sales tax or VAT, which is calculated at
-          checkout. Our order process is conducted by our online reseller Paddle.com, the Merchant
-          of Record for all orders.
+          Prices are in US dollars and exclude any sales tax or VAT. Agent Relay Console sells
+          credits directly; payments settle in USDC on Base over x402, or by invoice on request.
         </p>
 
         <h2 className="mt-10 text-lg font-medium text-foreground">Credit cost per tool call</h2>
