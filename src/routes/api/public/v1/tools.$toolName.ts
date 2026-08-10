@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { resolveTool } from "@/lib/agent/contracts";
-import { runTool } from "@/lib/agent/tools.server";
+import { recordToolTrace, runTool } from "@/lib/agent/tools.server";
 import { apiError, json, preflight, toolDescriptor } from "@/lib/api/catalog.server";
 import {
   CONFIRMATION_HEADER,
