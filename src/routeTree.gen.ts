@@ -38,6 +38,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedChatThreadIdRouteImport } from './routes/_authenticated/chat.$threadId'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as ApiPublicV1ClaimRouteImport } from './routes/api/public/v1/claim'
 import { Route as ApiPublicV1MeRouteImport } from './routes/api/public/v1/me'
 import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/public/v1/openapi[.]json'
@@ -199,6 +200,11 @@ const AuthenticatedChatThreadIdRoute =
     path: '/chat/$threadId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1ClaimRoute = ApiPublicV1ClaimRouteImport.update({
   id: '/api/public/v1/claim',
   path: '/api/public/v1/claim',
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
@@ -315,6 +322,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/chat/$threadId': typeof AuthenticatedChatThreadIdRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/api/public/v1/claim': typeof ApiPublicV1ClaimRoute
   '/api/public/v1/me': typeof ApiPublicV1MeRoute
@@ -397,6 +406,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/chat/$threadId'
+    | '/api/stripe/webhook'
     | '/chat/'
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
@@ -436,6 +446,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/chat/$threadId'
+    | '/api/stripe/webhook'
     | '/chat'
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
@@ -476,6 +487,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/chat/$threadId'
+    | '/api/stripe/webhook'
     | '/_authenticated/chat/'
     | '/api/public/v1/claim'
     | '/api/public/v1/me'
@@ -510,6 +522,7 @@ export interface RootRouteChildren {
   ApiAgentRoute: typeof ApiAgentRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiPublicV1ClaimRoute: typeof ApiPublicV1ClaimRoute
   ApiPublicV1MeRoute: typeof ApiPublicV1MeRoute
   ApiPublicV1OpenapiDotjsonRoute: typeof ApiPublicV1OpenapiDotjsonRoute
@@ -725,6 +738,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatThreadIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/claim': {
       id: '/api/public/v1/claim'
       path: '/api/public/v1/claim'
@@ -850,6 +870,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAgentRoute: ApiAgentRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiPublicV1ClaimRoute: ApiPublicV1ClaimRoute,
   ApiPublicV1MeRoute: ApiPublicV1MeRoute,
   ApiPublicV1OpenapiDotjsonRoute: ApiPublicV1OpenapiDotjsonRoute,
