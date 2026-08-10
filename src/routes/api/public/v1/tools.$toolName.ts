@@ -365,14 +365,25 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         const reserved = reservation;
 
         let result: Record<string, unknown>;
+        let toolError: string | null = null;
         try {
           result = await runTool(toolName, { ...parsed.data, orgId: identity.orgId });
         } catch (e) {
-          const message = e instanceof Error ? e.message : "Tool execution failed";
+          toolError = e instanceof Error ? e.message : "Tool execution failed";
+          await recordToolTrace({
+            orgId: identity.orgId,
+            requestId,
+            toolName,
+            args: parsed.data as Record<string, unknown>,
+            error: toolError,
+            creditsCharged: 0,
+            durationMs: Date.now() - toolStartedAt.getTime(),
+            startedAt: toolStartedAt,
+          });
           await releaseIdem();
           await refundReservedCredits(supabaseAdmin, reserved.usageEventId, "tool_failed");
-          log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message });
-          return apiError(502, "tool_failed", message);
+          log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message: toolError });
+          return apiError(502, "tool_failed", toolError);
         }
 
         // Tools report failure in-band as { ok: false, error }. Treat that the
