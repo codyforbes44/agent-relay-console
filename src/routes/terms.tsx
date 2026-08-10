@@ -89,20 +89,14 @@ function TermsPage() {
 
           <Section title="6. Payment, billing and tax">
             <p>
-              Credits are sold as one-time packs at the prices shown on our pricing page. Our order
-              process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of
-              Record for all our orders. Paddle provides all customer service inquiries and handles
-              returns. Payment, billing, tax, cancellation and refund mechanics are governed by
-              Paddle&apos;s{" "}
-              <a
-                className="underline"
-                href="https://www.paddle.com/legal/checkout-buyer-terms"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Buyer Terms
-              </a>
-              , together with our refund policy.
+              Credits are sold directly by Agent Relay Console as one-time packs at the prices shown
+              on our pricing page. Prices are quoted in US dollars and settled in USDC on the Base
+              network using the x402 payment protocol, or by invoice where we have agreed that in
+              advance. There is no subscription and no automatic renewal; you buy credits only when
+              you choose to. Prices exclude any sales tax or VAT that may apply, and you are
+              responsible for any taxes arising from your purchase other than taxes on our income.
+              Credits are consumed per successful tool call and do not expire. Refunds are governed
+              by our refund policy.
             </p>
           </Section>
 
