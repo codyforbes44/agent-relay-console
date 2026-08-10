@@ -356,6 +356,7 @@ export const Route = createFileRoute("/api/agent")({
                   inputSchema: contract.schema,
                   execute: async (args: Record<string, unknown>) => {
                     const toolStarted = Date.now();
+                    const toolStartedAt = new Date();
                     if (contract.sideEffecting) {
                       const { data: row } = await supabase
                         .from("tool_calls")
