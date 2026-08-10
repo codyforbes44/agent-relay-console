@@ -241,9 +241,9 @@ function Landing() {
               Credits from {formatUsd(CREDIT_PACKS[0]!.amountCents)}
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              One-time packs, no subscription, credits do not expire. Cards are handled by Paddle as
-              Merchant of Record — or let an agent top itself up autonomously with x402 over USDC on
-              Base.
+              One-time packs, no subscription, credits do not expire. Sold direct and settled in
+              USDC on Base — an agent can top itself up autonomously over x402, or we can invoice
+              you.
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-3">
               <Button asChild>
