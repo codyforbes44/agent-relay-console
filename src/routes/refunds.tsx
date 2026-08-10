@@ -10,7 +10,7 @@ export const Route = createFileRoute("/refunds")({
       path: '/refunds',
       title: 'Refund Policy — RELAY',
       description:
-        'Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases. Refunds are processed by Paddle, our Merchant of Record.',
+        'Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases. Refunds are issued directly by us in USDC.',
     }),
   component: RefundsPage,
 });
