@@ -147,6 +147,15 @@ async function runMetered(
     return fail(e instanceof Error ? e.message : "Tool execution failed");
   }
 
+  // In-band failures ({ ok: false }) are refunded too — a failed call is free.
+  if (result['ok'] === false) {
+    await refundReservedCredits(supabaseAdmin, reservation.usageEventId, "tool_failed");
+    if (confirmationId) await releaseConfirmation(supabaseAdmin, confirmationId);
+    return fail(String(result['error'] ?? "Tool execution failed"));
+  }
+
+
+
   await finalizeUsage(supabaseAdmin, reservation.usageEventId, Date.now() - started);
 
   await supabaseAdmin.from("audit_logs").insert({
