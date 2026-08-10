@@ -365,7 +365,7 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
 
         let result: Record<string, unknown>;
         try {
-          result = await runTool(toolName, parsed.data);
+          result = await runTool(toolName, { ...parsed.data, orgId: identity.orgId });
         } catch (e) {
           const message = e instanceof Error ? e.message : "Tool execution failed";
           await releaseIdem();
