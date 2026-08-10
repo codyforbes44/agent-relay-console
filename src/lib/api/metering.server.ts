@@ -124,15 +124,18 @@ export async function finalizeUsage(admin: SupabaseClient, usageEventId: string,
   }
 }
 
+/**
+ * Per-key rate limit. Atomic: the counter is incremented and compared inside a
+ * single statement, so a simultaneous burst cannot slip past the limit the way
+ * a count-then-decide check could.
+ */
 export async function checkRateLimit(admin: SupabaseClient, keyId: string): Promise<boolean> {
-  const since = new Date(Date.now() - 60_000).toISOString();
-  const { count, error } = await admin
-    .from("usage_events")
-    .select("id", { count: "exact", head: true })
-    .eq("key_id", keyId)
-    .gte("created_at", since);
-  if (error) return true;
-  return (count ?? 0) < RATE_LIMIT_PER_MINUTE;
+  const { data, error } = await admin.rpc("consume_rate_limit", {
+    _key_id: keyId,
+    _limit: RATE_LIMIT_PER_MINUTE,
+  });
+  if (error) return true; // never lock out callers on a metering hiccup
+  return data !== false;
 }
 
 export type MeterInput = {
