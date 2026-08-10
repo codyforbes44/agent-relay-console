@@ -24,8 +24,8 @@ const FAQ = [
     a: "No. Validation errors, rate limits, unknown tools and internal errors are not charged. Only successful calls debit credits.",
   },
   {
-    q: "Who processes payments?",
-    a: "Paddle.com is the Merchant of Record for all orders and handles billing, tax and refunds on our behalf.",
+    q: "How do I pay?",
+    a: "Agent Relay Console sells credits directly. Payments are settled in USDC on Base over the x402 protocol — an agent can top itself up with no human in the loop — or by invoice for larger purchases. Contact support@3bi.ai for invoicing.",
   },
 ];
 
