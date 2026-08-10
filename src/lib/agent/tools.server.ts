@@ -452,6 +452,133 @@ async function searchKnowledgeBase(args: Record<string, unknown>): Promise<Recor
   }
 }
 
+/**
+ * Run Python or JavaScript in an E2B sandbox. Files and network are ephemeral
+ * and isolated to the sandbox. stdout, stderr and exit code are returned.
+ */
+async function executeCode(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const apiKey = process.env['E2B_API_KEY'];
+  if (!apiKey) return { ok: false, error: "Code execution is not configured" };
+
+  const code = String(args['code'] ?? "");
+  if (!code.trim()) return { ok: false, error: "code is required" };
+  const language = (String(args['language'] ?? "python") as "python" | "javascript") || "python";
+  if (language !== "python" && language !== "javascript") {
+    return { ok: false, error: "language must be python or javascript" };
+  }
+  const timeout = Math.min(Math.max(Number(args['timeout'] ?? 60) || 60, 1), 300);
+
+  try {
+    const { Sandbox } = await import("e2b");
+    const sbx = await Sandbox.create(language === "python" ? "python" : "node", { apiKey });
+    try {
+      const execution = await sbx.runCode(code, {
+        language,
+        timeoutMs: timeout * 1000,
+      });
+      return ok({
+        language,
+        stdout: execution.stdout ?? "",
+        stderr: execution.stderr ?? "",
+        exitCode: execution.exitCode ?? 0,
+        results: execution.results ?? [],
+        executedAt: new Date().toISOString(),
+      });
+    } finally {
+      await sbx.kill();
+    }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Code execution failed" };
+  }
+}
+
+/**
+ * Open an interactive remote browser (Browserbase), perform optional actions,
+ * and return the final page text plus a screenshot URL.
+ */
+async function browsePage(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const apiKey = process.env['BROWSERBASE_API_KEY'];
+  if (!apiKey) return { ok: false, error: "Browser automation is not configured" };
+
+  const url = String(args['url'] ?? "").trim();
+  if (!url) return { ok: false, error: "url is required" };
+
+  const actions = Array.isArray(args['actions']) ? (args['actions'] as unknown[]) : [];
+  const screenshot = Boolean(args['screenshot'] ?? true);
+
+  try {
+    const { default: Browserbase } = await import("@browserbasehq/sdk");
+    const bb = new Browserbase({ apiKey });
+    const session = await bb.sessions.create({
+      projectId: process.env['BROWSERBASE_PROJECT_ID'] ?? undefined,
+    });
+    const wsUrl = session.connectUrl;
+    if (!wsUrl) return { ok: false, error: "Browserbase session did not return a connect URL" };
+
+    const { chromium } = await import("playwright-core");
+    const browser = await chromium.connectOverCDP(wsUrl);
+    try {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 1800 } });
+      const page = await context.newPage();
+      await page.goto(url, { waitUntil: "domcontentloaded" });
+
+      for (const action of actions) {
+        const a = action as Record<string, unknown>;
+        const type = String(a['type'] ?? "");
+        const selector = typeof a['selector'] === "string" ? a['selector'] : undefined;
+        const value = typeof a['value'] === "string" ? a['value'] : undefined;
+        const delay = Number(a['delay'] ?? 0);
+        switch (type) {
+          case "click":
+            if (selector) await page.click(selector);
+            break;
+          case "type":
+            if (selector && value !== undefined) await page.fill(selector, value);
+            break;
+          case "wait":
+            await page.waitForTimeout(delay);
+            break;
+          case "navigate":
+            if (value) await page.goto(value, { waitUntil: "domcontentloaded" });
+            break;
+        }
+      }
+
+      let screenshotUrl: string | null = null;
+      if (screenshot) {
+        const screenshotBuffer = await page.screenshot({ fullPage: false });
+        // Upload screenshot to a temporary storage bucket so the agent can fetch it.
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const path = `screenshots/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
+        const { data, error } = await supabaseAdmin.storage.from("agent-uploads").upload(path, screenshotBuffer, {
+          contentType: "image/png",
+        });
+        if (!error && data?.path) {
+          const { data: signedUrl } = await supabaseAdmin.storage
+            .from("agent-uploads")
+            .createSignedUrl(data.path, 60 * 60);
+          screenshotUrl = signedUrl?.signedUrl ?? null;
+        }
+      }
+
+      const title = await page.title().catch(() => null);
+      const text = await page.evaluate(() => document.body.innerText).catch(() => "");
+
+      return ok({
+        url: page.url(),
+        title,
+        text: text.slice(0, 12_000),
+        screenshotUrl,
+        finishedAt: new Date().toISOString(),
+      });
+    } finally {
+      await browser.close();
+    }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Browser automation failed" };
+  }
+}
+
 export async function runTool(
   name: string,
   args: Record<string, unknown>,
