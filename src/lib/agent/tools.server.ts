@@ -452,6 +452,89 @@ async function searchKnowledgeBase(args: Record<string, unknown>): Promise<Recor
   }
 }
 
+/**
+ * Run Python or JavaScript in an E2B sandbox. Files and network are ephemeral
+ * and isolated to the sandbox. stdout, stderr and exit code are returned.
+ */
+async function executeCode(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const apiKey = process.env['E2B_API_KEY'];
+  if (!apiKey) return { ok: false, error: "Code execution is not configured" };
+
+  const code = String(args['code'] ?? "");
+  if (!code.trim()) return { ok: false, error: "code is required" };
+  const language = (String(args['language'] ?? "python") as "python" | "javascript") || "python";
+  if (language !== "python" && language !== "javascript") {
+    return { ok: false, error: "language must be python or javascript" };
+  }
+  const timeout = Math.min(Math.max(Number(args['timeout'] ?? 60) || 60, 1), 300);
+
+  try {
+    const { Sandbox } = await import("e2b");
+    const template = language === "python" ? "python" : "node";
+    const sbx = await Sandbox.create(template, { apiKey });
+    try {
+      const filename = `/tmp/relay_exec_${Date.now()}.${language === "python" ? "py" : "js"}`;
+      await sbx.files.write(filename, code);
+      const cmd = language === "python" ? `python3 ${filename}` : `node ${filename}`;
+      const execution = await sbx.commands.run(cmd, {
+        timeoutMs: timeout * 1000,
+      });
+      return ok({
+        language,
+        stdout: execution.stdout ?? "",
+        stderr: execution.stderr ?? "",
+        exitCode: execution.exitCode ?? 0,
+        executedAt: new Date().toISOString(),
+      });
+    } finally {
+      await sbx.kill();
+    }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Code execution failed" };
+  }
+}
+
+/**
+ * Open a URL in a remote Browserbase browser and return the rendered page text,
+ * title, and final URL via the Browserbase Fetch API. This runs the browser in
+ * Browserbase's cloud without requiring a local browser client, so it works in
+ * edge serverless runtimes.
+ */
+async function browsePage(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const apiKey = process.env['BROWSERBASE_API_KEY'];
+  if (!apiKey) return { ok: false, error: "Browser automation is not configured" };
+
+  const url = String(args['url'] ?? "").trim();
+  if (!url) return { ok: false, error: "url is required" };
+
+  try {
+    const { default: Browserbase } = await import("@browserbasehq/sdk");
+    const bb = new Browserbase({ apiKey });
+    const res = await bb.fetchAPI.create({
+      url,
+      format: "markdown",
+      allowRedirects: true,
+    });
+
+    const text = String(res.content ?? "");
+    const firstLine = text.split("\n")[0];
+    const title = firstLine && firstLine.startsWith("# ") ? firstLine.replace(/^#\s*/, "") : null;
+
+
+    return ok({
+      url,
+      statusCode: res.statusCode,
+      contentType: res.contentType,
+      title,
+      text,
+      finishedAt: new Date().toISOString(),
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Browser automation failed" };
+  }
+}
+
+
 export async function runTool(
   name: string,
   args: Record<string, unknown>,

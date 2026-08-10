@@ -200,6 +200,60 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     summarize: (a) => `"${str(a['query'])}"`,
   },
   {
+    // Real code execution in a sandboxed environment.
+    name: "execute_code",
+    label: "Execute code",
+    description:
+      "Run Python or JavaScript code in a sandboxed E2B environment and return stdout, stderr, and the exit code. The environment is ephemeral and isolated. Side-effecting: file writes are scoped to the sandbox only.",
+    sideEffecting: false,
+    icon: "database",
+    credits: 8,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      code: z.string().describe("Python or JavaScript code to execute"),
+      language: z.enum(["python", "javascript"]).optional().describe("Language. Defaults to python"),
+      timeout: z.number().optional().describe("Timeout in seconds, 1-300. Defaults to 60"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: { code: "print('hello')", language: "python" },
+    exampleResult: {
+      ok: true,
+      language: "python",
+      stdout: "hello\n",
+      stderr: "",
+      exitCode: 0,
+      executedAt: "2026-08-09T20:15:18.358Z",
+    },
+    summarize: (a) => `${str(a['language'] ?? "python")} snippet`,
+  },
+  {
+    // Real browser automation: render a page in Browserbase's cloud browser and return the page text.
+    name: "browse_page",
+    label: "Browse page",
+    description:
+      "Open a URL in a remote Browserbase browser and return the rendered page as markdown text, including title, status code, and content type. Runs in Browserbase's cloud so it works from serverless runtimes.",
+    sideEffecting: false,
+    icon: "globe",
+    credits: 10,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      url: z.string().describe("URL to open and render"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: { url: "https://example.com" },
+    exampleResult: {
+      ok: true,
+      url: "https://example.com/",
+      statusCode: 200,
+      contentType: "text/markdown",
+      title: "Example Domain",
+      text: "Example Domain\n\nThis domain is for use in illustrative examples...",
+      finishedAt: "2026-08-09T20:15:18.358Z",
+    },
+    summarize: (a) => str(a['url']),
+  },
+
+  {
     name: "sandbox_search_knowledge_base",
     label: "Search knowledge base (sandbox)",
     description:
