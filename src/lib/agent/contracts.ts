@@ -399,7 +399,6 @@ export const TOOLS_BY_NAME: Record<string, ToolContract> = Object.fromEntries(
  * responses carry a `deprecated` pointer to the new name.
  */
 export const DEPRECATED_TOOL_ALIASES: Record<string, string> = {
-  search_knowledge_base: "sandbox_search_knowledge_base",
   lookup_crm_contact: "sandbox_lookup_crm_contact",
   list_records: "sandbox_list_records",
   send_email: "sandbox_send_email",
