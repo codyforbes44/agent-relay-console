@@ -390,18 +390,38 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         // same as a throw: refund the reservation and answer 502 tool_failed,
         // so a failed call never costs credits.
         if (result['ok'] === false) {
-          const message = String(result['error'] ?? "Tool execution failed");
+          toolError = String(result['error'] ?? "Tool execution failed");
+          await recordToolTrace({
+            orgId: identity.orgId,
+            requestId,
+            toolName,
+            args: parsed.data as Record<string, unknown>,
+            result,
+            error: toolError,
+            creditsCharged: 0,
+            durationMs: Date.now() - toolStartedAt.getTime(),
+            startedAt: toolStartedAt,
+          });
           await releaseIdem();
           await refundReservedCredits(supabaseAdmin, reserved.usageEventId, "tool_failed");
-          log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message });
-          return apiError(502, "tool_failed", message);
+          log("public_tool_error", { requestId, toolName, orgId: identity.orgId, message: toolError });
+          return apiError(502, "tool_failed", toolError);
         }
-
 
         const latencyMs = Date.now() - started;
         await Promise.all([
           finalizeUsage(supabaseAdmin, reserved.usageEventId, latencyMs),
           touchKey(supabaseAdmin, identity.keyId),
+          recordToolTrace({
+            orgId: identity.orgId,
+            requestId,
+            toolName,
+            args: parsed.data as Record<string, unknown>,
+            result,
+            creditsCharged: tool.credits,
+            durationMs: Date.now() - toolStartedAt.getTime(),
+            startedAt: toolStartedAt,
+          }),
         ]);
 
         log("public_tool_call", {
