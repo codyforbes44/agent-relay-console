@@ -95,8 +95,8 @@ export function LegalFooter() {
       </div>
       <div className="mx-auto w-full max-w-5xl px-6 pb-8 text-xs text-muted-foreground">
         <p>
-          © {new Date().getFullYear()} {SITE_NAME}. Orders are processed by Paddle.com, our
-          Merchant of Record.
+          © {new Date().getFullYear()} {SITE_NAME}. Credits are sold directly by us and settled in
+          USDC on Base.
         </p>
       </div>
     </footer>
