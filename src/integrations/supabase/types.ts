@@ -1113,6 +1113,10 @@ export type Database = {
         Args: { _ip_hash: string; _max: number; _window_hours: number }
         Returns: boolean
       }
+      consume_user_rate_limit: {
+        Args: { _max?: number; _user_id: string }
+        Returns: boolean
+      }
       has_org_access: { Args: { _org_id: string }; Returns: boolean }
       has_role: {
         Args: {
