@@ -210,11 +210,13 @@ try {
   const mcp = JSON.parse(
     readFileSync(new URL("../.lovable/mcp/manifest.json", import.meta.url), "utf8"),
   );
-  const mcpNames = (mcp.tools || []).map((t) => t.name).sort();
-  if (mcpNames.length && mcpNames.join(",") !== expectedNames.join(",")) {
+  const mcpTools = mcp.mcp?.tools ?? mcp.tools;
+  if (!Array.isArray(mcpTools)) throw new Error("MCP manifest has no tool catalog");
+  const mcpNames = mcpTools.map((t) => t.name).sort();
+  if (mcpNames.join(",") !== expectedNames.join(",")) {
     fail(`mcp manifest tools mismatch: [${mcpNames}] vs [${expectedNames}]`);
   }
-  for (const t of mcp.tools || []) {
+  for (const t of mcpTools) {
     const c = publicTools.find((x) => x.name === t.name);
     if (c && !String(t.description || "").includes(`${c.credits} credit`)) {
       fail(`mcp ${t.name}: description does not state ${c.credits} credits`);

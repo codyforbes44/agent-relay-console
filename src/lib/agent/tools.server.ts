@@ -620,6 +620,10 @@ export async function runTool(
       return searchWeb(args);
     case "search_knowledge_base":
       return searchKnowledgeBase(args);
+    case "execute_code":
+      return executeCode(args);
+    case "browse_page":
+      return browsePage(args);
     case "sandbox_search_knowledge_base": {
       const q = String(args["query"] ?? "").toLowerCase();
       const hits = KB.filter(
