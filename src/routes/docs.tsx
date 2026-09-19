@@ -14,7 +14,7 @@ export const Route = createFileRoute("/docs")({
       path: "/docs",
       title: "API docs — RELAY tool API for agents",
       description:
-        "Machine-first REST and MCP API for autonomous agents: bearer key auth, credit metering, OpenAPI discovery, idempotency keys and explicit side-effect confirmation.",
+        "REST and MCP API reference for agents: bearer-key auth, credit metering, OpenAPI discovery, idempotency keys and side-effect confirmation.",
     }),
   component: DocsPage,
 });
