@@ -21,6 +21,11 @@ the generated catalog and OAuth issuer alongside the source. The API consistency
 checker now reads the SDK's nested manifest catalog and rejects missing catalogs.
 Provider regression tests mock E2B and Browserbase and make no paid requests.
 
+The existing API-consistency workflow invoked an unavailable `tsgo` package; it
+now runs the repository's installed TypeScript checker. Generated Supabase types
+and MCP routes are exempt only from Prettier's formatting rule, while semantic
+lint checks remain enabled. Two existing hand-authored formatting errors are fixed.
+
 Before deployment, verify provider configuration and run the existing API consistency
 check against staging. Production provider health and account ownership are not
 established by these tests. No live provider keys or account configuration are changed
