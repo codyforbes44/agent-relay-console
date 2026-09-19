@@ -77,20 +77,15 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
+    // Sitewide defaults only. Per-page title/description/og tags live on each
+    // leaf route via publicHead() so no tag is emitted twice.
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "author", content: SITE_PRODUCT_NAME },
-      { name: "keywords", content: SITE_KEYWORDS.join(", ") },
-      { title: SITE_TITLE },
-      { name: "description", content: SITE_DESCRIPTION },
-      { property: "og:title", content: SITE_TITLE },
-      { property: "og:description", content: SITE_DESCRIPTION },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: SITE_PRODUCT_NAME },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "twitter:title", content: SITE_TITLE },
-      { name: "twitter:description", content: SITE_DESCRIPTION },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
