@@ -37,4 +37,14 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  {
+    // Generator output has its own formatting. Keep semantic lint rules enabled.
+    files: [
+      "src/integrations/supabase/types.ts",
+      "src/routes/\\[.mcp\\]/**/*.ts",
+      "src/routes/\\[.well-known\\]/oauth-protected-resource.ts",
+      "src/routes/mcp.ts",
+    ],
+    rules: { "prettier/prettier": "off" },
+  },
 );

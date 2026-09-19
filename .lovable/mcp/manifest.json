@@ -122,6 +122,145 @@
         "outputSchema": null
       },
       {
+        "name": "search_web",
+        "title": "Search web",
+        "description": "Search the public web and return ranked results with titles, snippets, and source URLs. Uses a server-side search API. Read-only. Costs 4 credit(s) per call. Example arguments: {\"query\":\"x402 payment protocol summary\"}. Example result: {\"ok\":true,\"query\":\"x402 payment protocol summary\",\"results\":[{\"title\":\"x402 - Machine-payable HTTP\",\"url\":\"https://x402.org\",\"content\":\"x402 is a protocol for machine payments over HTTP using stablecoins...\",\"score\":0.94}],\"answer\":\"x402 lets servers request on-chain payment by returning HTTP 402.\",\"searchedAt\":\"2026-08-09T20:15:18.358Z\"}. Read-only and safe to retry.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Natural language search query"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Number of results to return, 1-20. Defaults to 5"
+            },
+            "includeAnswer": {
+              "type": "boolean",
+              "description": "Include a short AI-generated answer based on the results. Defaults to false"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_knowledge_base",
+        "title": "Search knowledge base",
+        "description": "Search this workspace's uploaded documents using semantic similarity. Returns the most relevant text chunks with document titles and source URLs. Read-only. Costs 3 credit(s) per call. Example arguments: {\"query\":\"refund policy\"}. Example result: {\"ok\":true,\"matches\":[{\"documentId\":\"doc_...\",\"chunkIndex\":0,\"title\":\"Refund policy\",\"sourceUrl\":null,\"content\":\"Refunds are issued within 14 days of purchase for annual plans...\",\"similarity\":0.91}]}. Read-only and safe to retry.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Natural language search query"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Number of chunks to return, 1-20. Defaults to 5"
+            },
+            "documentIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Optional list of document IDs to restrict the search to"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "execute_code",
+        "title": "Execute code",
+        "description": "Run Python or JavaScript code in a sandboxed E2B environment and return stdout, stderr, and the exit code. Files are ephemeral, but code can make external network requests with side effects. Requires the configured side-effect confirmation flow. Costs 8 credit(s) per call. Example arguments: {\"code\":\"print('hello')\",\"language\":\"python\"}. Example result: {\"ok\":true,\"language\":\"python\",\"stdout\":\"hello\\n\",\"stderr\":\"\",\"exitCode\":0,\"executedAt\":\"2026-08-09T20:15:18.358Z\"}. Side-effecting, two-step: call it first WITHOUT confirmation_token — it returns a preview plus a single-use confirmationToken. Show that preview to the human, and only after they approve, call again with the identical arguments plus confirmation_token. The token is bound to those exact arguments and expires in 10 minutes.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "destructiveHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "Python or JavaScript code to execute"
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "python",
+                "javascript"
+              ],
+              "description": "Language. Defaults to python"
+            },
+            "timeout": {
+              "type": "number",
+              "description": "Timeout in seconds, 1-300. Defaults to 60"
+            },
+            "confirmation_token": {
+              "type": "string",
+              "description": "Single-use token from this tool's previous confirmation_required response. Omit on the first call to get the preview."
+            }
+          },
+          "required": [
+            "code"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "browse_page",
+        "title": "Browse page",
+        "description": "Open a URL in a remote Browserbase browser and return the rendered page as markdown text, including title, status code, and content type. Runs in Browserbase's cloud so it works from serverless runtimes. Costs 10 credit(s) per call. Example arguments: {\"url\":\"https://example.com\"}. Example result: {\"ok\":true,\"url\":\"https://example.com/\",\"statusCode\":200,\"contentType\":\"text/markdown\",\"title\":\"Example Domain\",\"text\":\"Example Domain\\n\\nThis domain is for use in illustrative examples...\",\"finishedAt\":\"2026-08-09T20:15:18.358Z\"}. Read-only and safe to retry.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "destructiveHint": false,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "URL to open and render"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
         "name": "sandbox_search_knowledge_base",
         "title": "Search knowledge base (sandbox)",
         "description": "Sandbox: searches a fixed set of fixture documents and returns simulated matches. Free — use it to exercise the API, not for real knowledge. Costs 0 credit(s) per call. Example arguments: {\"query\":\"refund policy\"}. Example result: {\"ok\":true,\"matches\":[{\"title\":\"Refund policy\",\"body\":\"Refunds are issued within 14 days of purchase for annual plans, pro-rated after that.\"}]}. Read-only and safe to retry.",

@@ -120,8 +120,7 @@ function makeFakeAdmin(options: { purchase?: Record<string, unknown> | null } = 
           return {
             eq() {
               return {
-                maybeSingle: () =>
-                  Promise.resolve({ data: options.purchase ?? null, error: null }),
+                maybeSingle: () => Promise.resolve({ data: options.purchase ?? null, error: null }),
               };
             },
           };

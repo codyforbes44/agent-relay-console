@@ -216,8 +216,8 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     name: "execute_code",
     label: "Execute code",
     description:
-      "Run Python or JavaScript code in a sandboxed E2B environment and return stdout, stderr, and the exit code. The environment is ephemeral and isolated. Side-effecting: file writes are scoped to the sandbox only.",
-    sideEffecting: false,
+      "Run Python or JavaScript code in a sandboxed E2B environment and return stdout, stderr, and the exit code. Files are ephemeral, but code can make external network requests with side effects. Requires the configured side-effect confirmation flow.",
+    sideEffecting: true,
     icon: "database",
     credits: 8,
     publicApi: true,

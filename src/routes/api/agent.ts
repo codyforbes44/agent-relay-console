@@ -181,9 +181,8 @@ export const Route = createFileRoute("/api/agent")({
           .maybeSingle();
         if (!membership) return jsonError(403, "You are not a member of this workspace");
 
-        const { supabaseAdmin: rateLimiterClient } = await import(
-          "@/integrations/supabase/client.server"
-        );
+        const { supabaseAdmin: rateLimiterClient } =
+          await import("@/integrations/supabase/client.server");
         const { data: allowed, error: rlError } = await rateLimiterClient.rpc(
           "consume_user_rate_limit",
           { _user_id: user.id, _max: RATE_LIMIT_PER_MINUTE },

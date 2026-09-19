@@ -139,7 +139,7 @@ async function runMetered(
 
   let result: Record<string, unknown>;
   try {
-    result = await runTool(contract.name, toolArgs);
+    result = await runTool(contract.name, { ...toolArgs, orgId });
   } catch (e) {
     await refundReservedCredits(supabaseAdmin, reservation.usageEventId, "tool_failed");
     if (confirmationId) await releaseConfirmation(supabaseAdmin, confirmationId);
