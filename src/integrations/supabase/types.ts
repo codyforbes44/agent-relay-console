@@ -124,6 +124,131 @@ export type Database = {
         }
         Relationships: []
       }
+      approval_intents: {
+        Row: {
+          args: Json
+          args_hash: string
+          callback_url: string | null
+          confirmation_token: string | null
+          created_at: string
+          credits: number
+          decided_at: string | null
+          decided_by: string | null
+          expires_at: string
+          id: string
+          idempotency_key: string | null
+          key_id: string | null
+          org_id: string
+          policy_decision: string
+          preview: Json
+          reason: string | null
+          status: string
+          tool_label: string
+          tool_name: string
+        }
+        Insert: {
+          args: Json
+          args_hash: string
+          callback_url?: string | null
+          confirmation_token?: string | null
+          created_at?: string
+          credits?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          expires_at?: string
+          id?: string
+          idempotency_key?: string | null
+          key_id?: string | null
+          org_id: string
+          policy_decision?: string
+          preview: Json
+          reason?: string | null
+          status?: string
+          tool_label: string
+          tool_name: string
+        }
+        Update: {
+          args?: Json
+          args_hash?: string
+          callback_url?: string | null
+          confirmation_token?: string | null
+          created_at?: string
+          credits?: number
+          decided_at?: string | null
+          decided_by?: string | null
+          expires_at?: string
+          id?: string
+          idempotency_key?: string | null
+          key_id?: string | null
+          org_id?: string
+          policy_decision?: string
+          preview?: Json
+          reason?: string | null
+          status?: string
+          tool_label?: string
+          tool_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_intents_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "agent_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_intents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_policies: {
+        Row: {
+          auto_approve_max_credits: number
+          auto_approve_tools: string[]
+          created_at: string
+          default_action: string
+          notify_email: string | null
+          org_id: string
+          require_human_tools: string[]
+          updated_at: string
+          webhook_secret: string
+        }
+        Insert: {
+          auto_approve_max_credits?: number
+          auto_approve_tools?: string[]
+          created_at?: string
+          default_action?: string
+          notify_email?: string | null
+          org_id: string
+          require_human_tools?: string[]
+          updated_at?: string
+          webhook_secret?: string
+        }
+        Update: {
+          auto_approve_max_credits?: number
+          auto_approve_tools?: string[]
+          created_at?: string
+          default_action?: string
+          notify_email?: string | null
+          org_id?: string
+          require_human_tools?: string[]
+          updated_at?: string
+          webhook_secret?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_policies_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -545,6 +670,158 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      oauth_connections: {
+        Row: {
+          access_token_enc: string
+          account_label: string
+          created_at: string
+          created_by_key_id: string | null
+          expires_at: string | null
+          id: string
+          org_id: string
+          provider_slug: string
+          refresh_token_enc: string | null
+          scopes: string[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_token_enc: string
+          account_label: string
+          created_at?: string
+          created_by_key_id?: string | null
+          expires_at?: string | null
+          id?: string
+          org_id: string
+          provider_slug: string
+          refresh_token_enc?: string | null
+          scopes?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_token_enc?: string
+          account_label?: string
+          created_at?: string
+          created_by_key_id?: string | null
+          expires_at?: string | null
+          id?: string
+          org_id?: string
+          provider_slug?: string
+          refresh_token_enc?: string | null
+          scopes?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_connections_created_by_key_id_fkey"
+            columns: ["created_by_key_id"]
+            isOneToOne: false
+            referencedRelation: "agent_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oauth_connections_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oauth_connections_provider_slug_fkey"
+            columns: ["provider_slug"]
+            isOneToOne: false
+            referencedRelation: "oauth_providers"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      oauth_providers: {
+        Row: {
+          authorize_url: string
+          default_scopes: string[]
+          docs_url: string | null
+          enabled: boolean
+          name: string
+          revoke_url: string | null
+          slug: string
+          token_url: string
+        }
+        Insert: {
+          authorize_url: string
+          default_scopes?: string[]
+          docs_url?: string | null
+          enabled?: boolean
+          name: string
+          revoke_url?: string | null
+          slug: string
+          token_url: string
+        }
+        Update: {
+          authorize_url?: string
+          default_scopes?: string[]
+          docs_url?: string | null
+          enabled?: boolean
+          name?: string
+          revoke_url?: string | null
+          slug?: string
+          token_url?: string
+        }
+        Relationships: []
+      }
+      oauth_states: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          key_id: string | null
+          org_id: string
+          provider_slug: string
+          state: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          key_id?: string | null
+          org_id: string
+          provider_slug: string
+          state: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          key_id?: string | null
+          org_id?: string
+          provider_slug?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_states_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "agent_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oauth_states_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oauth_states_provider_slug_fkey"
+            columns: ["provider_slug"]
+            isOneToOne: false
+            referencedRelation: "oauth_providers"
+            referencedColumns: ["slug"]
           },
         ]
       }
@@ -1102,7 +1379,57 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      oauth_connection_summaries: {
+        Row: {
+          account_label: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          org_id: string | null
+          provider_slug: string | null
+          scopes: string[] | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_label?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          org_id?: string | null
+          provider_slug?: string | null
+          scopes?: string[] | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_label?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          org_id?: string | null
+          provider_slug?: string | null
+          scopes?: string[] | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "oauth_connections_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oauth_connections_provider_slug_fkey"
+            columns: ["provider_slug"]
+            isOneToOne: false
+            referencedRelation: "oauth_providers"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
     }
     Functions: {
       claim_organization: { Args: { _token_hash: string }; Returns: string }
