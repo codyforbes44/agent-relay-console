@@ -15,7 +15,7 @@ CREATE TABLE public.approval_policies (
   auto_approve_tools TEXT[] NOT NULL DEFAULT '{}',
   require_human_tools TEXT[] NOT NULL DEFAULT '{}',
   default_action TEXT NOT NULL DEFAULT 'human' CHECK (default_action IN ('human', 'auto')),
-  webhook_secret TEXT NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
+  webhook_secret TEXT NOT NULL DEFAULT encode(extensions.gen_random_bytes(32), 'hex'),
   notify_email TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -151,10 +151,13 @@ WITH (security_invoker = true) AS
          expires_at, created_at, updated_at
   FROM public.oauth_connections;
 GRANT SELECT ON public.oauth_connection_summaries TO authenticated;
--- RLS on the view so members only see their own org's connections.
-ALTER TABLE public.oauth_connection_summaries ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "org members read connection summaries"
-  ON public.oauth_connection_summaries
+-- Views cannot carry RLS. The security_invoker view relies on the base table:
+-- members get column-level SELECT on non-secret columns only, scoped by RLS.
+GRANT SELECT (id, org_id, provider_slug, account_label, scopes, status,
+              expires_at, created_at, updated_at)
+  ON public.oauth_connections TO authenticated;
+CREATE POLICY "org members read connection metadata"
+  ON public.oauth_connections
   FOR SELECT TO authenticated USING (public.has_org_access(org_id));
 
 -- ---------------------------------------------------------------------------
