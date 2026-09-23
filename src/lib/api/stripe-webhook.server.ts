@@ -265,9 +265,7 @@ async function handleSubscriptionCheckoutCompleted(
   livemode: boolean,
 ): Promise<Response> {
   const subscriptionId =
-    typeof session.subscription === "string"
-      ? session.subscription
-      : session.subscription?.id;
+    typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
   if (!subscriptionId) {
     log("stripe_sub_no_subscription", { sessionId: session.id });
     return Response.json({ received: true, ignored: "no subscription on session" });
@@ -295,7 +293,13 @@ async function handleInvoicePaid(
 ): Promise<Response> {
   // Stripe v22: the subscription link lives under invoice.parent.
   const parent = invoice.parent as
-    | { type?: string; subscription_details?: { subscription?: string | Stripe.Subscription; metadata?: Record<string, string> | null } }
+    | {
+        type?: string;
+        subscription_details?: {
+          subscription?: string | Stripe.Subscription;
+          metadata?: Record<string, string> | null;
+        };
+      }
     | null
     | undefined;
   const subDetails =

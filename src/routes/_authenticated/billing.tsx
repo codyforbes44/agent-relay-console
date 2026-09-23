@@ -38,7 +38,10 @@ export const Route = createFileRoute("/_authenticated/billing")({
           "Monthly plans and one-time credit packs for your Relay workspace — pay by card, in USDC over x402, or by invoice.",
       },
       { property: "og:title", content: "Billing — Relay Agent Tool API" },
-      { property: "og:description", content: "Monthly plans and credit packs for agent tool calls." },
+      {
+        property: "og:description",
+        content: "Monthly plans and credit packs for agent tool calls.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -192,11 +195,7 @@ function BillingPanel({ orgId }: { orgId: string }) {
         </CardHeader>
         {subscription ? (
           <CardContent>
-            <Button
-              variant="outline"
-              disabled={portal.isPending}
-              onClick={() => portal.mutate()}
-            >
+            <Button variant="outline" disabled={portal.isPending} onClick={() => portal.mutate()}>
               {portal.isPending ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -269,8 +268,8 @@ function BillingPanel({ orgId }: { orgId: string }) {
           </div>
           <p className="text-xs text-muted-foreground">
             Plans grant credits on every monthly renewal. Unused credits roll over, up to one
-            month's allotment. Cancel anytime from the customer portal — your balance stays until
-            it is used.
+            month's allotment. Cancel anytime from the customer portal — your balance stays until it
+            is used.
           </p>
 
           <h2 className="text-lg font-medium text-foreground">One-time credit packs</h2>

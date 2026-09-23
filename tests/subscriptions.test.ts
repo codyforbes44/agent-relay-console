@@ -35,7 +35,11 @@ function createFakeDb() {
   const pick = (row: Row, cols: string): Row => {
     if (cols.trim() === "*") return { ...row };
     const out: Row = {};
-    for (const c of cols.split(",").map((s) => s.trim()).filter(Boolean)) out[c] = row[c];
+    for (const c of cols
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean))
+      out[c] = row[c];
     return out;
   };
 
@@ -54,7 +58,11 @@ function createFakeDb() {
 
     const applyUpsert = (): { data: Row | null; error: { message: string } | null } => {
       const rows = tables[table]!;
-      const row: Row = { id: `row-${rows.length + 1}`, created_at: new Date().toISOString(), ...payload };
+      const row: Row = {
+        id: `row-${rows.length + 1}`,
+        created_at: new Date().toISOString(),
+        ...payload,
+      };
       if (table === "org_subscriptions" && upsertConflict === "stripe_subscription_id") {
         const existing = rows.find(
           (r) => r["stripe_subscription_id"] === row["stripe_subscription_id"],
@@ -78,14 +86,26 @@ function createFakeDb() {
       if (table === "credit_ledger" && row["external_ref"]) {
         const key = `${row["source"]}|${row["external_ref"]}`;
         if (ledgerKeys.has(key)) {
-          return { data: null, error: { message: 'duplicate key value violates unique constraint "credit_ledger_source_ref_uniq"' } };
+          return {
+            data: null,
+            error: {
+              message:
+                'duplicate key value violates unique constraint "credit_ledger_source_ref_uniq"',
+            },
+          };
         }
         ledgerKeys.add(key);
       }
       if (table === "subscription_periods" && row["invoice_id"]) {
         const inv = String(row["invoice_id"]);
         if (periodInvoices.has(inv)) {
-          return { data: null, error: { message: 'duplicate key value violates unique constraint "subscription_periods_invoice_id_key"' } };
+          return {
+            data: null,
+            error: {
+              message:
+                'duplicate key value violates unique constraint "subscription_periods_invoice_id_key"',
+            },
+          };
         }
         periodInvoices.add(inv);
       }
@@ -119,7 +139,25 @@ function createFakeDb() {
       return applySelect();
     };
 
-    const q: Record<string, any> = {
+    type FakeQueryResult = { data: Row[] | Row | null; error: { message: string } | null };
+
+    interface FakeQuery {
+      select: (c: string) => FakeQuery;
+      eq: (k: string, v: unknown) => FakeQuery;
+      lt: (k: string, v: unknown) => FakeQuery;
+      gte: (k: string, v: unknown) => FakeQuery;
+      in: (k: string, vs: unknown[]) => FakeQuery;
+      order: (col: string, opts?: { ascending?: boolean }) => FakeQuery;
+      limit: (n: number) => FakeQuery;
+      maybeSingle: () => Promise<{ data: Row | null; error: { message: string } | null }>;
+      single: () => Promise<{ data: Row | null; error: Error | { message: string } | null }>;
+      then: (
+        resolve: (value: FakeQueryResult) => void,
+        reject: (err: unknown) => void,
+      ) => Promise<void>;
+    }
+
+    const q: FakeQuery = {
       select: (c: string) => {
         cols = c;
         return q;
@@ -155,11 +193,12 @@ function createFakeDb() {
         return { data: first, error: res.error };
       },
       single: async () => {
-        const res = await q["maybeSingle"]();
+        const res = await q.maybeSingle();
         if (!res.data) return { data: null, error: new Error("no rows") };
         return res;
       },
-      then: (resolve: any, reject: any) => Promise.resolve(run()).then(resolve, reject),
+      then: (resolve: (value: FakeQueryResult) => void, reject: (err: unknown) => void) =>
+        Promise.resolve(run()).then(resolve, reject),
     };
     return q;
   };
@@ -209,10 +248,7 @@ function seedSubscription(tables: Record<string, Row[]>): OrgSubscription {
   };
 }
 
-function seedPeriod(
-  tables: Record<string, Row[]>,
-  overrides: Row = {},
-) {
+function seedPeriod(tables: Record<string, Row[]>, overrides: Row = {}) {
   tables["subscription_periods"]!.push({
     id: "period-1",
     subscription_id: "sub-row-1",

@@ -20,11 +20,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type Stripe from "stripe";
 
 import { getStripeClient, stripeConfigured } from "@/lib/api/stripe.server";
-import {
-  ACTIVE_SUBSCRIPTION_STATUSES,
-  PLAN_BY_ID,
-  type RelayPlan,
-} from "@/lib/billing/plans";
+import { ACTIVE_SUBSCRIPTION_STATUSES, PLAN_BY_ID, type RelayPlan } from "@/lib/billing/plans";
 
 export type OrgSubscription = {
   id: string;
@@ -49,9 +45,7 @@ function rowToSubscription(row: Record<string, unknown>): OrgSubscription {
     stripeCustomerId: String(row["stripe_customer_id"]),
     stripeSubscriptionId: String(row["stripe_subscription_id"]),
     status: String(row["status"]),
-    currentPeriodStart: row["current_period_start"]
-      ? String(row["current_period_start"])
-      : null,
+    currentPeriodStart: row["current_period_start"] ? String(row["current_period_start"]) : null,
     currentPeriodEnd: row["current_period_end"] ? String(row["current_period_end"]) : null,
     cancelAtPeriodEnd: row["cancel_at_period_end"] === true,
   };
@@ -235,7 +229,11 @@ export async function computePeriodGrant(
     rollover = Math.min(input.plan.rolloverCap, Math.max(0, granted - spent));
   }
 
-  return { monthly: input.plan.monthlyCredits, rollover, grant: input.plan.monthlyCredits + rollover };
+  return {
+    monthly: input.plan.monthlyCredits,
+    rollover,
+    grant: input.plan.monthlyCredits + rollover,
+  };
 }
 
 /**
@@ -268,9 +266,7 @@ export async function grantPeriodCredits(
       `(${input.plan.monthlyCredits.toLocaleString()} monthly + ${rollover.toLocaleString()} rollover)`,
   });
 
-  const duplicate = Boolean(
-    ledgerError && ledgerError.message.includes("duplicate key"),
-  );
+  const duplicate = Boolean(ledgerError && ledgerError.message.includes("duplicate key"));
   if (ledgerError && !duplicate) throw new Error(`ledger write failed: ${ledgerError.message}`);
   if (duplicate) return { granted: false, credits: grant, rollover };
 
@@ -280,8 +276,7 @@ export async function grantPeriodCredits(
     invoice_id: input.invoice.id,
     period_start: input.invoice.periodStart ?? new Date().toISOString(),
     period_end:
-      input.invoice.periodEnd ??
-      new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
+      input.invoice.periodEnd ?? new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
     granted_credits: grant,
     rollover_credits: rollover,
   });

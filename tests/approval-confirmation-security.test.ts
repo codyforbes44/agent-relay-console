@@ -32,7 +32,11 @@ function createFakeDb() {
   const pick = (row: Row, cols: string): Row => {
     if (cols.trim() === "*") return { ...row };
     const out: Row = {};
-    for (const c of cols.split(",").map((s) => s.trim()).filter(Boolean)) out[c] = row[c];
+    for (const c of cols
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean))
+      out[c] = row[c];
     return out;
   };
 
@@ -71,7 +75,19 @@ function createFakeDb() {
   const query = (table: string, op: "select" | "insert" | "update", payload: Row | null = null) => {
     const filters: Array<(r: Row) => boolean> = [];
     let cols = "*";
-    const q: Record<string, any> = {
+    interface FakeQuery {
+      select: (c: string) => FakeQuery;
+      eq: (k: string, v: unknown) => FakeQuery;
+      lt: (k: string, v: unknown) => FakeQuery;
+      maybeSingle: () => Promise<{ data: Row | null; error: null }>;
+      single: () => Promise<{ data: Row | null; error: Error | null }>;
+      then: (
+        resolve: (value: { data: Row | null; error: null }) => void,
+        reject: (err: unknown) => void,
+      ) => Promise<void>;
+    }
+
+    const q: FakeQuery = {
       select: (c: string) => {
         cols = c;
         return q;
@@ -90,8 +106,10 @@ function createFakeDb() {
         if (!res.data) return { data: null, error: new Error("no rows") };
         return res;
       },
-      then: (resolve: any, reject: any) =>
-        Promise.resolve(runQuery(table, op, payload, cols, filters)).then(resolve, reject),
+      then: (
+        resolve: (value: { data: Row | null; error: null }) => void,
+        reject: (err: unknown) => void,
+      ) => Promise.resolve(runQuery(table, op, payload, cols, filters)).then(resolve, reject),
     };
     return q;
   };

@@ -88,9 +88,7 @@ export const createPlanCheckout = createServerFn({ method: "POST" })
 /** Returns the Stripe customer-portal URL for managing/canceling the plan. */
 export const createPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { orgId: string }) =>
-    z.object({ orgId: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: { orgId: string }) => z.object({ orgId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     if (!stripeConfigured()) {
       throw new Error("Card payments are not enabled on this deployment");
