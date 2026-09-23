@@ -48,7 +48,9 @@ export type IssuedConfirmation = {
   preview: { summary: string; args: Record<string, unknown> };
 };
 
-/** Creates a pending confirmation and returns the raw token (stored hashed). */
+/** Creates a pending confirmation and returns the raw token (stored hashed).
+ *  Pass intentId when the token belongs to an approval flow: redemption then
+ *  verifies the linked intent is approved, and deny/expire revokes the row. */
 export async function issueConfirmation(
   admin: SupabaseClient,
   input: {
@@ -56,6 +58,7 @@ export async function issueConfirmation(
     keyId: string | null;
     tool: ToolContract;
     args: Record<string, unknown>;
+    intentId?: string | null;
   },
 ): Promise<IssuedConfirmation> {
   const token = `cnf_${crypto.randomUUID().replace(/-/g, "")}`;
@@ -73,9 +76,24 @@ export async function issueConfirmation(
     preview,
     credits: input.tool.credits,
     expires_at: expiresAt,
+    intent_id: input.intentId ?? null,
   });
 
   return { token, expiresAt, preview };
+}
+
+/** Revokes every still-pending confirmation tied to an approval intent.
+ *  Called when the intent is denied or expires, so a token minted for it
+ *  can never execute the side effect after the human decision. */
+export async function revokeConfirmationsForIntent(
+  admin: SupabaseClient,
+  intentId: string,
+): Promise<void> {
+  await admin
+    .from("tool_confirmations")
+    .update({ status: "revoked" })
+    .eq("intent_id", intentId)
+    .eq("status", "pending");
 }
 
 export type RedeemFailure = {
@@ -85,6 +103,9 @@ export type RedeemFailure = {
     | "confirmation_mismatch"
     | "confirmation_expired"
     | "confirmation_used"
+    | "confirmation_revoked"
+    | "approval_denied"
+    | "approval_not_approved"
     | "request_in_progress";
   message: string;
   extra?: Record<string, unknown>;
@@ -110,7 +131,7 @@ export async function redeemConfirmation(
   const tokenHash = await sha256(input.token);
   const { data: row } = await admin
     .from("tool_confirmations")
-    .select("id, org_id, tool_name, args_hash, status, expires_at, response")
+    .select("id, org_id, tool_name, args_hash, status, expires_at, response, intent_id")
     .eq("token_hash", tokenHash)
     .maybeSingle();
 
@@ -124,6 +145,52 @@ export async function redeemConfirmation(
           "Unknown confirmation token. Call the tool without a token first to receive a preview and a fresh token.",
       },
     };
+  }
+
+  if (row.status === "revoked") {
+    return {
+      ok: false,
+      failure: {
+        status: 403,
+        code: "confirmation_revoked",
+        message:
+          "This confirmation was revoked — its approval intent was denied or expired. Request a new confirmation for a new call.",
+      },
+    };
+  }
+
+  // Tokens minted for an approval flow are only redeemable while the linked
+  // intent is approved. This is the backstop: even if a token row somehow
+  // exists for a denied/expired/pending intent, it can never execute.
+  if (row.intent_id) {
+    const { data: intentRow } = await admin
+      .from("approval_intents")
+      .select("id, status")
+      .eq("id", row.intent_id)
+      .maybeSingle();
+    const intentStatus = (intentRow as { status?: string } | null)?.status;
+    if (intentStatus === "denied") {
+      return {
+        ok: false,
+        failure: {
+          status: 403,
+          code: "approval_denied",
+          message:
+            "A human denied this call in the approvals inbox. It cannot be executed — start a new call if you still need it.",
+        },
+      };
+    }
+    if (intentStatus !== "approved") {
+      return {
+        ok: false,
+        failure: {
+          status: 403,
+          code: "approval_not_approved",
+          message:
+            "This confirmation is tied to an approval intent that is not approved. Poll the intent until it is approved, then retry with the token from the poll response.",
+        },
+      };
+    }
   }
 
   if (row.tool_name !== input.toolName) {

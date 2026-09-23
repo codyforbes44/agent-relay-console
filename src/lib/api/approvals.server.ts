@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { TOOLS_BY_NAME, type ToolContract } from "@/lib/agent/contracts";
-import { hashArgs, issueConfirmation } from "./confirmations.server";
+import { hashArgs, issueConfirmation, revokeConfirmationsForIntent } from "./confirmations.server";
 
 /**
  * Async approval flow.
@@ -239,6 +239,7 @@ export async function createApprovalIntent(
       keyId: input.keyId,
       tool: input.tool,
       args: input.args,
+      intentId: intent.id,
     });
     const { data: decided, error: decideError } = await admin
       .from("approval_intents")
@@ -299,12 +300,16 @@ export async function listApprovalIntentsForOrg(
 
 /** Marks pending intents past their TTL as expired. Best-effort, idempotent. */
 export async function expireStaleIntents(admin: SupabaseClient, orgId: string): Promise<void> {
-  await admin
+  const { data } = await admin
     .from("approval_intents")
     .update({ status: "expired" })
     .eq("org_id", orgId)
     .eq("status", "pending")
-    .lt("expires_at", new Date().toISOString());
+    .lt("expires_at", new Date().toISOString())
+    .select("id");
+  for (const row of (data ?? []) as Array<{ id: string }>) {
+    await revokeConfirmationsForIntent(admin, row.id);
+  }
 }
 
 export type DecideResult =
@@ -342,6 +347,7 @@ export async function decideApprovalIntent(
   if (intent.status !== "pending") return { ok: false, code: "approval_not_pending" };
   if (new Date(intent.expiresAt).getTime() < Date.now()) {
     await admin.from("approval_intents").update({ status: "expired" }).eq("id", intent.id);
+    await revokeConfirmationsForIntent(admin, intent.id);
     return { ok: false, code: "approval_expired" };
   }
 
@@ -354,6 +360,7 @@ export async function decideApprovalIntent(
       keyId: intent.keyId,
       tool,
       args: intent.args,
+      intentId: intent.id,
     });
     confirmationToken = issued.token;
   }
@@ -373,6 +380,13 @@ export async function decideApprovalIntent(
     .single();
   if (decideError) throw decideError;
   const final = rowToIntent(decided as Record<string, unknown>);
+  if (input.decision === "denied") {
+    // Belt and suspenders: no token should exist for a pending intent, but if
+    // one does (minted before this fix, or a future regression), a Deny must
+    // kill it. Redemption also verifies intent status, so this is defense in
+    // depth rather than the only guard.
+    await revokeConfirmationsForIntent(admin, intent.id);
+  }
   void deliverDecisionWebhook(admin, final);
   return { ok: true, intent: final };
 }

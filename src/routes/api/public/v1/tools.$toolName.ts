@@ -5,7 +5,6 @@ import { recordToolTrace, runTool } from "@/lib/agent/tools.server";
 import { apiError, json, preflight, toolDescriptor } from "@/lib/api/catalog.server";
 import {
   CONFIRMATION_HEADER,
-  issueConfirmation,
   redeemConfirmation,
   releaseConfirmation,
   storeConfirmationResponse,
@@ -145,10 +144,14 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
 
           if (!token) {
             // Async approval flow: every gated call mints an approval intent a
-            // human can decide later (console inbox or signed webhook), while
-            // the classic inline token below keeps working for operators who
-            // are present right now. The workspace policy may auto-approve, in
-            // which case the token is issued already approved.
+            // human can decide later (console inbox or signed webhook). A
+            // confirmation token is minted ONLY once the call is approved —
+            // the agent polls the intent and the token is revealed in the poll
+            // response. Minting a token for a still-pending intent would let
+            // the agent execute the side effect with no human decision at all,
+            // and the token would survive a later "Deny". The workspace policy
+            // may auto-approve, in which case the token is issued already
+            // approved below.
             const { intent: approvalIntent } = await createApprovalIntent(supabaseAdmin, {
               orgId: identity.orgId,
               keyId: identity.keyId,
@@ -158,20 +161,8 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
               idempotencyKey: request.headers.get("idempotency-key"),
             });
 
-            let confirmationToken: string | null = approvalIntent.confirmationToken;
-            let confirmationExpiresAt: string | null = null;
-            let preview = approvalIntent.preview;
-            if (approvalIntent.status !== "approved") {
-              const issued = await issueConfirmation(supabaseAdmin, {
-                orgId: identity.orgId,
-                keyId: identity.keyId,
-                tool,
-                args: parsed.data,
-              });
-              confirmationToken = issued.token;
-              confirmationExpiresAt = issued.expiresAt;
-              preview = issued.preview;
-            }
+            const approved = approvalIntent.status === "approved";
+            const confirmationToken = approved ? approvalIntent.confirmationToken : null;
             await recordUsage(supabaseAdmin, {
               orgId: identity.orgId,
               keyId: identity.keyId,
@@ -182,20 +173,19 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
               latencyMs: Date.now() - started,
               requestId,
             });
-            const approved = approvalIntent.status === "approved";
             return apiError(
               428,
               "confirmation_required",
               approved
                 ? `This tool has side effects, and your workspace policy auto-approved this call. Retry the identical request with header '${CONFIRMATION_HEADER}: <confirmationToken>'.`
-                : `This tool has side effects. Show the preview to your operator, then retry the identical request with header '${CONFIRMATION_HEADER}: <confirmationToken>'. ` +
-                    `Alternatively the operator can approve later from the console inbox, or the agent can poll the approval intent (or register an x-approval-callback webhook) and retry once it is approved.`,
+                : `This tool has side effects and needs a human decision. An approval intent is now pending in your workspace inbox: ${origin}/approvals?intent=${approvalIntent.id}. ` +
+                    `Poll ${origin}${APPROVAL_POLL_ROUTE}/${approvalIntent.id} until its status is "approved" — the poll response will then include a single-use confirmation token. ` +
+                    `Retry the identical request with header '${CONFIRMATION_HEADER}: <confirmationToken>'.`,
               {
                 tool: toolName,
                 credits: tool.credits,
-                preview,
+                preview: approvalIntent.preview,
                 confirmationToken,
-                ...(confirmationExpiresAt ? { expiresAt: confirmationExpiresAt } : {}),
                 approval: {
                   intent_id: approvalIntent.id,
                   status: approvalIntent.status,
