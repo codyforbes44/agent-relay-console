@@ -11,6 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAccountSummary } from "@/lib/api/keys.functions";
 import { createCreditCheckout, isCardCheckoutEnabled } from "@/lib/billing/checkout.functions";
+import {
+  createPlanCheckout,
+  createPortalSession,
+  getSubscriptionSummary,
+  listPlans,
+} from "@/lib/billing/subscription.functions";
 import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
 import { SITE_URL } from "@/lib/site";
 
@@ -18,20 +24,21 @@ const SUPPORT_EMAIL = "support@3bi.ai";
 
 const searchSchema = z.object({
   checkout: z.enum(["success", "cancel"]).optional(),
+  plan: z.enum(["success", "cancel"]).optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/billing")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Buy credits — Relay Agent Tool API" },
+      { title: "Billing — Relay Agent Tool API" },
       {
         name: "description",
         content:
-          "Top up your Relay workspace with credit packs — pay by card, in USDC over x402, or by invoice.",
+          "Monthly plans and one-time credit packs for your Relay workspace — pay by card, in USDC over x402, or by invoice.",
       },
-      { property: "og:title", content: "Buy credits — Relay Agent Tool API" },
-      { property: "og:description", content: "Credit packs for agent tool calls." },
+      { property: "og:title", content: "Billing — Relay Agent Tool API" },
+      { property: "og:description", content: "Monthly plans and credit packs for agent tool calls." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -42,8 +49,8 @@ export const Route = createFileRoute("/_authenticated/billing")({
 function BillingPage() {
   return (
     <ConsoleShell
-      title="Buy credits"
-      description="Credits are consumed per metered tool call. Packs never expire."
+      title="Billing"
+      description="Monthly plans for steady agent traffic, or one-time credit packs that never expire."
     >
       {(org) => <BillingPanel orgId={org.id} />}
     </ConsoleShell>
@@ -77,15 +84,17 @@ function CopyButton({ value }: { value: string }) {
 }
 
 function CheckoutBanner() {
-  const { checkout } = Route.useSearch();
-  if (!checkout) return null;
-  if (checkout === "success") {
+  const { checkout, plan } = Route.useSearch();
+  const result = checkout ?? plan;
+  if (!result) return null;
+  if (result === "success") {
     return (
       <Alert>
         <AlertTitle>Payment received</AlertTitle>
         <AlertDescription>
-          Your credits will appear on the balance above within a few seconds. This page refreshes
-          automatically.
+          {plan === "success"
+            ? "Your subscription is active — the first month's credits will appear on the balance above within a few seconds. This page refreshes automatically."
+            : "Your credits will appear on the balance above within a few seconds. This page refreshes automatically."}
         </AlertDescription>
       </Alert>
     );
@@ -93,7 +102,7 @@ function CheckoutBanner() {
   return (
     <Alert>
       <AlertTitle>Checkout cancelled</AlertTitle>
-      <AlertDescription>No payment was taken. Pick a pack to try again.</AlertDescription>
+      <AlertDescription>No payment was taken. Pick a pack or plan to try again.</AlertDescription>
     </Alert>
   );
 }
@@ -102,6 +111,10 @@ function BillingPanel({ orgId }: { orgId: string }) {
   const summary = useServerFn(getAccountSummary);
   const cardEnabled = useServerFn(isCardCheckoutEnabled);
   const startCheckout = useServerFn(createCreditCheckout);
+  const fetchPlans = useServerFn(listPlans);
+  const fetchSubscription = useServerFn(getSubscriptionSummary);
+  const startPlanCheckout = useServerFn(createPlanCheckout);
+  const startPortal = useServerFn(createPortalSession);
 
   const { data, isLoading } = useQuery({
     queryKey: ["usage", orgId],
@@ -115,12 +128,41 @@ function BillingPanel({ orgId }: { orgId: string }) {
     staleTime: Infinity,
   });
 
+  const { data: plansData } = useQuery({
+    queryKey: ["plans"],
+    queryFn: () => fetchPlans(),
+    staleTime: Infinity,
+  });
+
+  const { data: subscriptionData } = useQuery({
+    queryKey: ["subscription", orgId],
+    queryFn: () => fetchSubscription({ data: { orgId } }),
+    refetchInterval: 60_000,
+  });
+
   const checkout = useMutation({
     mutationFn: (priceId: string) => startCheckout({ data: { orgId, priceId } }),
     onSuccess: ({ url }) => {
       window.location.assign(url);
     },
   });
+
+  const planCheckout = useMutation({
+    mutationFn: (planId: string) => startPlanCheckout({ data: { orgId, planId } }),
+    onSuccess: ({ url }) => {
+      window.location.assign(url);
+    },
+  });
+
+  const portal = useMutation({
+    mutationFn: () => startPortal({ data: { orgId } }),
+    onSuccess: ({ url }) => {
+      window.location.assign(url);
+    },
+  });
+
+  const subscription = subscriptionData?.subscription ?? null;
+  const plans = plansData?.plans ?? [];
 
   return (
     <div className="space-y-6">
@@ -138,16 +180,101 @@ function BillingPanel({ orgId }: { orgId: string }) {
               `${(data?.balance ?? 0).toLocaleString()} credits`
             )}
           </CardTitle>
+          {subscription ? (
+            <CardDescription className="pt-1">
+              {subscription.planName} plan
+              {subscription.renewsAt
+                ? ` · renews ${new Date(subscription.renewsAt).toLocaleDateString()}`
+                : ""}
+              {subscription.cancelAtPeriodEnd ? " · cancels at period end" : ""}
+            </CardDescription>
+          ) : null}
         </CardHeader>
+        {subscription ? (
+          <CardContent>
+            <Button
+              variant="outline"
+              disabled={portal.isPending}
+              onClick={() => portal.mutate()}
+            >
+              {portal.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <CreditCard className="size-4" />
+              )}
+              Manage subscription
+            </Button>
+            {portal.isError ? (
+              <p className="mt-2 text-sm text-destructive">
+                {portal.error instanceof Error ? portal.error.message : "Please try again."}
+              </p>
+            ) : null}
+          </CardContent>
+        ) : null}
       </Card>
 
-      {checkout.isError ? (
+      {planCheckout.isError ? (
         <Alert variant="destructive">
-          <AlertTitle>Checkout failed</AlertTitle>
+          <AlertTitle>Subscription checkout failed</AlertTitle>
           <AlertDescription>
-            {checkout.error instanceof Error ? checkout.error.message : "Please try again."}
+            {planCheckout.error instanceof Error ? planCheckout.error.message : "Please try again."}
           </AlertDescription>
         </Alert>
+      ) : null}
+
+      {!subscription && card?.enabled && plans.length > 0 ? (
+        <>
+          <h2 className="text-lg font-medium text-foreground">Monthly plans</h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {plans.map((plan, i) => (
+              <Card
+                key={plan.planId}
+                className={`flex flex-col ${i === 1 ? "border-primary" : ""}`}
+              >
+                <CardHeader>
+                  <CardDescription className="font-mono text-xs uppercase tracking-[0.2em]">
+                    {plan.name}
+                    {i === 1 ? " · most popular" : ""}
+                  </CardDescription>
+                  <CardTitle className="text-2xl">
+                    {formatUsd(plan.amountCents)}
+                    <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="mt-auto space-y-4">
+                  <p className="text-sm text-muted-foreground">{plan.tagline}</p>
+                  <ul className="space-y-1.5 text-sm">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2">
+                        <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className="w-full"
+                    disabled={planCheckout.isPending}
+                    onClick={() => planCheckout.mutate(plan.planId)}
+                  >
+                    {planCheckout.isPending && planCheckout.variables === plan.planId ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <CreditCard className="size-4" />
+                    )}
+                    Subscribe
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Plans grant credits on every monthly renewal. Unused credits roll over, up to one
+            month's allotment. Cancel anytime from the customer portal — your balance stays until
+            it is used.
+          </p>
+
+          <h2 className="text-lg font-medium text-foreground">One-time credit packs</h2>
+        </>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-3">

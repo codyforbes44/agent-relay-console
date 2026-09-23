@@ -52,10 +52,18 @@ export const Route = createFileRoute("/.well-known/agents.json")({
             networks: ["base"],
             purchase_url: `${origin}/api/public/v1/credits/purchase`,
             human_checkout_url: `${origin}/pricing`,
+            plans: pricing.plans.map((p) => ({
+              plan_id: p.planId,
+              name: p.name,
+              usd_per_month: p.usdPerMonth,
+              monthly_credits: p.monthlyCredits,
+              rollover_cap: p.rolloverCap,
+            })),
+            subscribe_url: `${origin}/billing`,
           },
           safety: {
             confirmation:
-              "Side-effecting tools require a two-step flow: an unconfirmed call returns 428 with a preview and a single-use token bound to the exact arguments; resend the identical body with x-confirmation-token to execute.",
+              "Side-effecting tools require human approval: an unconfirmed call returns 428 with a preview and an approval intent (no token while pending); once a human approves, the poll response reveals a single-use token bound to the exact arguments. Resend the identical body with x-confirmation-token to execute.",
             idempotency_header: "idempotency-key",
           },
           tools: PUBLIC_TOOLS.map((t) => ({

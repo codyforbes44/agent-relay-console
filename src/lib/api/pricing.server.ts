@@ -1,5 +1,6 @@
 import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
 import { CREDIT_PACKS, USD_PER_CREDIT, usdForCredits } from "@/lib/billing/packs";
+import { RELAY_PLANS } from "@/lib/billing/plans";
 
 export type ToolPrice = {
   name: string;
@@ -23,6 +24,15 @@ export type PricingDocument = {
     usd: number;
     usdPerCredit: number;
   }>;
+  plans: Array<{
+    planId: string;
+    name: string;
+    usdPerMonth: number;
+    monthlyCredits: number;
+    rolloverCap: number;
+    usdPerCredit: number;
+    features: string[];
+  }>;
   tools: ToolPrice[];
   purchase: {
     machine: { url: string; method: "POST"; protocol: "x402"; asset: "USDC"; networks: string[] };
@@ -44,6 +54,15 @@ export function pricingDocument(origin: string): PricingDocument {
       credits: p.credits,
       usd: p.amountCents / 100,
       usdPerCredit: Math.round((p.amountCents / 100 / p.credits) * 1e6) / 1e6,
+    })),
+    plans: RELAY_PLANS.map((p) => ({
+      planId: p.planId,
+      name: p.name,
+      usdPerMonth: p.amountCents / 100,
+      monthlyCredits: p.monthlyCredits,
+      rolloverCap: p.rolloverCap,
+      usdPerCredit: Math.round((p.amountCents / 100 / p.monthlyCredits) * 1e6) / 1e6,
+      features: p.features,
     })),
     tools: PUBLIC_TOOLS.map((t) => ({
       name: t.name,

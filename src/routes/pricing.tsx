@@ -4,16 +4,17 @@ import { PublicShell } from "@/components/public/PublicShell";
 import { Button } from "@/components/ui/button";
 import { PUBLIC_TOOLS } from "@/lib/agent/contracts";
 import { CREDIT_PACKS, formatUsd } from "@/lib/billing/packs";
+import { RELAY_PLANS } from "@/lib/billing/plans";
 import { publicHead } from "@/lib/site";
 
 const FAQ = [
   {
     q: "Do credits expire?",
-    a: "No. Credit packs are one-time purchases and the balance stays on your workspace until it is used.",
+    a: "One-time credit packs never expire — the balance stays on your workspace until it is used. Monthly plans grant fresh credits on every renewal, and unused plan credits roll over up to one month's allotment.",
   },
   {
     q: "Is there a subscription or minimum?",
-    a: "No. You buy a pack when you need one. Every new workspace also starts with 500 free credits.",
+    a: "No minimum. You can buy one-time packs as needed, or take a monthly plan if your agents run steadily — plans are cheaper per credit and unused credits roll over. Every new workspace also starts with 500 free credits.",
   },
   {
     q: "What does one credit buy?",
@@ -33,9 +34,9 @@ export const Route = createFileRoute("/pricing")({
   head: () => {
     const base = publicHead({
       path: "/pricing",
-      title: "Pricing — RELAY credit packs from $9",
+      title: "Pricing — RELAY monthly plans from $29/mo and credit packs from $9",
       description:
-        "Pay-as-you-go credit packs for the Agent Relay Console tool API: 1,000 credits for $9, 5,000 for $39, 25,000 for $149. No subscription, credits never expire.",
+        "Monthly plans and pay-as-you-go credit packs for the Agent Relay Console tool API: plans from $29/mo with rollover, packs from $9 with credits that never expire.",
     });
     return {
       ...base,
@@ -64,9 +65,51 @@ function PricingPage() {
       <main className="mx-auto w-full max-w-3xl px-6 py-16">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">Pricing</h1>
         <p className="mt-3 text-muted-foreground">
-          Agent Relay Console is pay-as-you-go. You buy credits once, and each successful tool call
-          debits credits from your workspace balance. There is no subscription and credits do not
-          expire. New workspaces start with 500 free credits.
+          Agent Relay Console sells credits, and each successful tool call debits credits from your
+          workspace balance. Run agents steadily on a monthly plan — cheaper per credit, with unused
+          credits rolling over — or buy one-time packs that never expire. New workspaces start with
+          500 free credits.
+        </p>
+
+        <h2 className="mt-10 text-lg font-medium text-foreground">Monthly plans</h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          {RELAY_PLANS.map((plan, i) => (
+            <div
+              key={plan.planId}
+              className={`rounded-lg border p-5 ${
+                i === 1 ? "border-primary bg-primary/5" : "border-border bg-card"
+              }`}
+            >
+              {i === 1 ? (
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
+                  Most popular
+                </span>
+              ) : null}
+              <p className="mt-1 text-sm font-medium text-foreground">{plan.name}</p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {formatUsd(plan.amountCents)}
+                <span className="text-sm font-normal text-muted-foreground">/mo</span>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {plan.monthlyCredits.toLocaleString()} credits/mo · $
+                {((plan.amountCents / 100 / plan.monthlyCredits) * 1000).toFixed(2)} per 1k
+              </p>
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{plan.tagline}</p>
+              <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+                {plan.features.map((f) => (
+                  <li key={f}>· {f}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Plans renew monthly and unused credits roll over up to one month's allotment. Cancel
+          anytime — your balance stays until it is used.{" "}
+          <Link to="/billing" className="underline underline-offset-2">
+            Subscribe from the console billing page
+          </Link>
+          .
         </p>
 
         <h2 className="mt-10 text-lg font-medium text-foreground">Credit packs</h2>

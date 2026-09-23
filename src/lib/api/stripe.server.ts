@@ -21,6 +21,11 @@ function stripeClient(): Stripe {
   return _stripe;
 }
 
+/** Shared client for subscription/portal flows (checkout sessions use it too). */
+export function getStripeClient(): Stripe {
+  return stripeClient();
+}
+
 export type CheckoutSession = { id: string; url: string };
 
 /** Creates a hosted Checkout Session for one credit pack, in USD. */
