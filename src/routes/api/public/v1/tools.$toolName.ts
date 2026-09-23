@@ -10,6 +10,8 @@ import {
   releaseConfirmation,
   storeConfirmationResponse,
 } from "@/lib/api/confirmations.server";
+import { APPROVAL_POLL_ROUTE, createApprovalIntent } from "@/lib/api/approvals.server";
+import { OAuthRequiredError } from "@/lib/api/oauth.server";
 import { getOrgSettings, requiresConfirmation } from "@/lib/api/settings.server";
 import { isToolEnabled } from "@/lib/api/org-tools.server";
 import { authenticateAgentKey, readBearer } from "@/lib/api/keys.server";
@@ -142,12 +144,34 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
           const token = request.headers.get(CONFIRMATION_HEADER);
 
           if (!token) {
-            const issued = await issueConfirmation(supabaseAdmin, {
+            // Async approval flow: every gated call mints an approval intent a
+            // human can decide later (console inbox or signed webhook), while
+            // the classic inline token below keeps working for operators who
+            // are present right now. The workspace policy may auto-approve, in
+            // which case the token is issued already approved.
+            const { intent: approvalIntent } = await createApprovalIntent(supabaseAdmin, {
               orgId: identity.orgId,
               keyId: identity.keyId,
               tool,
               args: parsed.data,
+              callbackUrl: request.headers.get("x-approval-callback"),
+              idempotencyKey: request.headers.get("idempotency-key"),
             });
+
+            let confirmationToken: string | null = approvalIntent.confirmationToken;
+            let confirmationExpiresAt: string | null = null;
+            let preview = approvalIntent.preview;
+            if (approvalIntent.status !== "approved") {
+              const issued = await issueConfirmation(supabaseAdmin, {
+                orgId: identity.orgId,
+                keyId: identity.keyId,
+                tool,
+                args: parsed.data,
+              });
+              confirmationToken = issued.token;
+              confirmationExpiresAt = issued.expiresAt;
+              preview = issued.preview;
+            }
             await recordUsage(supabaseAdmin, {
               orgId: identity.orgId,
               keyId: identity.keyId,
@@ -158,16 +182,29 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
               latencyMs: Date.now() - started,
               requestId,
             });
+            const approved = approvalIntent.status === "approved";
             return apiError(
               428,
               "confirmation_required",
-              `This tool has side effects. Show the preview to your operator, then retry the identical request with header '${CONFIRMATION_HEADER}: <confirmationToken>'.`,
+              approved
+                ? `This tool has side effects, and your workspace policy auto-approved this call. Retry the identical request with header '${CONFIRMATION_HEADER}: <confirmationToken>'.`
+                : `This tool has side effects. Show the preview to your operator, then retry the identical request with header '${CONFIRMATION_HEADER}: <confirmationToken>'. ` +
+                    `Alternatively the operator can approve later from the console inbox, or the agent can poll the approval intent (or register an x-approval-callback webhook) and retry once it is approved.`,
               {
                 tool: toolName,
                 credits: tool.credits,
-                preview: issued.preview,
-                confirmationToken: issued.token,
-                expiresAt: issued.expiresAt,
+                preview,
+                confirmationToken,
+                ...(confirmationExpiresAt ? { expiresAt: confirmationExpiresAt } : {}),
+                approval: {
+                  intent_id: approvalIntent.id,
+                  status: approvalIntent.status,
+                  policy_decision: approvalIntent.policyDecision,
+                  poll_url: `${origin}${APPROVAL_POLL_ROUTE}/${approvalIntent.id}`,
+                  approval_url: `${origin}/approvals?intent=${approvalIntent.id}`,
+                  expires_at: approvalIntent.expiresAt,
+                  callback_accepted: approvalIntent.callbackUrl !== null,
+                },
               },
             );
           }
@@ -401,6 +438,39 @@ export const Route = createFileRoute("/api/public/v1/tools/$toolName")({
         try {
           result = await runTool(toolName, { ...parsed.data, orgId: identity.orgId });
         } catch (e) {
+          // Connected-account tools: no linked OAuth account (or the token is
+          // dead). This is a 409 with a connect action, not a tool failure —
+          // the agent can recover by having its operator link the account.
+          if (e instanceof OAuthRequiredError) {
+            const oauthMessage = e.message;
+            await recordToolTrace({
+              orgId: identity.orgId,
+              requestId,
+              toolName,
+              args: parsed.data as Record<string, unknown>,
+              error: oauthMessage,
+              creditsCharged: 0,
+              durationMs: Date.now() - toolStartedAt.getTime(),
+              startedAt: toolStartedAt,
+            });
+            await releaseIdem();
+            await refundReservedCredits(supabaseAdmin, reserved.usageEventId, "oauth_required");
+            log("public_tool_oauth_required", {
+              requestId,
+              toolName,
+              orgId: identity.orgId,
+              provider: e.provider,
+            });
+            return apiError(409, "oauth_connection_required", oauthMessage, {
+              provider: e.provider,
+              connect: {
+                url: `${origin}/api/public/v1/oauth/${e.provider}/authorize`,
+                method: "POST",
+                description:
+                  "POST with your API key to receive an authorization URL; have your operator complete the OAuth flow, then retry this call.",
+              },
+            });
+          }
           toolError = e instanceof Error ? e.message : "Tool execution failed";
           await recordToolTrace({
             orgId: identity.orgId,

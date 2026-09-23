@@ -28,7 +28,9 @@ import { Route as DotwellKnownAgentsDotjsonRouteImport } from './routes/[.]well-
 import { Route as DotwellKnownAiPluginDotjsonRouteImport } from './routes/[.]well-known/ai-plugin[.]json'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedApprovalsRouteImport } from './routes/_authenticated/approvals'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
+import { Route as AuthenticatedConnectionsRouteImport } from './routes/_authenticated/connections'
 import { Route as AuthenticatedKeysRouteImport } from './routes/_authenticated/keys'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
@@ -45,9 +47,14 @@ import { Route as ApiPublicV1OpenapiDotjsonRouteImport } from './routes/api/publ
 import { Route as ApiPublicV1PricingRouteImport } from './routes/api/public/v1/pricing'
 import { Route as ApiPublicV1SignupRouteImport } from './routes/api/public/v1/signup'
 import { Route as ApiPublicV1ToolsRouteImport } from './routes/api/public/v1/tools'
+import { Route as ApiPublicV1ApprovalsIntentIdRouteImport } from './routes/api/public/v1/approvals.$intentId'
 import { Route as ApiPublicV1CreditsPurchaseRouteImport } from './routes/api/public/v1/credits.purchase'
 import { Route as ApiPublicV1KeysRotateRouteImport } from './routes/api/public/v1/keys.rotate'
+import { Route as ApiPublicV1OauthCallbackRouteImport } from './routes/api/public/v1/oauth.callback'
+import { Route as ApiPublicV1OauthConnectionsRouteImport } from './routes/api/public/v1/oauth.connections'
+import { Route as ApiPublicV1OauthProvidersRouteImport } from './routes/api/public/v1/oauth.providers'
 import { Route as ApiPublicV1ToolsToolNameRouteImport } from './routes/api/public/v1/tools.$toolName'
+import { Route as ApiPublicV1OauthProviderAuthorizeRouteImport } from './routes/api/public/v1/oauth.$provider.authorize'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -148,11 +155,22 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedApprovalsRoute = AuthenticatedApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedConnectionsRoute =
+  AuthenticatedConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedKeysRoute = AuthenticatedKeysRouteImport.update({
   id: '/keys',
   path: '/keys',
@@ -236,6 +254,12 @@ const ApiPublicV1ToolsRoute = ApiPublicV1ToolsRouteImport.update({
   path: '/api/public/v1/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1ApprovalsIntentIdRoute =
+  ApiPublicV1ApprovalsIntentIdRouteImport.update({
+    id: '/api/public/v1/approvals/$intentId',
+    path: '/api/public/v1/approvals/$intentId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1CreditsPurchaseRoute =
   ApiPublicV1CreditsPurchaseRouteImport.update({
     id: '/api/public/v1/credits/purchase',
@@ -247,11 +271,35 @@ const ApiPublicV1KeysRotateRoute = ApiPublicV1KeysRotateRouteImport.update({
   path: '/api/public/v1/keys/rotate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1OauthCallbackRoute =
+  ApiPublicV1OauthCallbackRouteImport.update({
+    id: '/api/public/v1/oauth/callback',
+    path: '/api/public/v1/oauth/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV1OauthConnectionsRoute =
+  ApiPublicV1OauthConnectionsRouteImport.update({
+    id: '/api/public/v1/oauth/connections',
+    path: '/api/public/v1/oauth/connections',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV1OauthProvidersRoute =
+  ApiPublicV1OauthProvidersRouteImport.update({
+    id: '/api/public/v1/oauth/providers',
+    path: '/api/public/v1/oauth/providers',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1ToolsToolNameRoute =
   ApiPublicV1ToolsToolNameRouteImport.update({
     id: '/$toolName',
     path: '/$toolName',
     getParentRoute: () => ApiPublicV1ToolsRoute,
+  } as any)
+const ApiPublicV1OauthProviderAuthorizeRoute =
+  ApiPublicV1OauthProviderAuthorizeRouteImport.update({
+    id: '/api/public/v1/oauth/$provider/authorize',
+    path: '/api/public/v1/oauth/$provider/authorize',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -273,7 +321,9 @@ export interface FileRoutesByFullPath {
   '/.well-known/ai-plugin.json': typeof DotwellKnownAiPluginDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/approvals': typeof AuthenticatedApprovalsRoute
   '/billing': typeof AuthenticatedBillingRoute
+  '/connections': typeof AuthenticatedConnectionsRoute
   '/keys': typeof AuthenticatedKeysRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tools': typeof AuthenticatedToolsRoute
@@ -290,9 +340,14 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/pricing': typeof ApiPublicV1PricingRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/approvals/$intentId': typeof ApiPublicV1ApprovalsIntentIdRoute
   '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
   '/api/public/v1/keys/rotate': typeof ApiPublicV1KeysRotateRoute
+  '/api/public/v1/oauth/callback': typeof ApiPublicV1OauthCallbackRoute
+  '/api/public/v1/oauth/connections': typeof ApiPublicV1OauthConnectionsRoute
+  '/api/public/v1/oauth/providers': typeof ApiPublicV1OauthProvidersRoute
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
+  '/api/public/v1/oauth/$provider/authorize': typeof ApiPublicV1OauthProviderAuthorizeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -313,7 +368,9 @@ export interface FileRoutesByTo {
   '/.well-known/ai-plugin.json': typeof DotwellKnownAiPluginDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/approvals': typeof AuthenticatedApprovalsRoute
   '/billing': typeof AuthenticatedBillingRoute
+  '/connections': typeof AuthenticatedConnectionsRoute
   '/keys': typeof AuthenticatedKeysRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tools': typeof AuthenticatedToolsRoute
@@ -330,9 +387,14 @@ export interface FileRoutesByTo {
   '/api/public/v1/pricing': typeof ApiPublicV1PricingRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/approvals/$intentId': typeof ApiPublicV1ApprovalsIntentIdRoute
   '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
   '/api/public/v1/keys/rotate': typeof ApiPublicV1KeysRotateRoute
+  '/api/public/v1/oauth/callback': typeof ApiPublicV1OauthCallbackRoute
+  '/api/public/v1/oauth/connections': typeof ApiPublicV1OauthConnectionsRoute
+  '/api/public/v1/oauth/providers': typeof ApiPublicV1OauthProvidersRoute
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
+  '/api/public/v1/oauth/$provider/authorize': typeof ApiPublicV1OauthProviderAuthorizeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -355,7 +417,9 @@ export interface FileRoutesById {
   '/.well-known/ai-plugin.json': typeof DotwellKnownAiPluginDotjsonRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/approvals': typeof AuthenticatedApprovalsRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
+  '/_authenticated/connections': typeof AuthenticatedConnectionsRoute
   '/_authenticated/keys': typeof AuthenticatedKeysRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tools': typeof AuthenticatedToolsRoute
@@ -372,9 +436,14 @@ export interface FileRoutesById {
   '/api/public/v1/pricing': typeof ApiPublicV1PricingRoute
   '/api/public/v1/signup': typeof ApiPublicV1SignupRoute
   '/api/public/v1/tools': typeof ApiPublicV1ToolsRouteWithChildren
+  '/api/public/v1/approvals/$intentId': typeof ApiPublicV1ApprovalsIntentIdRoute
   '/api/public/v1/credits/purchase': typeof ApiPublicV1CreditsPurchaseRoute
   '/api/public/v1/keys/rotate': typeof ApiPublicV1KeysRotateRoute
+  '/api/public/v1/oauth/callback': typeof ApiPublicV1OauthCallbackRoute
+  '/api/public/v1/oauth/connections': typeof ApiPublicV1OauthConnectionsRoute
+  '/api/public/v1/oauth/providers': typeof ApiPublicV1OauthProvidersRoute
   '/api/public/v1/tools/$toolName': typeof ApiPublicV1ToolsToolNameRoute
+  '/api/public/v1/oauth/$provider/authorize': typeof ApiPublicV1OauthProviderAuthorizeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -397,7 +466,9 @@ export interface FileRouteTypes {
     | '/.well-known/ai-plugin.json'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
+    | '/approvals'
     | '/billing'
+    | '/connections'
     | '/keys'
     | '/settings'
     | '/tools'
@@ -414,9 +485,14 @@ export interface FileRouteTypes {
     | '/api/public/v1/pricing'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
+    | '/api/public/v1/approvals/$intentId'
     | '/api/public/v1/credits/purchase'
     | '/api/public/v1/keys/rotate'
+    | '/api/public/v1/oauth/callback'
+    | '/api/public/v1/oauth/connections'
+    | '/api/public/v1/oauth/providers'
     | '/api/public/v1/tools/$toolName'
+    | '/api/public/v1/oauth/$provider/authorize'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -437,7 +513,9 @@ export interface FileRouteTypes {
     | '/.well-known/ai-plugin.json'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
+    | '/approvals'
     | '/billing'
+    | '/connections'
     | '/keys'
     | '/settings'
     | '/tools'
@@ -454,9 +532,14 @@ export interface FileRouteTypes {
     | '/api/public/v1/pricing'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
+    | '/api/public/v1/approvals/$intentId'
     | '/api/public/v1/credits/purchase'
     | '/api/public/v1/keys/rotate'
+    | '/api/public/v1/oauth/callback'
+    | '/api/public/v1/oauth/connections'
+    | '/api/public/v1/oauth/providers'
     | '/api/public/v1/tools/$toolName'
+    | '/api/public/v1/oauth/$provider/authorize'
   id:
     | '__root__'
     | '/'
@@ -478,7 +561,9 @@ export interface FileRouteTypes {
     | '/.well-known/ai-plugin.json'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
+    | '/_authenticated/approvals'
     | '/_authenticated/billing'
+    | '/_authenticated/connections'
     | '/_authenticated/keys'
     | '/_authenticated/settings'
     | '/_authenticated/tools'
@@ -495,9 +580,14 @@ export interface FileRouteTypes {
     | '/api/public/v1/pricing'
     | '/api/public/v1/signup'
     | '/api/public/v1/tools'
+    | '/api/public/v1/approvals/$intentId'
     | '/api/public/v1/credits/purchase'
     | '/api/public/v1/keys/rotate'
+    | '/api/public/v1/oauth/callback'
+    | '/api/public/v1/oauth/connections'
+    | '/api/public/v1/oauth/providers'
     | '/api/public/v1/tools/$toolName'
+    | '/api/public/v1/oauth/$provider/authorize'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -529,8 +619,13 @@ export interface RootRouteChildren {
   ApiPublicV1PricingRoute: typeof ApiPublicV1PricingRoute
   ApiPublicV1SignupRoute: typeof ApiPublicV1SignupRoute
   ApiPublicV1ToolsRoute: typeof ApiPublicV1ToolsRouteWithChildren
+  ApiPublicV1ApprovalsIntentIdRoute: typeof ApiPublicV1ApprovalsIntentIdRoute
   ApiPublicV1CreditsPurchaseRoute: typeof ApiPublicV1CreditsPurchaseRoute
   ApiPublicV1KeysRotateRoute: typeof ApiPublicV1KeysRotateRoute
+  ApiPublicV1OauthCallbackRoute: typeof ApiPublicV1OauthCallbackRoute
+  ApiPublicV1OauthConnectionsRoute: typeof ApiPublicV1OauthConnectionsRoute
+  ApiPublicV1OauthProvidersRoute: typeof ApiPublicV1OauthProvidersRoute
+  ApiPublicV1OauthProviderAuthorizeRoute: typeof ApiPublicV1OauthProviderAuthorizeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -668,11 +763,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/approvals': {
+      id: '/_authenticated/approvals'
+      path: '/approvals'
+      fullPath: '/approvals'
+      preLoaderRoute: typeof AuthenticatedApprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/billing': {
       id: '/_authenticated/billing'
       path: '/billing'
       fullPath: '/billing'
       preLoaderRoute: typeof AuthenticatedBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/connections': {
+      id: '/_authenticated/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof AuthenticatedConnectionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/keys': {
@@ -787,6 +896,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/approvals/$intentId': {
+      id: '/api/public/v1/approvals/$intentId'
+      path: '/api/public/v1/approvals/$intentId'
+      fullPath: '/api/public/v1/approvals/$intentId'
+      preLoaderRoute: typeof ApiPublicV1ApprovalsIntentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/credits/purchase': {
       id: '/api/public/v1/credits/purchase'
       path: '/api/public/v1/credits/purchase'
@@ -801,6 +917,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1KeysRotateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/oauth/callback': {
+      id: '/api/public/v1/oauth/callback'
+      path: '/api/public/v1/oauth/callback'
+      fullPath: '/api/public/v1/oauth/callback'
+      preLoaderRoute: typeof ApiPublicV1OauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/oauth/connections': {
+      id: '/api/public/v1/oauth/connections'
+      path: '/api/public/v1/oauth/connections'
+      fullPath: '/api/public/v1/oauth/connections'
+      preLoaderRoute: typeof ApiPublicV1OauthConnectionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/oauth/providers': {
+      id: '/api/public/v1/oauth/providers'
+      path: '/api/public/v1/oauth/providers'
+      fullPath: '/api/public/v1/oauth/providers'
+      preLoaderRoute: typeof ApiPublicV1OauthProvidersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/tools/$toolName': {
       id: '/api/public/v1/tools/$toolName'
       path: '/$toolName'
@@ -808,12 +945,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1ToolsToolNameRouteImport
       parentRoute: typeof ApiPublicV1ToolsRoute
     }
+    '/api/public/v1/oauth/$provider/authorize': {
+      id: '/api/public/v1/oauth/$provider/authorize'
+      path: '/api/public/v1/oauth/$provider/authorize'
+      fullPath: '/api/public/v1/oauth/$provider/authorize'
+      preLoaderRoute: typeof ApiPublicV1OauthProviderAuthorizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedApprovalsRoute: typeof AuthenticatedApprovalsRoute
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
+  AuthenticatedConnectionsRoute: typeof AuthenticatedConnectionsRoute
   AuthenticatedKeysRoute: typeof AuthenticatedKeysRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedToolsRoute: typeof AuthenticatedToolsRoute
@@ -824,7 +970,9 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedApprovalsRoute: AuthenticatedApprovalsRoute,
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
+  AuthenticatedConnectionsRoute: AuthenticatedConnectionsRoute,
   AuthenticatedKeysRoute: AuthenticatedKeysRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedToolsRoute: AuthenticatedToolsRoute,
@@ -877,8 +1025,14 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1PricingRoute: ApiPublicV1PricingRoute,
   ApiPublicV1SignupRoute: ApiPublicV1SignupRoute,
   ApiPublicV1ToolsRoute: ApiPublicV1ToolsRouteWithChildren,
+  ApiPublicV1ApprovalsIntentIdRoute: ApiPublicV1ApprovalsIntentIdRoute,
   ApiPublicV1CreditsPurchaseRoute: ApiPublicV1CreditsPurchaseRoute,
   ApiPublicV1KeysRotateRoute: ApiPublicV1KeysRotateRoute,
+  ApiPublicV1OauthCallbackRoute: ApiPublicV1OauthCallbackRoute,
+  ApiPublicV1OauthConnectionsRoute: ApiPublicV1OauthConnectionsRoute,
+  ApiPublicV1OauthProvidersRoute: ApiPublicV1OauthProvidersRoute,
+  ApiPublicV1OauthProviderAuthorizeRoute:
+    ApiPublicV1OauthProviderAuthorizeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

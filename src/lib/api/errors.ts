@@ -187,6 +187,81 @@ export const API_ERRORS: ApiErrorSpec[] = [
     action: "Retry with backoff; the same idempotency-key is safe to reuse.",
     retryable: true,
   },
+  {
+    status: 404,
+    code: "approval_intent_not_found",
+    cause: "No approval intent with that id exists in this workspace.",
+    action: "Use the intent_id from the 428 approval object; intents expire after 24 hours.",
+    retryable: false,
+  },
+  {
+    status: 409,
+    code: "oauth_connection_required",
+    cause:
+      "This tool needs a connected third-party account, and none is linked for this workspace.",
+    action:
+      "POST the connect URL from the body with your API key to get an authorization URL, have your operator complete the OAuth flow, then retry the call.",
+    retryable: false,
+    extra: ["provider", "connect"],
+  },
+  {
+    status: 404,
+    code: "oauth_provider_unknown",
+    cause: "No OAuth provider with that slug is enabled.",
+    action: "GET /api/public/v1/oauth/providers for the supported catalog.",
+    retryable: false,
+  },
+  {
+    status: 502,
+    code: "oauth_callback_failed",
+    cause: "The OAuth provider refused the code exchange or the profile lookup.",
+    action:
+      "Restart the connect flow; if it persists the provider app credentials may be misconfigured.",
+    retryable: false,
+  },
+  {
+    status: 502,
+    code: "oauth_provider_not_configured",
+    cause:
+      "The OAuth provider is enabled in the catalog but its app credentials are missing on RELAY.",
+    action: "The workspace owner should contact support; agents cannot fix this themselves.",
+    retryable: false,
+  },
+  {
+    status: 500,
+    code: "oauth_authorize_failed",
+    cause: "The OAuth authorization URL could not be generated.",
+    action: "Retry; if it persists, check that the provider is still enabled.",
+    retryable: true,
+  },
+  {
+    status: 500,
+    code: "catalog_unavailable",
+    cause: "The OAuth provider catalog could not be loaded.",
+    action: "Retry shortly.",
+    retryable: true,
+  },
+  {
+    status: 500,
+    code: "connections_unavailable",
+    cause: "The workspace's OAuth connections could not be listed.",
+    action: "Retry shortly.",
+    retryable: true,
+  },
+  {
+    status: 404,
+    code: "connection_not_found",
+    cause: "No OAuth connection with that id exists in this workspace.",
+    action: "List connections with GET /api/public/v1/oauth/connections and use a current id.",
+    retryable: false,
+  },
+  {
+    status: 500,
+    code: "revoke_failed",
+    cause: "The OAuth connection could not be revoked.",
+    action: "Retry; the connection remains active until revocation succeeds.",
+    retryable: true,
+  },
 ];
 
 /** Error codes reachable from POST /api/public/v1/tools/{name}. */

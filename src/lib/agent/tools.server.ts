@@ -605,6 +605,120 @@ async function browsePage(args: Record<string, unknown>): Promise<Record<string,
   }
 }
 
+/**
+ * Connected tools: act through the workspace's managed OAuth connections.
+ * Tokens never leave the server — handlers resolve them via oauth.server and
+ * let OAuthRequiredError propagate so the route can answer 409 with
+ * reconnect instructions.
+ */
+
+function requireOrgId(args: Record<string, unknown>): string {
+  const orgId = typeof args["orgId"] === "string" ? args["orgId"] : null;
+  if (!orgId) throw new Error("orgId is required");
+  return orgId;
+}
+
+async function connectionToken(orgId: string, provider: string): Promise<string> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { getConnectionToken } = await import("@/lib/api/oauth.server");
+  return getConnectionToken(supabaseAdmin, orgId, provider);
+}
+
+function toB64Url(bytes: Uint8Array): string {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function gmailSend(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const orgId = requireOrgId(args);
+  const to = String(args["to"] ?? "").trim();
+  const subject = String(args["subject"] ?? "");
+  const body = String(args["body"] ?? "");
+  if (!to) return { ok: false, error: "to is required" };
+
+  const token = await connectionToken(orgId, "google");
+  const raw = toB64Url(
+    new TextEncoder().encode(
+      `To: ${to}\r\nSubject: ${subject}\r\nContent-Type: text/plain; charset="UTF-8"\r\n\r\n${body}`,
+    ),
+  );
+  const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: JSON.stringify({ raw }),
+  });
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!res.ok) {
+    const message =
+      ((data["error"] as Record<string, unknown> | undefined)?.["message"] as string | undefined) ??
+      `Gmail API error ${res.status}`;
+    throw new Error(`gmail: ${message}`);
+  }
+  return ok({
+    messageId: data["id"],
+    to,
+    threadId: data["threadId"] ?? null,
+    sentAt: new Date().toISOString(),
+  });
+}
+
+async function slackPostMessage(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const orgId = requireOrgId(args);
+  const channel = String(args["channel"] ?? "").trim();
+  const text = String(args["text"] ?? "");
+  if (!channel) return { ok: false, error: "channel is required" };
+  if (!text) return { ok: false, error: "text is required" };
+
+  const token = await connectionToken(orgId, "slack");
+  const res = await fetch("https://slack.com/api/chat.postMessage", {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: JSON.stringify({ channel, text }),
+  });
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!res.ok || data["ok"] !== true) {
+    throw new Error(`slack: ${String(data["error"] ?? `API error ${res.status}`)}`);
+  }
+  return ok({
+    channel: data["channel"],
+    ts: data["ts"],
+    messageId: `${data["channel"]}:${data["ts"]}`,
+    postedAt: new Date().toISOString(),
+  });
+}
+
+async function githubCreateIssue(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const orgId = requireOrgId(args);
+  const owner = String(args["owner"] ?? "").trim();
+  const repo = String(args["repo"] ?? "").trim();
+  const title = String(args["title"] ?? "").trim();
+  const body = args["body"] ? String(args["body"]) : undefined;
+  if (!owner || !repo) return { ok: false, error: "owner and repo are required" };
+  if (!title) return { ok: false, error: "title is required" };
+
+  const token = await connectionToken(orgId, "github");
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${token}`,
+      accept: "application/vnd.github+json",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ title, ...(body ? { body } : {}) }),
+  });
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!res.ok) {
+    throw new Error(`github: ${String(data["message"] ?? `API error ${res.status}`)}`);
+  }
+  return ok({
+    issueNumber: data["number"],
+    url: data["html_url"],
+    state: data["state"],
+    createdAt: new Date().toISOString(),
+  });
+}
+
 export async function runTool(
   name: string,
   args: Record<string, unknown>,
@@ -624,6 +738,12 @@ export async function runTool(
       return executeCode(args);
     case "browse_page":
       return browsePage(args);
+    case "gmail_send":
+      return gmailSend(args);
+    case "slack_post_message":
+      return slackPostMessage(args);
+    case "github_create_issue":
+      return githubCreateIssue(args);
     case "sandbox_search_knowledge_base": {
       const q = String(args["query"] ?? "").toLowerCase();
       const hits = KB.filter(

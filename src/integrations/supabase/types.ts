@@ -1100,6 +1100,221 @@ export type Database = {
         }
         Relationships: []
       }
+      // -----------------------------------------------------------------
+      // Manually appended for the RELAY async-approvals + managed-OAuth
+      // migration (20260923140000). Regenerate via the Supabase CLI when
+      // the migration is applied to replace these with generated types.
+      // -----------------------------------------------------------------
+      approval_policies: {
+        Row: {
+          org_id: string
+          auto_approve_max_credits: number
+          auto_approve_tools: string[]
+          require_human_tools: string[]
+          default_action: string
+          webhook_secret: string
+          notify_email: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          org_id: string
+          auto_approve_max_credits?: number
+          auto_approve_tools?: string[]
+          require_human_tools?: string[]
+          default_action?: string
+          webhook_secret?: string
+          notify_email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          org_id?: string
+          auto_approve_max_credits?: number
+          auto_approve_tools?: string[]
+          require_human_tools?: string[]
+          default_action?: string
+          webhook_secret?: string
+          notify_email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      approval_intents: {
+        Row: {
+          id: string
+          org_id: string
+          key_id: string | null
+          tool_name: string
+          tool_label: string
+          args: Json
+          args_hash: string
+          preview: Json
+          credits: number
+          idempotency_key: string | null
+          callback_url: string | null
+          status: string
+          policy_decision: string
+          confirmation_token: string | null
+          decided_by: string | null
+          decided_at: string | null
+          reason: string | null
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          key_id?: string | null
+          tool_name: string
+          tool_label: string
+          args: Json
+          args_hash: string
+          preview: Json
+          credits?: number
+          idempotency_key?: string | null
+          callback_url?: string | null
+          status?: string
+          policy_decision?: string
+          confirmation_token?: string | null
+          decided_by?: string | null
+          decided_at?: string | null
+          reason?: string | null
+          expires_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          key_id?: string | null
+          tool_name?: string
+          tool_label?: string
+          args?: Json
+          args_hash?: string
+          preview?: Json
+          credits?: number
+          idempotency_key?: string | null
+          callback_url?: string | null
+          status?: string
+          policy_decision?: string
+          confirmation_token?: string | null
+          decided_by?: string | null
+          decided_at?: string | null
+          reason?: string | null
+          expires_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      oauth_providers: {
+        Row: {
+          slug: string
+          name: string
+          authorize_url: string
+          token_url: string
+          revoke_url: string | null
+          default_scopes: string[]
+          docs_url: string | null
+          enabled: boolean
+        }
+        Insert: {
+          slug: string
+          name: string
+          authorize_url: string
+          token_url: string
+          revoke_url?: string | null
+          default_scopes?: string[]
+          docs_url?: string | null
+          enabled?: boolean
+        }
+        Update: {
+          slug?: string
+          name?: string
+          authorize_url?: string
+          token_url?: string
+          revoke_url?: string | null
+          default_scopes?: string[]
+          docs_url?: string | null
+          enabled?: boolean
+        }
+        Relationships: []
+      }
+      oauth_connections: {
+        Row: {
+          id: string
+          org_id: string
+          provider_slug: string
+          account_label: string
+          access_token_enc: string
+          refresh_token_enc: string | null
+          expires_at: string | null
+          scopes: string[]
+          status: string
+          created_by_key_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          org_id: string
+          provider_slug: string
+          account_label: string
+          access_token_enc: string
+          refresh_token_enc?: string | null
+          expires_at?: string | null
+          scopes?: string[]
+          status?: string
+          created_by_key_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          org_id?: string
+          provider_slug?: string
+          account_label?: string
+          access_token_enc?: string
+          refresh_token_enc?: string | null
+          expires_at?: string | null
+          scopes?: string[]
+          status?: string
+          created_by_key_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      oauth_states: {
+        Row: {
+          state: string
+          org_id: string
+          key_id: string | null
+          provider_slug: string
+          created_at: string
+          expires_at: string
+          consumed_at: string | null
+        }
+        Insert: {
+          state: string
+          org_id: string
+          key_id?: string | null
+          provider_slug: string
+          created_at?: string
+          expires_at?: string
+          consumed_at?: string | null
+        }
+        Update: {
+          state?: string
+          org_id?: string
+          key_id?: string | null
+          provider_slug?: string
+          created_at?: string
+          expires_at?: string
+          consumed_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

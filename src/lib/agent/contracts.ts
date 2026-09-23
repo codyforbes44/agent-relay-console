@@ -455,6 +455,94 @@ export const TOOL_CONTRACTS: ToolContract[] = [
     },
     summarize: (a) => `${str(a["type"])} · ${str(a["recordId"])}`,
   },
+  {
+    // Connected tool: sends through the workspace's linked Google account.
+    // Requires a managed OAuth connection (POST /oauth/google/authorize).
+    name: "gmail_send",
+    label: "Send Gmail",
+    description:
+      "Send an email through the workspace's connected Google account. Uses the managed OAuth connection — the agent never sees credentials. Requires the workspace to connect Google first (POST /api/public/v1/oauth/google/authorize). Side-effecting: requires confirmation.",
+    sideEffecting: true,
+    icon: "mail",
+    credits: 6,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      to: z.string().describe("Recipient email address"),
+      subject: z.string().describe("Email subject"),
+      body: z.string().describe("Plain text email body"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: {
+      to: "dana@northwind.io",
+      subject: "Your invoice is ready",
+      body: "Hi Dana — invoice in_881 is attached. Thanks!",
+    },
+    exampleResult: {
+      ok: true,
+      messageId: "18f2a91cd4b5e607",
+      to: "dana@northwind.io",
+      threadId: "18f2a91cd4b5e607",
+      sentAt: "2026-09-23T18:00:00.000Z",
+    },
+    summarize: (a) => `${str(a["to"])} — ${str(a["subject"])}`,
+  },
+  {
+    // Connected tool: posts as the workspace's linked Slack identity.
+    name: "slack_post_message",
+    label: "Post Slack message",
+    description:
+      "Post a message to a Slack channel as the workspace's connected Slack identity. Uses the managed OAuth connection — the agent never sees credentials. Requires the workspace to connect Slack first (POST /api/public/v1/oauth/slack/authorize). Side-effecting: requires confirmation.",
+    sideEffecting: true,
+    icon: "globe",
+    credits: 4,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      channel: z.string().describe("Channel name (e.g. #general) or channel ID"),
+      text: z.string().describe("Message text (Slack mrkdwn supported)"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: { channel: "#general", text: "Deploy finished :white_check_mark:" },
+    exampleResult: {
+      ok: true,
+      channel: "C0123456789",
+      ts: "1758650400.000100",
+      messageId: "C0123456789:1758650400.000100",
+      postedAt: "2026-09-23T18:00:00.000Z",
+    },
+    summarize: (a) => `${str(a["channel"])} — ${str(a["text"]).slice(0, 60)}`,
+  },
+  {
+    // Connected tool: opens an issue on GitHub as the linked account.
+    name: "github_create_issue",
+    label: "Create GitHub issue",
+    description:
+      "Create an issue in a GitHub repository as the workspace's connected GitHub identity. Uses the managed OAuth connection — the agent never sees credentials. Requires the workspace to connect GitHub first (POST /api/public/v1/oauth/github/authorize). Side-effecting: requires confirmation.",
+    sideEffecting: true,
+    icon: "database",
+    credits: 4,
+    publicApi: true,
+    demo: false,
+    schema: z.object({
+      owner: z.string().describe("Repository owner (user or organization)"),
+      repo: z.string().describe("Repository name"),
+      title: z.string().describe("Issue title"),
+      body: z.string().optional().describe("Issue body in markdown"),
+    }) as unknown as z.ZodType<Record<string, unknown>>,
+    example: {
+      owner: "octocat",
+      repo: "hello-world",
+      title: "Found a bug",
+      body: "Steps to reproduce...",
+    },
+    exampleResult: {
+      ok: true,
+      issueNumber: 1347,
+      url: "https://github.com/octocat/hello-world/issues/1347",
+      state: "open",
+      createdAt: "2026-09-23T18:00:00.000Z",
+    },
+    summarize: (a) => `${str(a["owner"])}/${str(a["repo"])} — ${str(a["title"])}`,
+  },
 ];
 
 export const TOOLS_BY_NAME: Record<string, ToolContract> = Object.fromEntries(

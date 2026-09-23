@@ -14,6 +14,9 @@ import sandboxLookupCrmContact from "./tools/sandbox-lookup-crm-contact";
 import sandboxSearchKnowledgeBase from "./tools/sandbox-search-knowledge-base";
 import sandboxSendEmail from "./tools/sandbox-send-email";
 import sandboxUpdateCrmRecord from "./tools/sandbox-update-crm-record";
+import gmailSend from "./tools/gmail-send";
+import slackPostMessage from "./tools/slack-post-message";
+import githubCreateIssue from "./tools/github-create-issue";
 
 // The OAuth issuer must be the direct Supabase host; the project ref is the
 // only value that survives publish unchanged.
@@ -44,5 +47,8 @@ export default defineMcp({
     sandboxUpdateCrmRecord,
     sandboxCreatePayment,
     sandboxDeleteRecord,
+    gmailSend,
+    slackPostMessage,
+    githubCreateIssue,
   ],
 });

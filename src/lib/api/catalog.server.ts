@@ -11,7 +11,7 @@ export const CORS_HEADERS: Record<string, string> = {
   "access-control-allow-origin": "*",
   "access-control-allow-headers":
     "authorization, content-type, x-api-key, x-confirmation-token, idempotency-key, x-payment",
-  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
 };
 
 export function json(body: unknown, status = 200, extra: Record<string, string> = {}) {
