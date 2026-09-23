@@ -226,10 +226,15 @@ async function fetchAccountLabel(
   };
   try {
     if (provider.slug === "google") {
-      const res = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", { headers });
+      // The OAuth userinfo endpoint only returns the email claim when the
+      // `email` scope is granted, which we deliberately do not request.
+      // The Gmail profile endpoint works with the gmail.send scope alone.
+      const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/profile", {
+        headers,
+      });
       if (res.ok) {
-        const data = (await res.json()) as { email?: string };
-        if (data.email) return data.email;
+        const data = (await res.json()) as { emailAddress?: string };
+        if (data.emailAddress) return data.emailAddress;
       } else {
         console.warn(`[oauth] account label lookup failed for google: ${res.status}`);
       }
