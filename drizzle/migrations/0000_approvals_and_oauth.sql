@@ -1,14 +1,3 @@
--- RELAY: async approval flow + managed OAuth.
---
--- approval_policies  : per-workspace auto-approval rules for side-effecting tools
--- approval_intents   : one row per side-effecting call awaiting (or having received) a human decision
--- oauth_providers    : seeded catalog of supported OAuth providers
--- oauth_connections  : per-workspace encrypted OAuth tokens (managed connections)
--- oauth_states       : short-lived CSRF states for the OAuth authorize dance
-
--- ---------------------------------------------------------------------------
--- approval_policies
--- ---------------------------------------------------------------------------
 CREATE TABLE public.approval_policies (
   org_id UUID PRIMARY KEY REFERENCES public.organizations(id) ON DELETE CASCADE,
   auto_approve_max_credits INTEGER NOT NULL DEFAULT 0,
@@ -29,9 +18,6 @@ CREATE POLICY "org members write approval policy" ON public.approval_policies
   FOR ALL TO authenticated USING (public.has_org_access(org_id))
   WITH CHECK (public.has_org_access(org_id));
 
--- ---------------------------------------------------------------------------
--- approval_intents
--- ---------------------------------------------------------------------------
 CREATE TABLE public.approval_intents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -48,9 +34,6 @@ CREATE TABLE public.approval_intents (
     CHECK (status IN ('pending', 'approved', 'denied', 'expired', 'cancelled')),
   policy_decision TEXT NOT NULL DEFAULT 'human'
     CHECK (policy_decision IN ('auto', 'human')),
-  -- Raw single-use confirmation token, revealed to the owning workspace only
-  -- once the intent is approved. Bound to the exact previewed args by the
-  -- existing tool_confirmations machinery.
   confirmation_token TEXT,
   decided_by TEXT,
   decided_at TIMESTAMPTZ,
@@ -71,9 +54,6 @@ CREATE POLICY "org members update approval intents" ON public.approval_intents
   FOR UPDATE TO authenticated USING (public.has_org_access(org_id))
   WITH CHECK (public.has_org_access(org_id));
 
--- ---------------------------------------------------------------------------
--- oauth_providers (seeded catalog)
--- ---------------------------------------------------------------------------
 CREATE TABLE public.oauth_providers (
   slug TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -119,9 +99,6 @@ ON CONFLICT (slug) DO UPDATE SET
   docs_url = EXCLUDED.docs_url,
   enabled = true;
 
--- ---------------------------------------------------------------------------
--- oauth_connections (encrypted per-workspace tokens)
--- ---------------------------------------------------------------------------
 CREATE TABLE public.oauth_connections (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -142,17 +119,12 @@ CREATE INDEX oauth_connections_org_idx
   ON public.oauth_connections(org_id, provider_slug, status);
 GRANT ALL ON public.oauth_connections TO service_role;
 ALTER TABLE public.oauth_connections ENABLE ROW LEVEL SECURITY;
--- No direct member access: token ciphertext never leaves the server. Members
--- read connection metadata through the view below; all token operations run
--- through server-side code with the service_role client.
 CREATE OR REPLACE VIEW public.oauth_connection_summaries
 WITH (security_invoker = true) AS
   SELECT id, org_id, provider_slug, account_label, scopes, status,
          expires_at, created_at, updated_at
   FROM public.oauth_connections;
 GRANT SELECT ON public.oauth_connection_summaries TO authenticated;
--- Views cannot carry RLS. The security_invoker view relies on the base table:
--- members get column-level SELECT on non-secret columns only, scoped by RLS.
 GRANT SELECT (id, org_id, provider_slug, account_label, scopes, status,
               expires_at, created_at, updated_at)
   ON public.oauth_connections TO authenticated;
@@ -160,9 +132,6 @@ CREATE POLICY "org members read connection metadata"
   ON public.oauth_connections
   FOR SELECT TO authenticated USING (public.has_org_access(org_id));
 
--- ---------------------------------------------------------------------------
--- oauth_states (CSRF protection for the authorize dance)
--- ---------------------------------------------------------------------------
 CREATE TABLE public.oauth_states (
   state TEXT PRIMARY KEY,
   org_id UUID NOT NULL REFERENCES public.organizations(id) ON DELETE CASCADE,
@@ -174,4 +143,3 @@ CREATE TABLE public.oauth_states (
 );
 GRANT ALL ON public.oauth_states TO service_role;
 ALTER TABLE public.oauth_states ENABLE ROW LEVEL SECURITY;
--- No authenticated access: states are only ever touched server-side.
