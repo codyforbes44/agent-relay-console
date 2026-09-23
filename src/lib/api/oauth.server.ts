@@ -218,28 +218,46 @@ async function fetchAccountLabel(
   provider: OAuthProviderInfo,
   accessToken: string,
 ): Promise<string> {
-  const headers = { authorization: `Bearer ${accessToken}` };
+  // GitHub's API rejects requests without a User-Agent header (403); send one
+  // on every provider call for good hygiene.
+  const headers = {
+    authorization: `Bearer ${accessToken}`,
+    "user-agent": "RelayOAuth/1.0 (+https://3bi.ai)",
+  };
   try {
     if (provider.slug === "google") {
       const res = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", { headers });
-      const data = (await res.json()) as { email?: string };
-      if (data.email) return data.email;
+      if (res.ok) {
+        const data = (await res.json()) as { email?: string };
+        if (data.email) return data.email;
+      } else {
+        console.warn(`[oauth] account label lookup failed for google: ${res.status}`);
+      }
     } else if (provider.slug === "github") {
       const res = await fetch("https://api.github.com/user", {
         headers: { ...headers, accept: "application/vnd.github+json" },
       });
-      const data = (await res.json()) as { login?: string };
-      if (data.login) return data.login;
+      if (res.ok) {
+        const data = (await res.json()) as { login?: string };
+        if (data.login) return data.login;
+      } else {
+        console.warn(`[oauth] account label lookup failed for github: ${res.status}`);
+      }
     } else if (provider.slug === "slack") {
       const res = await fetch("https://slack.com/api/auth.test", {
         method: "POST",
         headers: { ...headers, "content-type": "application/x-www-form-urlencoded" },
       });
-      const data = (await res.json()) as { ok?: boolean; user?: string; team?: string };
-      if (data.ok && data.user) return data.team ? `${data.user}@${data.team}` : data.user;
+      if (res.ok) {
+        const data = (await res.json()) as { ok?: boolean; user?: string; team?: string };
+        if (data.ok && data.user) return data.team ? `${data.user}@${data.team}` : data.user;
+        console.warn(`[oauth] account label lookup failed for slack: ok=${data.ok}`);
+      } else {
+        console.warn(`[oauth] account label lookup failed for slack: ${res.status}`);
+      }
     }
-  } catch {
-    // Fall through to the timestamped fallback below.
+  } catch (err) {
+    console.warn(`[oauth] account label lookup threw for ${provider.slug}:`, err);
   }
   return `${provider.slug}-account-${new Date().toISOString().slice(0, 10)}`;
 }
