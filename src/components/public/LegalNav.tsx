@@ -4,15 +4,10 @@ const PAGES = [
   { to: "/terms", label: "Terms & conditions" },
   { to: "/refunds", label: "Refund policy" },
   { to: "/privacy", label: "Privacy notice" },
-  { to: "/impressum", label: "Impressum" },
 ] as const;
 
-/** Cross-links between the legal pages, shown under each page title. */
-export function LegalNav({
-  current,
-}: {
-  current: "/terms" | "/refunds" | "/privacy" | "/impressum";
-}) {
+/** Cross-links between the three legal pages, shown under each page title. */
+export function LegalNav({ current }: { current: "/terms" | "/refunds" | "/privacy" }) {
   return (
     <nav aria-label="Legal pages" className="mt-4 flex flex-wrap gap-2 text-xs">
       {PAGES.map((p) => {
