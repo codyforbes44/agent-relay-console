@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ClaimRouteImport } from './routes/claim'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as DocsRouteImport } from './routes/docs'
+import { Route as ImpressumRouteImport } from './routes/impressum'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as PricingRouteImport } from './routes/pricing'
@@ -83,6 +84,11 @@ const ConnectRoute = ConnectRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImpressumRoute = ImpressumRouteImport.update({
+  id: '/impressum',
+  path: '/impressum',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
@@ -308,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/claim': typeof ClaimRoute
   '/connect': typeof ConnectRoute
   '/docs': typeof DocsRoute
+  '/impressum': typeof ImpressumRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
@@ -355,6 +362,7 @@ export interface FileRoutesByTo {
   '/claim': typeof ClaimRoute
   '/connect': typeof ConnectRoute
   '/docs': typeof DocsRoute
+  '/impressum': typeof ImpressumRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
@@ -404,6 +412,7 @@ export interface FileRoutesById {
   '/claim': typeof ClaimRoute
   '/connect': typeof ConnectRoute
   '/docs': typeof DocsRoute
+  '/impressum': typeof ImpressumRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/mcp': typeof McpRoute
   '/pricing': typeof PricingRoute
@@ -453,6 +462,7 @@ export interface FileRouteTypes {
     | '/claim'
     | '/connect'
     | '/docs'
+    | '/impressum'
     | '/llms.txt'
     | '/mcp'
     | '/pricing'
@@ -500,6 +510,7 @@ export interface FileRouteTypes {
     | '/claim'
     | '/connect'
     | '/docs'
+    | '/impressum'
     | '/llms.txt'
     | '/mcp'
     | '/pricing'
@@ -548,6 +559,7 @@ export interface FileRouteTypes {
     | '/claim'
     | '/connect'
     | '/docs'
+    | '/impressum'
     | '/llms.txt'
     | '/mcp'
     | '/pricing'
@@ -597,6 +609,7 @@ export interface RootRouteChildren {
   ClaimRoute: typeof ClaimRoute
   ConnectRoute: typeof ConnectRoute
   DocsRoute: typeof DocsRoute
+  ImpressumRoute: typeof ImpressumRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   McpRoute: typeof McpRoute
   PricingRoute: typeof PricingRoute
@@ -670,6 +683,13 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impressum': {
+      id: '/impressum'
+      path: '/impressum'
+      fullPath: '/impressum'
+      preLoaderRoute: typeof ImpressumRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/llms.txt': {
@@ -1002,6 +1022,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClaimRoute: ClaimRoute,
   ConnectRoute: ConnectRoute,
   DocsRoute: DocsRoute,
+  ImpressumRoute: ImpressumRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   McpRoute: McpRoute,
   PricingRoute: PricingRoute,
