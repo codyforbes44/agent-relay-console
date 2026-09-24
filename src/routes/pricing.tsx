@@ -14,7 +14,7 @@ const FAQ = [
   },
   {
     q: "Is there a subscription or minimum?",
-    a: "No minimum. You can buy one-time packs as needed, or take a monthly plan if your agents run steadily — plans are cheaper per credit and unused credits roll over. Every new workspace also starts with 500 free credits.",
+    a: "No minimum. Monthly plans are subscriptions: billed monthly in advance and renewed automatically until you cancel from the customer portal — cancel anytime and your remaining balance stays until it is used. Or buy one-time packs as needed. Every new workspace also starts with 500 free credits.",
   },
   {
     q: "What does one credit buy?",

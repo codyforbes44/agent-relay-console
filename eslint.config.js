@@ -41,10 +41,15 @@ export default tseslint.config(
     // Generator output has its own formatting. Keep semantic lint rules enabled.
     files: [
       "src/integrations/supabase/types.ts",
+      // Lovable-generated preview-auth shim; uses deferred initialization.
+      "src/integrations/supabase/previewAuthStorage.ts",
       "src/routes/\\[.mcp\\]/**/*.ts",
       "src/routes/\\[.well-known\\]/oauth-protected-resource.ts",
       "src/routes/mcp.ts",
     ],
-    rules: { "prettier/prettier": "off" },
+    rules: {
+      "prettier/prettier": "off",
+      "prefer-const": "off",
+    },
   },
 );

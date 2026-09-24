@@ -22,7 +22,7 @@ function TermsPage() {
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">
           Terms &amp; Conditions
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: 9 August 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated: 24 September 2026</p>
         <LegalNav current="/terms" />
 
         <div className="prose-sm mt-8 space-y-8 text-sm leading-relaxed text-muted-foreground">
@@ -89,14 +89,25 @@ function TermsPage() {
 
           <Section title="6. Payment, billing and tax">
             <p>
-              Credits are sold directly by Agent Relay Console as one-time packs at the prices shown
-              on our pricing page. Prices are quoted in US dollars and payable by card through our
-              payment processor, in USDC on the Base network using the x402 payment protocol, or by
-              invoice where we have agreed that in advance. There is no subscription and no
-              automatic renewal; you buy credits only when you choose to. Prices exclude any sales
-              tax or VAT that may apply, and you are responsible for any taxes arising from your
-              purchase other than taxes on our income. Credits are consumed per successful tool call
-              and do not expire. Refunds are governed by our refund policy.
+              Credits are sold directly by Agent Relay Console in two ways: as one-time credit packs
+              at the prices shown on our pricing page, and as monthly subscription plans that grant
+              a fresh credit allotment on every renewal. Prices are quoted in US dollars and payable
+              by card through our payment processor, in USDC on the Base network using the x402
+              payment protocol, or by invoice where we have agreed that in advance. Prices exclude
+              any sales tax or VAT that may apply, and you are responsible for any taxes arising
+              from your purchase other than taxes on our income. Credits are consumed per successful
+              tool call. Refunds are governed by our refund policy.
+            </p>
+            <p className="mt-2">
+              Monthly plans are subscriptions billed in advance for each monthly billing period and
+              renewed automatically until you cancel. You can cancel at any time from the customer
+              portal linked on your console billing page; cancellation takes effect at the end of
+              the current billing period and no further charges are made after that. Each renewal
+              grants the plan&apos;s full monthly credit allotment. Unused plan credits roll over
+              into the next period, capped at one month&apos;s allotment, and plan credits are
+              consumed before pack credits. If you cancel, any remaining balance — including
+              rolled-over plan credits — stays on your workspace until it is used. One-time pack
+              credits never expire.
             </p>
           </Section>
 
@@ -126,7 +137,7 @@ function TermsPage() {
             <p>
               We may suspend or terminate access for material breach of these terms, non-payment,
               suspected fraud or security risk, or repeated or serious policy violations. You may
-              stop using the Service at any time. On termination your access ends; you may export
+              stop using the Service at any time, and you may cancel a monthly plan at any time as described in section 6; cancelling a plan ends future billing but does not delete your workspace or your remaining credit balance. On termination your access ends; you may export
               your conversation and usage data before closing your account, after which we may
               delete it in line with our privacy notice.
             </p>
