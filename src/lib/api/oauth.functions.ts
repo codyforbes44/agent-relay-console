@@ -63,6 +63,12 @@ export const getOAuthAuthorizeUrl = createServerFn({ method: "POST" })
       if (message.startsWith("oauth_provider_unknown")) {
         throw new Error("Unknown OAuth provider");
       }
+      if (message.startsWith("oauth_provider_not_configured")) {
+        // Never leak internal secret names to the caller; the detailed
+        // message stays in the server logs.
+        console.error(message);
+        throw new Error("This OAuth provider is not configured yet");
+      }
       throw new Error(message);
     }
   });
