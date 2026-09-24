@@ -137,9 +137,11 @@ function TermsPage() {
             <p>
               We may suspend or terminate access for material breach of these terms, non-payment,
               suspected fraud or security risk, or repeated or serious policy violations. You may
-              stop using the Service at any time, and you may cancel a monthly plan at any time as described in section 6; cancelling a plan ends future billing but does not delete your workspace or your remaining credit balance. On termination your access ends; you may export
-              your conversation and usage data before closing your account, after which we may
-              delete it in line with our privacy notice.
+              stop using the Service at any time, and you may cancel a monthly plan at any time as
+              described in section 6; cancelling a plan ends future billing but does not delete your
+              workspace or your remaining credit balance. On termination your access ends; you may
+              export your conversation and usage data before closing your account, after which we
+              may delete it in line with our privacy notice.
             </p>
           </Section>
 
