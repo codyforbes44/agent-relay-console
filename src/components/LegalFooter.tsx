@@ -90,11 +90,6 @@ export function LegalFooter() {
                 Privacy notice
               </Link>
             </li>
-            <li>
-              <Link to="/impressum" className="hover:text-foreground">
-                Impressum
-              </Link>
-            </li>
           </ul>
         </nav>
       </div>
