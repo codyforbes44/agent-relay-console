@@ -10,7 +10,7 @@ export const Route = createFileRoute("/refunds")({
       path: "/refunds",
       title: "Refund Policy — RELAY",
       description:
-        "Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases. Refunds are issued directly by us to your original payment method.",
+        "Agent Relay Console offers a 30-day money-back guarantee on credit pack purchases and a 14-day refund window on monthly plan charges. Refunds are issued directly by us to your original payment method.",
     }),
   component: RefundsPage,
 });
@@ -20,7 +20,7 @@ function RefundsPage() {
     <PublicShell>
       <main className="mx-auto w-full max-w-3xl px-6 py-16">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">Refund Policy</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: 9 August 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated: 24 September 2026</p>
         <LegalNav current="/refunds" />
 
         <div className="mt-8 space-y-6 text-sm leading-relaxed text-muted-foreground">
@@ -53,6 +53,20 @@ function RefundsPage() {
               the refunded purchase are removed from your workspace balance. Card refunds typically
               appear within 5–10 business days depending on your bank; on-chain refunds usually
               settle within one business day of approval.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="mb-2 text-base font-medium text-foreground">Monthly plans</h2>
+            <p>
+              Monthly plan payments are covered too. If you cancel within 14 days of a plan charge —
+              your first subscription payment or any renewal — email{" "}
+              <a className="underline" href="mailto:support@3bi.ai">
+                support@3bi.ai
+              </a>{" "}
+              and we will refund that charge in full. After the first 14 days of a billing period
+              there are no pro-rata refunds, but your plan stays active until the end of the period
+              you paid for, and any remaining credits stay on your workspace until they are used.
             </p>
           </div>
 

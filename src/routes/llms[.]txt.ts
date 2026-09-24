@@ -76,7 +76,7 @@ over documents uploaded to the workspace knowledge base), execute_code (Python o
 and browse_page (render a URL in a Browserbase cloud browser and return the page as markdown). Every sandbox_* tool is free (0 credits), returns fixture
 
 data (demo=true) and changes nothing; they exist so agents can rehearse auth, schemas, idempotency and the two-step
-confirmation gate. The pre-rename names (search_knowledge_base, lookup_crm_contact, list_records, send_email,
+confirmation gate. The pre-rename names (lookup_crm_contact, list_records, send_email,
 update_crm_record, create_payment, delete_record) still resolve to their sandbox_* equivalents and return a "deprecated"
 pointer. Workspace owners can disable individual tools in the console.
 

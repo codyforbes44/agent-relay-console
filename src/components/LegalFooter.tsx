@@ -10,8 +10,8 @@ export function LegalFooter() {
         <div>
           <p className="font-mono text-xs font-semibold tracking-[0.3em] text-primary">RELAY</p>
           <p className="mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">
-            A metered HTTP and MCP tool API built for autonomous agents. Pay per call, no
-            subscription.
+            A metered HTTP and MCP tool API built for autonomous agents. Pay per call, or subscribe
+            for monthly credits.
           </p>
         </div>
 
@@ -88,6 +88,11 @@ export function LegalFooter() {
             <li>
               <Link to="/privacy" className="hover:text-foreground">
                 Privacy notice
+              </Link>
+            </li>
+            <li>
+              <Link to="/impressum" className="hover:text-foreground">
+                Impressum
               </Link>
             </li>
           </ul>
