@@ -167,7 +167,7 @@ export function CustomApiKeys({ orgId }: { orgId: string }) {
                     {c.label}{" "}
                     <span className="text-xs text-muted-foreground">
                       · {CREDENTIAL_SERVICES.find((s) => s.id === c.service)?.name ?? c.service}
-                      {c.config.zone ? ` · ${c.config.zone}` : ""}
+                      {c.config["zone"] ? ` · ${c.config["zone"]}` : ""}
                     </span>
                   </p>
                   <p className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
