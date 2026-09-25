@@ -825,6 +825,56 @@ export type Database = {
           },
         ]
       }
+      org_api_credentials: {
+        Row: {
+          config: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          last_verified_at: string | null
+          org_id: string
+          secret_ciphertext: string
+          secret_last4: string
+          service: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          last_verified_at?: string | null
+          org_id: string
+          secret_ciphertext: string
+          secret_last4: string
+          service: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          last_verified_at?: string | null
+          org_id?: string
+          secret_ciphertext?: string
+          secret_last4?: string
+          service?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_api_credentials_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_members: {
         Row: {
           created_at: string

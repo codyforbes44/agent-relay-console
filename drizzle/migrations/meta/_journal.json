@@ -8,6 +8,13 @@
       "when": 1790189713724,
       "tag": "0000_approvals_and_oauth",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790307442802,
+      "tag": "0001_org_api_credentials",
+      "breakpoints": true
     }
   ]
 }

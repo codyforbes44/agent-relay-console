@@ -5,6 +5,7 @@ import { ExternalLink, Loader2, Plug, Unplug } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+import { CustomApiKeys } from "@/components/workspace/CustomApiKeys";
 import { ConsoleShell } from "@/components/workspace/ConsoleShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,12 @@ function ConnectionsPage() {
       title="Connected accounts"
       description="Link a third-party account once and every agent in this workspace can act through it — Gmail, Slack, GitHub — without ever seeing the credentials. Tokens are encrypted and refresh automatically."
     >
-      {(org) => <ConnectionsPanel orgId={org.id} />}
+      {(org) => (
+        <div className="space-y-6">
+          <ConnectionsPanel orgId={org.id} />
+          <CustomApiKeys orgId={org.id} />
+        </div>
+      )}
     </ConsoleShell>
   );
 }
